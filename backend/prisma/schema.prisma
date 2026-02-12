@@ -1,0 +1,234 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlserver"
+  url      = env("DATABASE_URL")
+}
+
+// ─── ENUMS as String fields (SQL Server doesn't support Prisma enums) ───
+
+model User {
+  id                String    @id @default(uuid())
+  email             String    @unique
+  passwordHash      String
+  firstName         String
+  lastName          String
+  profilePicture    String?
+  bio               String?
+  batch             String?
+  program           String?
+  section           String?
+  university        String?
+  campus            String?
+  socialLinks       String?   // JSON string
+  role              String    @default("STUDENT") // STUDENT | ADMIN
+  emailVerified     Boolean   @default(false)
+  verificationToken String?
+  refreshToken      String?
+  isBanned          Boolean   @default(false)
+  banReason         String?
+  reputationScore   Float     @default(0)
+  totalExchanges    Int       @default(0)
+  isDeleted         Boolean   @default(false)
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  posts             Post[]
+  offersMade        Offer[]           @relation("OfferCreator")
+  sentMessages      Message[]         @relation("MessageSender")
+  ratingsGiven      Rating[]          @relation("RatingGiver")
+  ratingsReceived   Rating[]          @relation("RatingReceiver")
+  reportsCreated    Report[]          @relation("ReportCreator")
+  reportsAgainst    Report[]          @relation("ReportTarget")
+  notifications     Notification[]
+
+  transactionsAsRequester Transaction[] @relation("TransactionRequester")
+  transactionsAsOfferer   Transaction[] @relation("TransactionOfferer")
+
+  @@index([email])
+  @@index([role])
+  @@index([reputationScore])
+  @@map("users")
+}
+
+model Post {
+  id          String    @id @default(uuid())
+  userId      String
+  title       String
+  description String
+  whatINeed   String
+  whatIOffer  String
+  category    String
+  tags        String?   // JSON array string
+  status      String    @default("ACTIVE") // ACTIVE | IN_PROGRESS | SUCCESSFUL | CANCELLED | EXPIRED
+  expiresAt   DateTime
+  isDeleted   Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  user        User      @relation(fields: [userId], references: [id])
+  offers      Offer[]
+  transaction Transaction?
+
+  @@index([userId])
+  @@index([status])
+  @@index([category])
+  @@index([expiresAt])
+  @@map("posts")
+}
+
+model Offer {
+  id                String    @id @default(uuid())
+  postId            String
+  userId            String
+  proposalDescription String
+  counterExchange   String?
+  status            String    @default("PENDING") // PENDING | ACCEPTED | REJECTED | WITHDRAWN
+  isDeleted         Boolean   @default(false)
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  post              Post      @relation(fields: [postId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  user              User      @relation("OfferCreator", fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  transaction       Transaction?
+
+  @@unique([postId, userId]) // Only ONE offer per student per post
+  @@index([postId])
+  @@index([userId])
+  @@index([status])
+  @@map("offers")
+}
+
+model Transaction {
+  id              String    @id @default(uuid())
+  postId          String    @unique
+  offerId         String    @unique
+  requesterId     String
+  offererId       String
+  status          String    @default("IN_PROGRESS") // IN_PROGRESS | SUCCESSFUL | CANCELLED | EXPIRED | DISPUTED
+  requesterDone   Boolean   @default(false)
+  offererDone     Boolean   @default(false)
+  requesterCancel Boolean   @default(false)
+  offererCancel   Boolean   @default(false)
+  completedAt     DateTime?
+  cancelledAt     DateTime?
+  expiresAt       DateTime
+  isDeleted       Boolean   @default(false)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  post            Post      @relation(fields: [postId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  offer           Offer     @relation(fields: [offerId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  requester       User      @relation("TransactionRequester", fields: [requesterId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  offerer         User      @relation("TransactionOfferer", fields: [offererId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  messages        Message[]
+  ratings         Rating[]
+  reports         Report[]
+
+  @@index([requesterId])
+  @@index([offererId])
+  @@index([status])
+  @@map("transactions")
+}
+
+model Message {
+  id              String    @id @default(uuid())
+  transactionId   String
+  senderId        String
+  content         String
+  messageType     String    @default("TEXT") // TEXT | SYSTEM | ACTION
+  isRead          Boolean   @default(false)
+  isDeleted       Boolean   @default(false)
+  createdAt       DateTime  @default(now())
+
+  transaction     Transaction @relation(fields: [transactionId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  sender          User        @relation("MessageSender", fields: [senderId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([transactionId])
+  @@index([senderId])
+  @@index([createdAt])
+  @@map("messages")
+}
+
+model Rating {
+  id              String    @id @default(uuid())
+  transactionId   String
+  giverId         String
+  receiverId      String
+  score           Int       // 1-5
+  review          String?
+  isDeleted       Boolean   @default(false)
+  createdAt       DateTime  @default(now())
+
+  transaction     Transaction @relation(fields: [transactionId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  giver           User        @relation("RatingGiver", fields: [giverId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  receiver        User        @relation("RatingReceiver", fields: [receiverId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@unique([transactionId, giverId]) // One rating per user per transaction
+  @@index([receiverId])
+  @@index([score])
+  @@map("ratings")
+}
+
+model Report {
+  id              String    @id @default(uuid())
+  transactionId   String
+  reporterId      String
+  targetUserId    String
+  reason          String
+  description     String
+  evidence        String?   // JSON array of file paths
+  status          String    @default("PENDING") // PENDING | INVESTIGATING | RESOLVED | DISMISSED
+  adminNotes      String?
+  resolvedAt      DateTime?
+  isDeleted       Boolean   @default(false)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  transaction     Transaction @relation(fields: [transactionId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  reporter        User        @relation("ReportCreator", fields: [reporterId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  targetUser      User        @relation("ReportTarget", fields: [targetUserId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([transactionId])
+  @@index([reporterId])
+  @@index([targetUserId])
+  @@index([status])
+  @@map("reports")
+}
+
+model Notification {
+  id          String    @id @default(uuid())
+  userId      String
+  type        String    // OFFER_RECEIVED | OFFER_ACCEPTED | OFFER_REJECTED | MESSAGE | TRANSACTION_COMPLETE | REPORT_UPDATE | SYSTEM
+  title       String
+  message     String
+  data        String?   // JSON string for extra data
+  isRead      Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+
+  user        User      @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([isRead])
+  @@index([createdAt])
+  @@map("notifications")
+}
+
+model LeaderboardSnapshot {
+  id              String    @id @default(uuid())
+  userId          String
+  rank            Int
+  reputationScore Float
+  totalExchanges  Int
+  averageRating   Float
+  period          String    // DAILY | WEEKLY | MONTHLY | ALL_TIME
+  snapshotDate    DateTime
+  createdAt       DateTime  @default(now())
+
+  @@index([period, snapshotDate])
+  @@index([userId])
+  @@index([rank])
+  @@map("leaderboard_snapshots")
+}
