@@ -1,0 +1,132 @@
+import { offerRepository } from '../repositories/offerRepository';
+import { postRepository } from '../repositories/postRepository';
+import { transactionRepository } from '../repositories/transactionRepository';
+import { notificationRepository } from '../repositories/notificationRepository';
+import {
+  BadRequestError, ForbiddenError, NotFoundError, ConflictError
+} from '../utils/errors';
+import prisma from '../prisma/client';
+
+export class OfferService {
+  async create(userId: string, postId: string, proposalDescription: string, counterExchange?: string) {
+    const post = await postRepository.findById(postId);
+    if (!post) throw new NotFoundError('Post not found');
+    if (post.userId === userId) throw new BadRequestError('Cannot offer on your own post');
+    if (post.status !== 'ACTIVE') throw new BadRequestError('Post is not accepting offers');
+    if (post.expiresAt < new Date()) throw new BadRequestError('Post has expired');
+
+    const existing = await offerRepository.findByPostAndUser(postId, userId);
+    if (existing) throw new ConflictError('You have already submitted an offer on this post');
+
+    const offer = await offerRepository.create({
+      post: { connect: { id: postId } },
+      user: { connect: { id: userId } },
+      proposalDescription,
+      counterExchange,
+    });
+
+    // Notify post owner
+    await notificationRepository.create({
+      userId: post.userId,
+      type: 'OFFER_RECEIVED',
+      title: 'New Offer Received',
+      message: `You received a new offer on "${post.title}"`,
+      data: JSON.stringify({ postId, offerId: offer.id }),
+    });
+
+    return offer;
+  }
+
+  async accept(offerId: string, userId: string) {
+    const offer = await offerRepository.findById(offerId);
+    if (!offer) throw new NotFoundError('Offer not found');
+    if (offer.post.userId !== userId) throw new ForbiddenError('Only the post owner can accept offers');
+    if (offer.status !== 'PENDING') throw new BadRequestError('Offer is no longer pending');
+    if (offer.post.status !== 'ACTIVE') throw new BadRequestError('Post is not active');
+
+    // Use transaction to ensure atomicity
+    const result = await prisma.$transaction(async (tx) => {
+      // Accept the offer
+      await tx.offer.update({
+        where: { id: offerId },
+        data: { status: 'ACCEPTED' },
+      });
+
+      // Reject all other offers
+      await tx.offer.updateMany({
+        where: {
+          postId: offer.postId,
+          id: { not: offerId },
+          status: 'PENDING',
+        },
+        data: { status: 'REJECTED' },
+      });
+
+      // Update post status
+      await tx.post.update({
+        where: { id: offer.postId },
+        data: { status: 'IN_PROGRESS' },
+      });
+
+      // Create transaction
+      const expiresAt = new Date();
+      expiresAt.setDate(expiresAt.getDate() + 14); // 14 days to complete
+
+      const transaction = await tx.transaction.create({
+        data: {
+          postId: offer.postId,
+          offerId: offer.id,
+          requesterId: userId,
+          offererId: offer.userId,
+          expiresAt,
+        },
+      });
+
+      return transaction;
+    });
+
+    // Notify the offer creator
+    await notificationRepository.create({
+      userId: offer.userId,
+      type: 'OFFER_ACCEPTED',
+      title: 'Offer Accepted!',
+      message: `Your offer on "${offer.post.title}" was accepted. Chat is now unlocked.`,
+      data: JSON.stringify({ transactionId: result.id }),
+    });
+
+    // Notify rejected offers
+    const rejectedOffers = await offerRepository.findByPost(offer.postId);
+    for (const rejected of rejectedOffers) {
+      if (rejected.user.id !== offer.userId) {
+        await notificationRepository.create({
+          userId: rejected.user.id,
+          type: 'OFFER_REJECTED',
+          title: 'Offer Not Selected',
+          message: `Another offer was selected for "${offer.post.title}"`,
+        });
+      }
+    }
+
+    return result;
+  }
+
+  async withdraw(offerId: string, userId: string) {
+    const offer = await offerRepository.findById(offerId);
+    if (!offer) throw new NotFoundError('Offer not found');
+    if (offer.userId !== userId) throw new ForbiddenError('Not authorized');
+    if (offer.status !== 'PENDING') throw new BadRequestError('Offer is no longer pending');
+
+    return offerRepository.update(offerId, { status: 'WITHDRAWN' });
+  }
+
+  async getByPost(postId: string) {
+    return offerRepository.findByPost(postId);
+  }
+
+  async getByUser(userId: string, page: number = 1, limit: number = 20) {
+    const skip = (page - 1) * limit;
+    return offerRepository.findByUser(userId, skip, limit);
+  }
+}
+
+export const offerService = new OfferService();
