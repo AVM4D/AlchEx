@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Clock, Tag, User, MessageCircle, Send, Star, Loader2 } from 'lucide-react';
+import { ArrowLeft, Clock, Tag, MessageCircle, Send, Loader2, Edit3, CheckCircle2 } from 'lucide-react';
 import { postsApi, offersApi } from '../services/dataService';
 import { useAuthStore } from '../store/authStore';
 import { formatRelativeTime, formatDate } from '../lib/utils';
 import type { Post, Offer } from '../types';
 import toast from 'react-hot-toast';
+import OfferCountdown from '../components/ui/OfferCountdown';
 
 export default function PostDetailPage() {
   const { id } = useParams();
@@ -16,6 +17,7 @@ export default function PostDetailPage() {
   const [offers, setOffers] = useState<Offer[]>([]);
   const [loading, setLoading] = useState(true);
   const [showOffer, setShowOffer] = useState(false);
+  const [editingOffer, setEditingOffer] = useState(false);
   const [proposal, setProposal] = useState('');
   const [counter, setCounter] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -37,6 +39,9 @@ export default function PostDetailPage() {
 
   useEffect(() => { fetchData(); }, [id]);
 
+  // Find current user's offer
+  const myOffer = user ? offers.find(o => o.userId === user.id) : null;
+
   const submitOffer = async () => {
     if (!proposal.trim() || !id) return;
     setSubmitting(true);
@@ -49,6 +54,28 @@ export default function PostDetailPage() {
       fetchData();
     } catch { toast.error('Failed to submit offer'); }
     setSubmitting(false);
+  };
+
+  const updateOffer = async () => {
+    if (!proposal.trim() || !myOffer) return;
+    setSubmitting(true);
+    try {
+      await offersApi.update(myOffer.id, { proposalDescription: proposal, counterExchange: counter || undefined });
+      toast.success('Offer updated!');
+      setEditingOffer(false);
+      setProposal('');
+      setCounter('');
+      fetchData();
+    } catch { toast.error('Failed to update offer'); }
+    setSubmitting(false);
+  };
+
+  const startEditOffer = () => {
+    if (!myOffer) return;
+    setProposal(myOffer.proposalDescription);
+    setCounter(myOffer.counterExchange || '');
+    setEditingOffer(true);
+    setShowOffer(false);
   };
 
   const acceptOffer = async (offerId: string) => {
@@ -74,6 +101,8 @@ export default function PostDetailPage() {
   );
 
   const isOwner = post.userId === user?.id;
+  // Find accepted offer's transaction for chat link
+  const acceptedOffer = offers.find(o => o.status === 'ACCEPTED');
 
   return (
     <div className="max-w-3xl mx-auto space-y-6">
@@ -117,10 +146,22 @@ export default function PostDetailPage() {
           <span className="pill text-[10px]"><MessageCircle size={10} /> {post._count?.offers ?? offers.length} offers</span>
         </div>
 
-        {/* Action button */}
-        {!isOwner && post.status === 'ACTIVE' && (
+        {/* Chat button for accepted offer (visible to both post owner and offerer) */}
+        {acceptedOffer?.transaction && (isOwner || acceptedOffer.userId === user?.id) && (
           <div className="mt-5">
-            <button onClick={() => setShowOffer(!showOffer)} className="group relative">
+            <Link to={`/chat/${acceptedOffer.transaction.id}`} className="group relative inline-flex">
+              <div className="absolute -inset-0.5 bg-gradient-to-r from-emerald-500 to-teal-400 rounded-lg blur opacity-30 group-hover:opacity-60 transition-opacity" />
+              <div className="relative flex items-center gap-2 px-5 py-2.5 bg-emerald-600 text-white rounded-lg text-sm font-medium">
+                <MessageCircle size={14} /> Open Chat
+              </div>
+            </Link>
+          </div>
+        )}
+
+        {/* Action buttons */}
+        {!isOwner && post.status === 'ACTIVE' && !myOffer && (
+          <div className="mt-5">
+            <button onClick={() => { setShowOffer(!showOffer); setEditingOffer(false); }} className="group relative">
               <div className="absolute -inset-0.5 bg-gradient-to-r from-[var(--accent)] to-purple-400 rounded-lg blur opacity-30 group-hover:opacity-60 transition-opacity" />
               <div className="relative flex items-center gap-2 px-5 py-2.5 bg-[var(--accent)] text-white rounded-lg text-sm font-medium">
                 <Send size={14} /> Make an Offer
@@ -136,12 +177,62 @@ export default function PostDetailPage() {
         )}
       </motion.div>
 
-      {/* Offer form */}
+      {/* ── User's own offer card (non-owner) ── */}
+      {!isOwner && user && (
+        <div className="glass-card p-6">
+          <h3 className="text-label mb-4">Your Offer</h3>
+          {myOffer ? (
+            <div className="bg-[var(--surface-2)] rounded-xl p-4 border border-[var(--border)]">
+              <div className="flex items-start justify-between gap-3 mb-2">
+                <span className={`pill text-[10px] ${
+                  myOffer.status === 'PENDING' ? 'text-amber-400 border-amber-500/20 bg-amber-500/10' :
+                  myOffer.status === 'ACCEPTED' ? 'text-emerald-400 border-emerald-500/20 bg-emerald-500/10' :
+                  myOffer.status === 'REJECTED' ? 'text-red-400 border-red-500/20 bg-red-500/10' :
+                  myOffer.status === 'EXPIRED' ? 'text-red-400 border-red-500/20 bg-red-500/10' :
+                  'text-gray-400 bg-gray-500/10 border-gray-500/20'
+                }`}>{myOffer.status}</span>
+                {myOffer.status === 'PENDING' && myOffer.expiresAt ? (
+                  <OfferCountdown expiresAt={myOffer.expiresAt} />
+                ) : (
+                  <span className="text-[10px] text-[var(--text-3)]">{formatRelativeTime(myOffer.createdAt)}</span>
+                )}
+              </div>
+              <p className="text-sm text-white mb-1">{myOffer.proposalDescription}</p>
+              {myOffer.counterExchange && <p className="text-xs text-[var(--text-3)]">Counter: {myOffer.counterExchange}</p>}
+
+              <div className="flex gap-2 mt-3">
+                {myOffer.status === 'PENDING' && (
+                  <button onClick={startEditOffer} className="flex items-center gap-1.5 px-4 py-1.5 bg-[var(--accent)]/10 text-[var(--accent)] rounded-lg text-xs font-medium hover:bg-[var(--accent)]/20 transition-colors">
+                    <Edit3 size={12} /> Edit Offer
+                  </button>
+                )}
+                {myOffer.status === 'ACCEPTED' && myOffer.transaction && (
+                  <Link to={`/chat/${myOffer.transaction.id}`} className="flex items-center gap-1.5 px-4 py-1.5 bg-emerald-500/10 text-emerald-400 rounded-lg text-xs font-medium hover:bg-emerald-500/20 transition-colors">
+                    <MessageCircle size={12} /> Chat
+                  </Link>
+                )}
+              </div>
+            </div>
+          ) : post.status === 'ACTIVE' ? (
+            <div className="text-center py-6">
+              <p className="text-sm text-[var(--text-3)] mb-3">You haven't made any offer yet.</p>
+              <button onClick={() => { setShowOffer(true); setEditingOffer(false); }}
+                className="px-5 py-2.5 bg-[var(--accent)] text-white rounded-lg text-sm font-medium hover:bg-[var(--accent)]/90 transition-all inline-flex items-center gap-2">
+                <Send size={14} /> Make an Offer
+              </button>
+            </div>
+          ) : (
+            <p className="text-sm text-[var(--text-3)] text-center py-6">This post is no longer accepting offers.</p>
+          )}
+        </div>
+      )}
+
+      {/* ── Create / Edit offer form ── */}
       <AnimatePresence>
-        {showOffer && (
+        {(showOffer || editingOffer) && (
           <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden">
             <div className="glass-card p-6 space-y-4">
-              <h3 className="text-label">Your Offer</h3>
+              <h3 className="text-label">{editingOffer ? 'Edit Your Offer' : 'Your Offer'}</h3>
               <div>
                 <label className="text-xs text-[var(--text-3)] mb-1 block">Proposal *</label>
                 <textarea value={proposal} onChange={(e) => setProposal(e.target.value)} rows={3}
@@ -155,52 +246,79 @@ export default function PostDetailPage() {
                   className="w-full bg-[var(--surface-2)] border border-[var(--border)] rounded-lg px-4 py-3 text-sm text-white placeholder-[var(--text-3)] focus:border-[var(--accent)] transition-all" />
               </div>
               <div className="flex gap-2">
-                <button onClick={submitOffer} disabled={submitting || !proposal.trim()}
+                <button onClick={editingOffer ? updateOffer : submitOffer} disabled={submitting || !proposal.trim()}
                   className="px-5 py-2.5 bg-[var(--accent)] text-white rounded-lg text-sm font-medium hover:bg-[var(--accent)]/90 disabled:opacity-40 transition-all flex items-center gap-2">
-                  {submitting ? <Loader2 size={14} className="animate-spin" /> : <Send size={14} />} Submit
+                  {submitting ? <Loader2 size={14} className="animate-spin" /> : editingOffer ? <CheckCircle2 size={14} /> : <Send size={14} />}
+                  {editingOffer ? 'Save Changes' : 'Submit'}
                 </button>
-                <button onClick={() => setShowOffer(false)} className="px-4 py-2 bg-[var(--surface-2)] text-[var(--text-2)] rounded-lg text-sm hover:text-white transition-colors">Cancel</button>
+                <button onClick={() => { setShowOffer(false); setEditingOffer(false); setProposal(''); setCounter(''); }}
+                  className="px-4 py-2 bg-[var(--surface-2)] text-[var(--text-2)] rounded-lg text-sm hover:text-white transition-colors">Cancel</button>
               </div>
             </div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Offers list */}
-      <div className="glass-card p-6">
-        <h3 className="text-label mb-4">Offers ({offers.length})</h3>
-        {offers.length === 0 ? (
-          <p className="text-sm text-[var(--text-3)] text-center py-6">No offers yet</p>
-        ) : (
-          <div className="space-y-3">
-            {offers.map((offer, i) => (
-              <motion.div key={offer.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
-                className="bg-[var(--surface-2)] rounded-xl p-4 border border-[var(--border)]">
-                <div className="flex items-start justify-between gap-3 mb-2">
-                  <div className="flex items-center gap-2">
-                    <div className="w-7 h-7 rounded-full bg-gradient-to-br from-[var(--accent)] to-purple-400 flex items-center justify-center text-[9px] text-white font-bold">
-                      {offer.user.firstName.charAt(0)}
+      {/* ── All offers list (visible to post owner) ── */}
+      {isOwner && (
+        <div className="glass-card p-6">
+          <h3 className="text-label mb-4">Offers ({offers.length})</h3>
+          {offers.length === 0 ? (
+            <p className="text-sm text-[var(--text-3)] text-center py-6">No offers yet</p>
+          ) : (
+            <div className="space-y-3">
+              {offers.map((offer, i) => (
+                <motion.div key={offer.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
+                  className="bg-[var(--surface-2)] rounded-xl p-4 border border-[var(--border)]">
+                  <div className="flex items-start justify-between gap-3 mb-2">
+                    <div className="flex items-center gap-2">
+                      <div className="w-7 h-7 rounded-full bg-gradient-to-br from-[var(--accent)] to-purple-400 flex items-center justify-center text-[9px] text-white font-bold">
+                        {offer.user.firstName.charAt(0)}
+                      </div>
+                      <div>
+                        <span className="text-sm font-medium text-white">{offer.user.firstName} {offer.user.lastName}</span>
+                        <span className="text-[10px] text-[var(--text-3)] ml-2">{formatRelativeTime(offer.createdAt)}</span>
+                      </div>
                     </div>
-                    <div>
-                      <span className="text-sm font-medium text-white">{offer.user.firstName} {offer.user.lastName}</span>
-                      <span className="text-[10px] text-[var(--text-3)] ml-2">{formatRelativeTime(offer.createdAt)}</span>
+                    <div className="flex items-center gap-2 shrink-0">
+                      {offer.status === 'PENDING' && offer.expiresAt && (
+                        <OfferCountdown expiresAt={offer.expiresAt} compact />
+                      )}
+                      <span className={`pill text-[10px] ${offer.status === 'PENDING' ? 'text-amber-400 border-amber-500/20' : offer.status === 'ACCEPTED' ? 'text-emerald-400 border-emerald-500/20' : offer.status === 'EXPIRED' ? 'text-red-400 border-red-500/20' : 'text-red-400 border-red-500/20'}`}>{offer.status}</span>
                     </div>
                   </div>
-                  <span className={`pill text-[10px] ${offer.status === 'PENDING' ? 'text-amber-400 border-amber-500/20' : offer.status === 'ACCEPTED' ? 'text-emerald-400 border-emerald-500/20' : 'text-red-400 border-red-500/20'}`}>{offer.status}</span>
-                </div>
-                <p className="text-sm text-[var(--text-2)] mb-1">{offer.proposalDescription}</p>
-                {offer.counterExchange && <p className="text-xs text-[var(--text-3)]">Counter: {offer.counterExchange}</p>}
-                {isOwner && offer.status === 'PENDING' && post.status === 'ACTIVE' && (
-                  <button onClick={() => acceptOffer(offer.id)}
-                    className="mt-3 px-4 py-1.5 bg-emerald-500/10 text-emerald-400 rounded-lg text-xs font-medium hover:bg-emerald-500/20 transition-colors">
-                    Accept Offer
-                  </button>
-                )}
-              </motion.div>
-            ))}
-          </div>
-        )}
-      </div>
+                  <p className="text-sm text-[var(--text-2)] mb-1">{offer.proposalDescription}</p>
+                  {offer.counterExchange && <p className="text-xs text-[var(--text-3)]">Counter: {offer.counterExchange}</p>}
+                  <div className="flex gap-2 mt-3">
+                    {offer.status === 'PENDING' && post.status === 'ACTIVE' && (
+                      <button onClick={() => acceptOffer(offer.id)}
+                        className="px-4 py-1.5 bg-emerald-500/10 text-emerald-400 rounded-lg text-xs font-medium hover:bg-emerald-500/20 transition-colors">
+                        Accept Offer
+                      </button>
+                    )}
+                    {offer.status === 'ACCEPTED' && offer.transaction && (
+                      <Link to={`/chat/${offer.transaction.id}`}
+                        className="flex items-center gap-1.5 px-4 py-1.5 bg-emerald-500/10 text-emerald-400 rounded-lg text-xs font-medium hover:bg-emerald-500/20 transition-colors">
+                        <MessageCircle size={12} /> Open Chat
+                      </Link>
+                    )}
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── Other offers summary (visible to non-owner, doesn't show details to protect privacy) ── */}
+      {!isOwner && offers.length > 0 && (
+        <div className="glass-card p-6">
+          <h3 className="text-label mb-2">Other Offers</h3>
+          <p className="text-sm text-[var(--text-3)]">
+            {offers.length} {offers.length === 1 ? 'offer has' : 'offers have'} been made on this post.
+          </p>
+        </div>
+      )}
     </div>
   );
 }

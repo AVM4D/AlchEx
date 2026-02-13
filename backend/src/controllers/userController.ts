@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import { userService } from '../services/userService';
 import { ratingService } from '../services/ratingService';
 import { successResponse } from '../utils/helpers';
+import { param } from '../utils/params';
 
 export class UserController {
   async getProfile(req: Request, res: Response, next: NextFunction) {
@@ -24,7 +25,7 @@ export class UserController {
 
   async getPublicProfile(req: Request, res: Response, next: NextFunction) {
     try {
-      const profile = await userService.getPublicProfile(req.params.id);
+      const profile = await userService.getPublicProfile(param(req, 'id'));
       res.json(successResponse(profile));
     } catch (error) {
       next(error);
@@ -33,7 +34,7 @@ export class UserController {
 
   async getRatingStats(req: Request, res: Response, next: NextFunction) {
     try {
-      const stats = await ratingService.getStats(req.params.id);
+      const stats = await ratingService.getStats(param(req, 'id'));
       res.json(successResponse(stats));
     } catch (error) {
       next(error);

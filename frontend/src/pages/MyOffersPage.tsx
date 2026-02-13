@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { Inbox, Clock, ExternalLink, XCircle } from 'lucide-react';
+import { Inbox, Clock, ExternalLink, XCircle, MessageCircle, Edit3 } from 'lucide-react';
 import { offersApi } from '../services/dataService';
 import { formatRelativeTime } from '../lib/utils';
 import type { Offer } from '../types';
 import toast from 'react-hot-toast';
+import OfferCountdown from '../components/ui/OfferCountdown';
 
 export default function MyOffersPage() {
   const [offers, setOffers] = useState<Offer[]>([]);
@@ -39,6 +40,7 @@ export default function MyOffersPage() {
     ACCEPTED: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20',
     REJECTED: 'text-red-400 bg-red-500/10 border-red-500/20',
     WITHDRAWN: 'text-gray-400 bg-gray-500/10 border-gray-500/20',
+    EXPIRED: 'text-red-400 bg-red-500/10 border-red-500/20',
   };
 
   return (
@@ -50,7 +52,7 @@ export default function MyOffersPage() {
 
       {/* Tabs */}
       <div className="flex gap-2">
-        {['All', 'PENDING', 'ACCEPTED', 'REJECTED'].map(s => (
+        {['All', 'PENDING', 'ACCEPTED', 'REJECTED', 'EXPIRED'].map(s => (
           <button key={s} onClick={() => setTab(s)}
             className={`px-4 py-2 rounded-lg text-xs font-medium transition-all ${tab === s ? 'bg-[var(--accent)] text-white shadow-[0_0_15px_rgba(139,92,246,0.3)]' : 'bg-[var(--surface-2)] text-[var(--text-2)] hover:text-white'}`}>
             {s === 'All' ? 'All' : s.charAt(0) + s.slice(1).toLowerCase()}
@@ -90,13 +92,32 @@ export default function MyOffersPage() {
               </div>
 
               <div className="flex items-center justify-between pt-3 border-t border-[var(--border)]">
-                <span className="text-[10px] text-[var(--text-3)] flex items-center gap-1"><Clock size={10} /> {formatRelativeTime(offer.createdAt)}</span>
-                {offer.status === 'PENDING' && (
-                  <button onClick={() => withdrawOffer(offer.id)}
-                    className="flex items-center gap-1.5 px-3 py-1.5 bg-red-500/10 text-red-400 rounded-lg text-xs font-medium hover:bg-red-500/20 transition-colors">
-                    <XCircle size={12} /> Withdraw
-                  </button>
-                )}
+                <div className="flex items-center gap-3">
+                  <span className="text-[10px] text-[var(--text-3)] flex items-center gap-1"><Clock size={10} /> {formatRelativeTime(offer.createdAt)}</span>
+                  {offer.status === 'PENDING' && offer.expiresAt && (
+                    <OfferCountdown expiresAt={offer.expiresAt} compact />
+                  )}
+                </div>
+                <div className="flex items-center gap-2">
+                  {offer.status === 'ACCEPTED' && offer.transaction && (
+                    <Link to={`/chat/${offer.transaction.id}`}
+                      className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-500/10 text-emerald-400 rounded-lg text-xs font-medium hover:bg-emerald-500/20 transition-colors">
+                      <MessageCircle size={12} /> Chat
+                    </Link>
+                  )}
+                  {offer.status === 'PENDING' && offer.post && (
+                    <Link to={`/posts/${offer.post.id}`}
+                      className="flex items-center gap-1.5 px-3 py-1.5 bg-[var(--accent)]/10 text-[var(--accent)] rounded-lg text-xs font-medium hover:bg-[var(--accent)]/20 transition-colors">
+                      <Edit3 size={12} /> Edit
+                    </Link>
+                  )}
+                  {offer.status === 'PENDING' && (
+                    <button onClick={() => withdrawOffer(offer.id)}
+                      className="flex items-center gap-1.5 px-3 py-1.5 bg-red-500/10 text-red-400 rounded-lg text-xs font-medium hover:bg-red-500/20 transition-colors">
+                      <XCircle size={12} /> Withdraw
+                    </button>
+                  )}
+                </div>
               </div>
             </motion.div>
           ))}

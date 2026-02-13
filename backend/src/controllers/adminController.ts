@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { adminService } from '../services/adminService';
 import { successResponse } from '../utils/helpers';
+import { param } from '../utils/params';
 
 export class AdminController {
   async getDashboard(_req: Request, res: Response, next: NextFunction) {
@@ -35,7 +36,7 @@ export class AdminController {
 
   async unbanUser(req: Request, res: Response, next: NextFunction) {
     try {
-      const result = await adminService.unbanUser(req.params.id);
+      const result = await adminService.unbanUser(param(req, 'id'));
       res.json(successResponse(result));
     } catch (error) {
       next(error);
@@ -66,7 +67,7 @@ export class AdminController {
 
   async forceCancel(req: Request, res: Response, next: NextFunction) {
     try {
-      const result = await adminService.forceCancel(req.params.id);
+      const result = await adminService.forceCancel(param(req, 'id'));
       res.json(successResponse(result, 'Transaction force-cancelled'));
     } catch (error) {
       next(error);

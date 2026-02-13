@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { postService } from '../services/postService';
 import { successResponse } from '../utils/helpers';
+import { param } from '../utils/params';
 
 export class PostController {
   async create(req: Request, res: Response, next: NextFunction) {
@@ -14,7 +15,7 @@ export class PostController {
 
   async getById(req: Request, res: Response, next: NextFunction) {
     try {
-      const post = await postService.getById(req.params.id);
+      const post = await postService.getById(param(req, 'id'));
       res.json(successResponse(post));
     } catch (error) {
       next(error);
@@ -23,7 +24,7 @@ export class PostController {
 
   async update(req: Request, res: Response, next: NextFunction) {
     try {
-      const post = await postService.update(req.params.id, req.user!.userId, req.body);
+      const post = await postService.update(param(req, 'id'), req.user!.userId, req.body);
       res.json(successResponse(post, 'Post updated'));
     } catch (error) {
       next(error);
@@ -33,7 +34,7 @@ export class PostController {
   async delete(req: Request, res: Response, next: NextFunction) {
     try {
       const isAdmin = req.user!.role === 'ADMIN';
-      await postService.delete(req.params.id, req.user!.userId, isAdmin);
+      await postService.delete(param(req, 'id'), req.user!.userId, isAdmin);
       res.json(successResponse(null, 'Post deleted'));
     } catch (error) {
       next(error);
@@ -42,7 +43,8 @@ export class PostController {
 
   async getMarketplace(req: Request, res: Response, next: NextFunction) {
     try {
-      const result = await postService.getMarketplace(req.query as any);
+      const userId = req.user?.userId;
+      const result = await postService.getMarketplace(req.query as any, userId);
       res.json(successResponse(result));
     } catch (error) {
       next(error);

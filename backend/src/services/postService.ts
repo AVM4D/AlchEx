@@ -3,6 +3,7 @@ import { offerRepository } from '../repositories/offerRepository';
 import { transactionRepository } from '../repositories/transactionRepository';
 import { notificationRepository } from '../repositories/notificationRepository';
 import { userRepository } from '../repositories/userRepository';
+import prisma from '../prisma/client';
 import {
   BadRequestError, ForbiddenError, NotFoundError, ConflictError
 } from '../utils/errors';
@@ -11,6 +12,7 @@ import { paginate, paginationMeta } from '../utils/helpers';
 
 export class PostService {
   async create(userId: string, input: CreatePostInput) {
+    const defaultExpiry = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
     const post = await postRepository.create({
       user: { connect: { id: userId } },
       title: input.title,
@@ -19,7 +21,8 @@ export class PostService {
       whatIOffer: input.whatIOffer,
       category: input.category,
       tags: input.tags ? JSON.stringify(input.tags) : null,
-      expiresAt: new Date(input.expiresAt),
+      expiresAt: input.expiresAt ? new Date(input.expiresAt) : defaultExpiry,
+      notifyOnOffers: input.notifyOnOffers ?? true,
     });
     return post;
   }
@@ -52,7 +55,7 @@ export class PostService {
     return postRepository.softDelete(id);
   }
 
-  async getMarketplace(query: MarketplaceQuery) {
+  async getMarketplace(query: MarketplaceQuery, userId?: string) {
     const { skip, take } = paginate(query.page, query.limit);
     const where: any = { status: query.status || 'ACTIVE' };
 
@@ -73,8 +76,28 @@ export class PostService {
       orderBy: { [query.sortBy]: query.sortOrder } as any,
     });
 
+    // If authenticated, attach the caller's offer (if any) to each post
+    let postsWithMyOffer = posts as any[];
+    if (userId) {
+      const postIds = posts.map((p: any) => p.id);
+      const myOffers = postIds.length
+        ? await prisma.offer.findMany({
+            where: { postId: { in: postIds }, userId, isDeleted: false },
+            select: {
+              id: true, postId: true, proposalDescription: true,
+              counterExchange: true, status: true, createdAt: true, expiresAt: true,
+            },
+          })
+        : [];
+      const offerMap = new Map(myOffers.map((o) => [o.postId, o]));
+      postsWithMyOffer = posts.map((p: any) => ({
+        ...p,
+        myOffer: offerMap.get(p.id) || null,
+      }));
+    }
+
     return {
-      posts,
+      posts: postsWithMyOffer,
       pagination: paginationMeta(total, query.page, query.limit),
     };
   }

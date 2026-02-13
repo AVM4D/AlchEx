@@ -1,16 +1,19 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Filter, Plus, Grid3X3, List, X, Clock, Tag } from 'lucide-react';
+import { Search, Filter, Plus, Grid3X3, List, X, Clock, Tag, CheckCircle2, Edit3, AlertCircle } from 'lucide-react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { postsApi } from '../services/dataService';
+import { useAuthStore } from '../store/authStore';
 import type { Post, PaginationMeta } from '../types';
 import { formatRelativeTime } from '../lib/utils';
+import OfferCountdown from '../components/ui/OfferCountdown';
 
 const ease: [number, number, number, number] = [0.16, 1, 0.3, 1];
 const CATEGORIES = ['All', 'Textbooks', 'Electronics', 'Tutoring', 'Notes', 'Lab Equipment', 'Services', 'Housing', 'Transportation', 'Other'];
 
 export default function MarketplacePage() {
   const [searchParams, setSearchParams] = useSearchParams();
+  const { user } = useAuthStore();
   const [posts, setPosts] = useState<Post[]>([]);
   const [meta, setMeta] = useState<PaginationMeta | null>(null);
   const [loading, setLoading] = useState(true);
@@ -32,7 +35,7 @@ export default function MarketplacePage() {
       const res = await postsApi.getMarketplace(params);
       const data = res.data.data;
       setPosts(data?.posts || (Array.isArray(data) ? data : []));
-      setMeta(data?.pagination || res.data.pagination || null);
+      setMeta(data?.pagination || (res.data as any).pagination || null);
     } catch { setPosts([]); }
     finally { setLoading(false); }
   }, [page, search, category, sortBy]);
@@ -150,6 +153,37 @@ export default function MarketplacePage() {
                   </div>
                   <p className="text-xs text-[var(--text-2)] line-clamp-2 mb-3">{post.description}</p>
                   {post.category && <span className="pill text-[10px] mr-2 mb-2 inline-flex"><Tag size={10} />{post.category}</span>}
+
+                  {/* My Offer Status */}
+                  {user && post.userId !== user.id && (
+                    <div className="mb-2">
+                      {post.myOffer ? (
+                        <div className={`flex items-center gap-1.5 text-[10px] px-2.5 py-1.5 rounded-lg ${
+                          post.myOffer.status === 'PENDING' ? 'bg-amber-500/10 text-amber-400' :
+                          post.myOffer.status === 'ACCEPTED' ? 'bg-emerald-500/10 text-emerald-400' :
+                          post.myOffer.status === 'REJECTED' ? 'bg-red-500/10 text-red-400' :
+                          post.myOffer.status === 'EXPIRED' ? 'bg-red-500/10 text-red-400' :
+                          'bg-gray-500/10 text-gray-400'
+                        }`}>
+                          {post.myOffer.status === 'ACCEPTED' ? <CheckCircle2 size={10} /> :
+                           post.myOffer.status === 'PENDING' ? <Clock size={10} /> :
+                           <AlertCircle size={10} />}
+                          Your offer: {post.myOffer.status.charAt(0) + post.myOffer.status.slice(1).toLowerCase()}
+                          {post.myOffer.status === 'PENDING' && (
+                            <span className="ml-1.5"><OfferCountdown expiresAt={post.myOffer.expiresAt} compact /></span>
+                          )}
+                        </div>
+                      ) : (
+                        <span className="text-[10px] text-[var(--text-3)] italic">No offer made yet</span>
+                      )}
+                    </div>
+                  )}
+                  {user && post.userId === user.id && (
+                    <div className="mb-2">
+                      <span className="text-[10px] text-[var(--accent)] font-medium">Your post</span>
+                    </div>
+                  )}
+
                   <div className="flex items-center justify-between pt-3 border-t border-[var(--border)]">
                     <div className="flex items-center gap-2">
                       <div className="w-5 h-5 rounded-full bg-gradient-to-br from-[var(--accent)] to-purple-400 flex items-center justify-center text-[8px] text-white font-bold">

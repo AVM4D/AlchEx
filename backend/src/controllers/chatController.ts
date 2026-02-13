@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { chatService } from '../services/chatService';
 import { successResponse } from '../utils/helpers';
+import { param } from '../utils/params';
 
 export class ChatController {
   async getMessages(req: Request, res: Response, next: NextFunction) {
@@ -8,7 +9,7 @@ export class ChatController {
       const page = parseInt(req.query.page as string) || 1;
       const limit = parseInt(req.query.limit as string) || 50;
       const result = await chatService.getMessages(
-        req.user!.userId, req.params.transactionId, page, limit
+        req.user!.userId, param(req, 'transactionId'), page, limit
       );
       res.json(successResponse(result));
     } catch (error) {

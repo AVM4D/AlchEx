@@ -13,7 +13,7 @@ export class OfferRepository {
           },
         },
         post: {
-          select: { id: true, title: true, userId: true, status: true },
+          select: { id: true, title: true, userId: true, status: true, notifyOnOffers: true, expiresAt: true },
         },
       },
     });
@@ -43,6 +43,9 @@ export class OfferRepository {
             reputationScore: true,
           },
         },
+        transaction: {
+          select: { id: true },
+        },
       },
       orderBy: { createdAt: 'desc' },
     });
@@ -57,6 +60,9 @@ export class OfferRepository {
         include: {
           post: {
             select: { id: true, title: true, status: true, userId: true },
+          },
+          transaction: {
+            select: { id: true },
           },
         },
         orderBy: { createdAt: 'desc' },
@@ -74,6 +80,17 @@ export class OfferRepository {
         status: 'PENDING',
       },
       data: { status: 'REJECTED' },
+    });
+  }
+
+  async expireOffers() {
+    return prisma.offer.updateMany({
+      where: {
+        status: 'PENDING',
+        expiresAt: { lte: new Date() },
+        isDeleted: false,
+      },
+      data: { status: 'EXPIRED' },
     });
   }
 }

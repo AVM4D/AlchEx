@@ -18,21 +18,28 @@ export class OfferService {
     const existing = await offerRepository.findByPostAndUser(postId, userId);
     if (existing) throw new ConflictError('You have already submitted an offer on this post');
 
+    // Offers expire after 48 hours to create urgency
+    const expiresAt = new Date();
+    expiresAt.setHours(expiresAt.getHours() + 48);
+
     const offer = await offerRepository.create({
       post: { connect: { id: postId } },
       user: { connect: { id: userId } },
       proposalDescription,
       counterExchange,
+      expiresAt,
     });
 
-    // Notify post owner
-    await notificationRepository.create({
-      userId: post.userId,
-      type: 'OFFER_RECEIVED',
-      title: 'New Offer Received',
-      message: `You received a new offer on "${post.title}"`,
-      data: JSON.stringify({ postId, offerId: offer.id }),
-    });
+    // Notify post owner only if they opted in
+    if (post.notifyOnOffers !== false) {
+      await notificationRepository.create({
+        userId: post.userId,
+        type: 'OFFER_RECEIVED',
+        title: 'New Offer Received',
+        message: `You received a new offer on "${post.title}"`,
+        data: JSON.stringify({ postId, offerId: offer.id }),
+      });
+    }
 
     return offer;
   }
@@ -43,6 +50,7 @@ export class OfferService {
     if (offer.post.userId !== userId) throw new ForbiddenError('Only the post owner can accept offers');
     if (offer.status !== 'PENDING') throw new BadRequestError('Offer is no longer pending');
     if (offer.post.status !== 'ACTIVE') throw new BadRequestError('Post is not active');
+    if (offer.expiresAt && new Date(offer.expiresAt) < new Date()) throw new BadRequestError('This offer has expired');
 
     // Use transaction to ensure atomicity
     const result = await prisma.$transaction(async (tx) => {
@@ -108,6 +116,20 @@ export class OfferService {
     }
 
     return result;
+  }
+
+  async update(offerId: string, userId: string, data: { proposalDescription?: string; counterExchange?: string }) {
+    const offer = await offerRepository.findById(offerId);
+    if (!offer) throw new NotFoundError('Offer not found');
+    if (offer.userId !== userId) throw new ForbiddenError('Not authorized');
+    if (offer.status !== 'PENDING') throw new BadRequestError('Only pending offers can be edited');
+    if (offer.expiresAt && new Date(offer.expiresAt) < new Date()) throw new BadRequestError('This offer has expired');
+
+    const updateData: any = {};
+    if (data.proposalDescription !== undefined) updateData.proposalDescription = data.proposalDescription;
+    if (data.counterExchange !== undefined) updateData.counterExchange = data.counterExchange;
+
+    return offerRepository.update(offerId, updateData);
   }
 
   async withdraw(offerId: string, userId: string) {

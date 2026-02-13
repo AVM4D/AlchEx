@@ -50,6 +50,7 @@ export interface Post {
   category: string;
   tags?: string;
   status: PostStatus;
+  notifyOnOffers?: boolean;
   expiresAt: string;
   createdAt: string;
   user: {
@@ -62,6 +63,15 @@ export interface Post {
   };
   _count?: { offers: number };
   offers?: Offer[];
+  myOffer?: {
+    id: string;
+    postId: string;
+    proposalDescription: string;
+    counterExchange?: string;
+    status: OfferStatus;
+    createdAt: string;
+    expiresAt: string;
+  } | null;
 }
 
 // ─── Offer Types ───
@@ -74,6 +84,7 @@ export interface Offer {
   proposalDescription: string;
   counterExchange?: string;
   status: OfferStatus;
+  expiresAt: string;
   createdAt: string;
   user: {
     id: string;
@@ -87,6 +98,9 @@ export interface Offer {
     title: string;
     status: string;
     userId: string;
+  };
+  transaction?: {
+    id: string;
   };
 }
 

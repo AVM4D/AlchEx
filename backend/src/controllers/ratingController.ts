@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { ratingService } from '../services/ratingService';
 import { successResponse } from '../utils/helpers';
+import { param } from '../utils/params';
 
 export class RatingController {
   async create(req: Request, res: Response, next: NextFunction) {
@@ -17,7 +18,7 @@ export class RatingController {
     try {
       const page = parseInt(req.query.page as string) || 1;
       const limit = parseInt(req.query.limit as string) || 20;
-      const result = await ratingService.getByUser(req.params.userId, page, limit);
+      const result = await ratingService.getByUser(param(req, 'userId'), page, limit);
       res.json(successResponse(result));
     } catch (error) {
       next(error);

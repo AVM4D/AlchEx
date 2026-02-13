@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { notificationRepository } from '../repositories/notificationRepository';
 import { successResponse } from '../utils/helpers';
+import { param } from '../utils/params';
 
 export class NotificationController {
   async getMyNotifications(req: Request, res: Response, next: NextFunction) {
@@ -17,7 +18,7 @@ export class NotificationController {
 
   async markAsRead(req: Request, res: Response, next: NextFunction) {
     try {
-      await notificationRepository.markAsRead(req.params.id, req.user!.userId);
+      await notificationRepository.markAsRead(param(req, 'id'), req.user!.userId);
       res.json(successResponse(null, 'Marked as read'));
     } catch (error) {
       next(error);
