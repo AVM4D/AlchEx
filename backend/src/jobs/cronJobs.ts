@@ -1,6 +1,7 @@
 import cron from 'node-cron';
 import { postRepository } from '../repositories/postRepository';
 import { transactionRepository } from '../repositories/transactionRepository';
+import { offerRepository } from '../repositories/offerRepository';
 import prisma from '../prisma/client';
 
 export function initializeCronJobs() {
@@ -13,6 +14,18 @@ export function initializeCronJobs() {
       }
     } catch (error) {
       console.error('[Cron] Error expiring posts:', error);
+    }
+  });
+
+  // Expire stale offers every 15 minutes
+  cron.schedule('*/15 * * * *', async () => {
+    try {
+      const result = await offerRepository.expireOffers();
+      if (result.count > 0) {
+        console.log(`[Cron] Expired ${result.count} offers`);
+      }
+    } catch (error) {
+      console.error('[Cron] Error expiring offers:', error);
     }
   });
 

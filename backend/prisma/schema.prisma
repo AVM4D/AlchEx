@@ -63,6 +63,7 @@ model Post {
   category    String
   tags        String?   // JSON array string
   status      String    @default("ACTIVE") // ACTIVE | IN_PROGRESS | SUCCESSFUL | CANCELLED | EXPIRED
+  notifyOnOffers Boolean @default(true) // If true, owner is notified on new offers
   expiresAt   DateTime
   isDeleted   Boolean   @default(false)
   createdAt   DateTime  @default(now())
@@ -85,7 +86,8 @@ model Offer {
   userId            String
   proposalDescription String
   counterExchange   String?
-  status            String    @default("PENDING") // PENDING | ACCEPTED | REJECTED | WITHDRAWN
+  status            String    @default("PENDING") // PENDING | ACCEPTED | REJECTED | WITHDRAWN | EXPIRED
+  expiresAt         DateTime? // Offer expiry – creates urgency for the post owner
   isDeleted         Boolean   @default(false)
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt

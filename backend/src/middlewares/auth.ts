@@ -51,6 +51,36 @@ export async function authenticateUser(
   }
 }
 
+/**
+ * Optional authentication – sets req.user if a valid token is present,
+ * but does NOT reject the request when the header is missing or invalid.
+ */
+export async function optionalAuth(
+  req: Request,
+  _res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) return next();
+
+    const token = authHeader.split(' ')[1];
+    const payload = verifyAccessToken(token);
+
+    const user = await prisma.user.findUnique({
+      where: { id: payload.userId },
+      select: { id: true, isBanned: true, isDeleted: true },
+    });
+
+    if (user && !user.isDeleted && !user.isBanned) {
+      req.user = payload;
+    }
+  } catch {
+    // silently ignore – unauthenticated access is fine
+  }
+  next();
+}
+
 export function authorizeAdmin(
   req: Request,
   _res: Response,

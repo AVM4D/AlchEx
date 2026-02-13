@@ -1,11 +1,12 @@
 import { Request, Response, NextFunction } from 'express';
 import { transactionService } from '../services/transactionService';
 import { successResponse } from '../utils/helpers';
+import { param } from '../utils/params';
 
 export class TransactionController {
   async getById(req: Request, res: Response, next: NextFunction) {
     try {
-      const tx = await transactionService.getById(req.params.id, req.user!.userId);
+      const tx = await transactionService.getById(param(req, 'id'), req.user!.userId);
       res.json(successResponse(tx));
     } catch (error) {
       next(error);
@@ -14,7 +15,7 @@ export class TransactionController {
 
   async markComplete(req: Request, res: Response, next: NextFunction) {
     try {
-      const tx = await transactionService.markComplete(req.params.id, req.user!.userId);
+      const tx = await transactionService.markComplete(param(req, 'id'), req.user!.userId);
       res.json(successResponse(tx, 'Marked as complete'));
     } catch (error) {
       next(error);
@@ -23,7 +24,7 @@ export class TransactionController {
 
   async cancel(req: Request, res: Response, next: NextFunction) {
     try {
-      const tx = await transactionService.cancel(req.params.id, req.user!.userId);
+      const tx = await transactionService.cancel(param(req, 'id'), req.user!.userId);
       res.json(successResponse(tx, 'Transaction cancelled'));
     } catch (error) {
       next(error);

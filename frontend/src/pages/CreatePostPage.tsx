@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Tag, Plus, Loader2 } from 'lucide-react';
+import { ArrowLeft, Tag, Plus, Loader2, Bell, BellOff } from 'lucide-react';
 import { postsApi } from '../services/dataService';
 import type { Post } from '../types';
 import toast from 'react-hot-toast';
@@ -15,6 +15,7 @@ export default function CreatePostPage() {
 
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(isEdit);
+  const defaultExpiry = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
   const [form, setForm] = useState({
     title: '',
     description: '',
@@ -22,6 +23,8 @@ export default function CreatePostPage() {
     whatIOffer: '',
     category: 'Textbooks',
     tags: '',
+    expiresAt: defaultExpiry,
+    notifyOnOffers: true,
   });
 
   // Load existing post for editing
@@ -38,6 +41,8 @@ export default function CreatePostPage() {
           whatIOffer: p.whatIOffer || '',
           category: p.category || 'Other',
           tags: p.tags || '',
+          expiresAt: p.expiresAt ? new Date(p.expiresAt).toISOString().slice(0, 10) : defaultExpiry,
+          notifyOnOffers: p.notifyOnOffers !== false,
         });
       } catch { toast.error('Failed to load post'); navigate('/my-posts'); }
       setFetching(false);
@@ -52,11 +57,16 @@ export default function CreatePostPage() {
     }
     setLoading(true);
     try {
+      const payload = {
+        ...form,
+        tags: form.tags ? form.tags.split(',').map(t => t.trim()).filter(Boolean) : [],
+        expiresAt: new Date(form.expiresAt).toISOString(),
+      };
       if (isEdit) {
-        await postsApi.update(id!, form);
+        await postsApi.update(id!, payload);
         toast.success('Post updated');
       } else {
-        await postsApi.create(form);
+        await postsApi.create(payload);
         toast.success('Post created');
       }
       navigate('/my-posts');
@@ -142,6 +152,31 @@ export default function CreatePostPage() {
             <input value={form.tags} onChange={(e) => set('tags', e.target.value)}
               placeholder="comma, separated, tags"
               className="w-full pl-9 pr-4 py-3 bg-[var(--surface-2)] border border-[var(--border)] rounded-lg text-sm text-white placeholder-[var(--text-3)] focus:border-[var(--accent)] transition-all" />
+          </div>
+        </div>
+
+        {/* Expires At */}
+        <div>
+          <label className="text-label block mb-1.5">Expires On</label>
+          <input type="date" value={form.expiresAt} onChange={(e) => set('expiresAt', e.target.value)}
+            min={new Date().toISOString().slice(0, 10)}
+            className="w-full bg-[var(--surface-2)] border border-[var(--border)] rounded-lg px-4 py-3 text-sm text-white focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)] transition-all [color-scheme:dark]" />
+        </div>
+
+        {/* Notification Preference */}
+        <div className="bg-[var(--surface-2)] rounded-xl p-4 border border-[var(--border)]">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              {form.notifyOnOffers ? <Bell size={16} className="text-[var(--accent)]" /> : <BellOff size={16} className="text-[var(--text-3)]" />}
+              <div>
+                <p className="text-sm font-medium text-white">Notify me on new offers</p>
+                <p className="text-[10px] text-[var(--text-3)] mt-0.5">Get instant notifications when someone makes an offer on this post</p>
+              </div>
+            </div>
+            <button type="button" onClick={() => setForm(p => ({ ...p, notifyOnOffers: !p.notifyOnOffers }))}
+              className={`relative w-11 h-6 rounded-full transition-colors ${form.notifyOnOffers ? 'bg-[var(--accent)]' : 'bg-[var(--border)]'}`}>
+              <div className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow-md transition-transform ${form.notifyOnOffers ? 'translate-x-5.5 left-[1.375rem]' : 'translate-x-0 left-0.5'}`} />
+            </button>
           </div>
         </div>
 

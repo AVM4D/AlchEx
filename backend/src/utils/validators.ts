@@ -1,27 +1,40 @@
 import { z } from 'zod';
 
+// ─── Reusable safe-string: trims whitespace, enforces length ───
+const safeString = (min: number, max: number) =>
+  z.string().trim().min(min).max(max);
+
+// ─── UUID validator for route params ───
+export const uuidParamSchema = z.object({
+  id: z.string().uuid('Invalid ID format'),
+});
+
 // ─── Auth Schemas ───
 export const registerSchema = z.object({
   email: z
     .string()
+    .trim()
+    .toLowerCase()
     .email('Invalid email address')
+    .max(255)
     .refine((email) => email.endsWith('.edu'), {
       message: 'Only .edu email addresses are allowed',
     }),
   password: z
     .string()
     .min(8, 'Password must be at least 8 characters')
+    .max(128, 'Password must be at most 128 characters')
     .regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
     .regex(/[a-z]/, 'Password must contain at least one lowercase letter')
     .regex(/[0-9]/, 'Password must contain at least one number')
     .regex(/[^A-Za-z0-9]/, 'Password must contain at least one special character'),
-  firstName: z.string().min(1, 'First name is required').max(50),
-  lastName: z.string().min(1, 'Last name is required').max(50),
+  firstName: safeString(1, 50),
+  lastName: safeString(1, 50),
 });
 
 export const loginSchema = z.object({
-  email: z.string().email('Invalid email address'),
-  password: z.string().min(1, 'Password is required'),
+  email: z.string().trim().toLowerCase().email('Invalid email address').max(255),
+  password: z.string().min(1, 'Password is required').max(128),
 });
 
 // ─── Post Schemas ───
@@ -31,10 +44,14 @@ export const createPostSchema = z.object({
   whatINeed: z.string().min(5).max(500),
   whatIOffer: z.string().min(5).max(500),
   category: z.string().min(1, 'Category is required'),
-  tags: z.array(z.string()).max(10).optional(),
+  tags: z.union([
+    z.array(z.string()).max(10),
+    z.string().transform((s) => s.split(',').map((t) => t.trim()).filter(Boolean)),
+  ]).optional(),
   expiresAt: z.string().refine((date) => new Date(date) > new Date(), {
     message: 'Expiry date must be in the future',
-  }),
+  }).optional(),
+  notifyOnOffers: z.boolean().default(true),
 });
 
 export const updatePostSchema = createPostSchema.partial();
@@ -43,6 +60,11 @@ export const updatePostSchema = createPostSchema.partial();
 export const createOfferSchema = z.object({
   postId: z.string().uuid(),
   proposalDescription: z.string().min(10).max(1000),
+  counterExchange: z.string().max(500).optional(),
+});
+
+export const updateOfferSchema = z.object({
+  proposalDescription: z.string().min(10).max(1000).optional(),
   counterExchange: z.string().max(500).optional(),
 });
 
@@ -63,15 +85,15 @@ export const createReportSchema = z.object({
 
 // ─── Profile Schema ───
 export const updateProfileSchema = z.object({
-  firstName: z.string().min(1).max(50).optional(),
-  lastName: z.string().min(1).max(50).optional(),
-  bio: z.string().max(500).optional(),
-  batch: z.string().max(20).optional(),
-  program: z.string().max(100).optional(),
-  section: z.string().max(20).optional(),
-  university: z.string().max(200).optional(),
-  campus: z.string().max(200).optional(),
-  socialLinks: z.string().optional(),
+  firstName: safeString(1, 50).optional(),
+  lastName: safeString(1, 50).optional(),
+  bio: safeString(0, 500).optional(),
+  batch: safeString(0, 20).optional(),
+  program: safeString(0, 100).optional(),
+  section: safeString(0, 20).optional(),
+  university: safeString(0, 200).optional(),
+  campus: safeString(0, 200).optional(),
+  socialLinks: z.string().max(2000).optional(), // JSON string, sanitized by middleware
 });
 
 // ─── Message Schema ───

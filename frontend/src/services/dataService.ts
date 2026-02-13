@@ -25,6 +25,9 @@ export const offersApi = {
   create: (data: { postId: string; proposalDescription: string; counterExchange?: string }) =>
     api.post<ApiResponse<Offer>>('/offers', data),
   
+  update: (id: string, data: { proposalDescription?: string; counterExchange?: string }) =>
+    api.put<ApiResponse<Offer>>(`/offers/${id}`, data),
+  
   accept: (id: string) => api.post<ApiResponse<Transaction>>(`/offers/${id}/accept`),
   
   withdraw: (id: string) => api.post(`/offers/${id}/withdraw`),

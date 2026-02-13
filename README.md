@@ -94,35 +94,166 @@ AlchEx/
 ## Getting Started
 
 ### Prerequisites
-- Node.js 18+
-- SQL Server (local, Docker, or Azure SQL)
-- npm or pnpm
+- **Node.js 18+** — download from https://nodejs.org
+- **SQL Server** — SQL Server Express (free) works perfectly
+  - Download: https://www.microsoft.com/en-us/sql-server/sql-server-downloads
+  - During install, pick "Basic" and note the instance name (usually `SQLEXPRESS`)
+- **Git** — https://git-scm.com
 
-### Backend Setup
+---
 
-```bash
+### 🚀 Step-by-Step Setup on a New PC (after cloning)
+
+Follow **every** step below, in order.
+
+#### Step 0 — Clone and open in VS Code
+
+```
+git clone <your-repo-url>
+cd AlchEx
+code .
+```
+
+#### Step 1 — Install backend dependencies
+
+Open a terminal in VS Code (`Ctrl + ~`), then:
+
+```
 cd backend
-cp .env.example .env          # Edit with your DB credentials & secrets
 npm install
-npx prisma generate           # Generate Prisma client
-npx prisma db push            # Push schema to database
-npm run dev                   # Starts on http://localhost:4000
 ```
 
-### Frontend Setup
+Wait until it finishes (you'll see `added X packages`).
 
-```bash
+#### Step 2 — Install frontend dependencies
+
+Open a **second** terminal (`Ctrl + Shift + ~`), then:
+
+```
 cd frontend
-cp .env.example .env          # Set VITE_API_URL if needed
 npm install
-npm run dev                   # Starts on http://localhost:5173
 ```
 
-### Docker (Full Stack)
+#### Step 3 — Create your backend `.env` file
+
+Go back to the **first terminal** (backend). Run:
+
+```
+copy .env.example .env
+```
+
+Now open the file `backend/.env` in VS Code and **edit the `DATABASE_URL`** to match your SQL Server:
+
+- **If you use Windows Authentication** (most common on a personal PC):
+  ```
+  DATABASE_URL="sqlserver://localhost;instanceName=SQLEXPRESS;database=alchex;integratedSecurity=true;trustServerCertificate=true"
+  ```
+  > Change `SQLEXPRESS` to your actual instance name if different.
+
+- **If you use SQL Server Authentication** (username + password):
+  ```
+  DATABASE_URL="sqlserver://localhost:1433;database=alchex;user=sa;password=YOUR_PASSWORD_HERE;trustServerCertificate=true"
+  ```
+
+Also change the JWT secrets to any random strings:
+```
+JWT_ACCESS_SECRET=some-random-long-string-abc123
+JWT_REFRESH_SECRET=another-random-long-string-xyz789
+```
+
+Save the file.
+
+#### Step 4 — Create your frontend `.env` file
+
+In the **second terminal** (frontend):
+
+```
+copy .env.example .env
+```
+
+The defaults (`http://localhost:4000`) are correct for local development — no changes needed.
+
+#### Step 5 — Make sure SQL Server is running
+
+- Press `Win + R`, type `services.msc`, press Enter
+- Find **SQL Server (SQLEXPRESS)** (or your instance name)
+- Make sure its status says **Running**. If not, right-click → Start.
+
+#### Step 6 — Create the database
+
+You can either:
+
+**Option A — Use the start script** (does everything automatically):
+```
+cd ..
+powershell -ExecutionPolicy Bypass -File start.ps1
+```
+This will create the database, push the schema, seed data, and start both servers. You're done!
+
+**Option B — Do it manually** (if the script doesn't work for your setup):
+
+Open **SQL Server Management Studio (SSMS)** or **sqlcmd** and create a database:
+```sql
+CREATE DATABASE [alchex];
+```
+
+Then in the **backend terminal**:
+```
+npx prisma generate
+npx prisma db push
+```
+
+You should see: `Your database is now in sync with your Prisma schema`.
+
+#### Step 7 — Seed the database (optional but recommended)
+
+This loads 10 sample users, 15 posts, 12 offers, and other test data:
+
+```
+npx tsx src/prisma/seed.ts
+```
+
+Sample login credentials after seeding:
+| Email | Password | Role |
+|-------|----------|------|
+| `admin@alchex.io` | `Test@1234` | Admin |
+| `demo@university.edu` | `Test@1234` | Admin |
+| `sarah@university.edu` | `Test@1234` | Student |
+
+All seed users share the password `Test@1234`.
+
+#### Step 8 — Start the backend server
+
+In the **backend terminal**:
+
+```
+npm run dev
+```
+
+You should see: `🚀 Server running on port 4000 (development)`.
+
+#### Step 9 — Start the frontend server
+
+In the **frontend terminal**:
+
+```
+npm run dev
+```
+
+You should see: `VITE ready ... Local: http://localhost:5173/`.
+
+#### Step 10 — Open the app
+
+Open your browser and go to **http://localhost:5173**.  
+That's it — you're running! 🎉
+
+---
+
+### 🐳 Docker Setup (alternative)
 
 ```bash
-cp .env.example .env          # Set DB_PASSWORD, JWT secrets
-docker-compose up --build     # Frontend: :80, Backend: :4000, DB: :1433
+copy .env.example .env          # Set DB_PASSWORD, JWT secrets
+docker-compose up --build       # Frontend: :80, Backend: :4000, DB: :1433
 ```
 
 After the DB is running, apply the schema:
@@ -130,6 +261,18 @@ After the DB is running, apply the schema:
 cd backend
 npx prisma db push
 ```
+
+---
+
+### ⚡ Quick Start (after first-time setup)
+
+Once everything is installed, you can start both servers any time with:
+
+```
+powershell -ExecutionPolicy Bypass -File run.ps1
+```
+
+Or manually: run `npm run dev` in both `backend/` and `frontend/` terminals.
 
 ---
 

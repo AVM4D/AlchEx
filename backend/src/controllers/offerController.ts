@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { offerService } from '../services/offerService';
 import { successResponse } from '../utils/helpers';
+import { param } from '../utils/params';
 
 export class OfferController {
   async create(req: Request, res: Response, next: NextFunction) {
@@ -17,8 +18,17 @@ export class OfferController {
 
   async accept(req: Request, res: Response, next: NextFunction) {
     try {
-      const transaction = await offerService.accept(req.params.id, req.user!.userId);
+      const transaction = await offerService.accept(param(req, 'id'), req.user!.userId);
       res.json(successResponse(transaction, 'Offer accepted. Transaction started.'));
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async update(req: Request, res: Response, next: NextFunction) {
+    try {
+      const offer = await offerService.update(param(req, 'id'), req.user!.userId, req.body);
+      res.json(successResponse(offer, 'Offer updated'));
     } catch (error) {
       next(error);
     }
@@ -26,7 +36,7 @@ export class OfferController {
 
   async withdraw(req: Request, res: Response, next: NextFunction) {
     try {
-      await offerService.withdraw(req.params.id, req.user!.userId);
+      await offerService.withdraw(param(req, 'id'), req.user!.userId);
       res.json(successResponse(null, 'Offer withdrawn'));
     } catch (error) {
       next(error);
@@ -35,7 +45,7 @@ export class OfferController {
 
   async getByPost(req: Request, res: Response, next: NextFunction) {
     try {
-      const offers = await offerService.getByPost(req.params.postId);
+      const offers = await offerService.getByPost(param(req, 'postId'));
       res.json(successResponse(offers));
     } catch (error) {
       next(error);
