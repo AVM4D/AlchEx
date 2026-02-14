@@ -1,8 +1,10 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, lazy, Suspense } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { ArrowRight, ArrowUpRight, Sparkles, ArrowLeftRight, Shield, Star, Zap, MessageCircle, Trophy, Users } from 'lucide-react';
 import { ParticleField } from '../components/ui/ParticleField';
+
+const ScrollVideoSection = lazy(() => import('../components/landing/ScrollVideoSection'));
 
 /* ─────────────────────── helpers ─────────────────────── */
 const ease: [number, number, number, number] = [0.16, 1, 0.3, 1];
@@ -109,12 +111,19 @@ export default function LandingPage() {
             </span>
           </motion.div>
 
-          {/* ALCHEX title */}
-          <h1 className="text-display leading-none mb-6">
-            <div className="text-[clamp(4rem,15vw,12rem)] tracking-[-0.06em]">
-              <SplitText text="ALCHEX" className="text-gradient-shine" delay={0.5} />
-            </div>
-          </h1>
+          {/* ALCHEX logo */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.5, duration: 1, ease }}
+            className="mb-6 flex justify-center"
+          >
+            <img
+              src="/logo.jpeg"
+              alt="AlchEx"
+              className="w-[clamp(22rem,65vw,52rem)] h-auto drop-shadow-[0_0_60px_rgba(139,92,246,0.4)] rounded-2xl saturate-0"
+            />
+          </motion.div>
 
           {/* Tagline */}
           <motion.p
@@ -174,6 +183,11 @@ export default function LandingPage() {
           </motion.div>
         </motion.div>
       </motion.section>
+
+      {/* ═══════════════════ SCROLL VIDEO ═══════════════════ */}
+      <Suspense fallback={null}>
+        <ScrollVideoSection />
+      </Suspense>
 
       {/* ═══════════════════ MARQUEE DIVIDER ═══════════════════ */}
       <section className="relative py-6 border-y border-[var(--border)] overflow-hidden bg-[var(--surface)]/50">
@@ -436,8 +450,8 @@ export default function LandingPage() {
           <div className="flex flex-col md:flex-row items-start justify-between gap-12">
             <div>
               <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[var(--accent)] to-purple-400 flex items-center justify-center shadow-[0_0_20px_rgba(139,92,246,0.3)]">
-                  <span className="text-lg">🔮</span>
+                <div className="w-10 h-10 rounded-xl overflow-hidden shadow-[0_0_20px_rgba(139,92,246,0.3)]">
+                  <img src="/smalllogo.png" alt="AlchEx" className="w-full h-full object-cover" />
                 </div>
                 <span className="text-xl font-display font-bold text-gradient">AlchEx</span>
               </div>

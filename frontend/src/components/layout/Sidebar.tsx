@@ -36,8 +36,8 @@ export const Sidebar: React.FC = () => {
       {/* Logo */}
       <div className="p-5 flex items-center gap-3 border-b border-[var(--border)]">
         <Link to="/dashboard" className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-[var(--accent)] to-purple-400 flex items-center justify-center shadow-[0_0_15px_rgba(139,92,246,0.3)]">
-            <span className="text-base">🔮</span>
+          <div className="w-9 h-9 rounded-lg overflow-hidden shadow-[0_0_15px_rgba(139,92,246,0.3)]">
+            <img src="/smalllogo.png" alt="AlchEx" className="w-full h-full object-cover" />
           </div>
           {!sidebarCollapsed && (
             <motion.span

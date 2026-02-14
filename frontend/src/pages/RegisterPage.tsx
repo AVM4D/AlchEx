@@ -75,9 +75,13 @@ export default function RegisterPage() {
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, ease }}
-            className="text-display text-6xl xl:text-7xl text-gradient-shine mb-6"
+            className="mb-6 flex justify-center"
           >
-            ALCHEX
+            <img
+              src="/logo.jpeg"
+              alt="AlchEx"
+              className="w-[clamp(16rem,40vw,28rem)] h-auto drop-shadow-[0_0_60px_rgba(139,92,246,0.4)] rounded-2xl saturate-0"
+            />
           </motion.h2>
           <motion.p
             initial={{ opacity: 0, y: 20 }}
@@ -118,8 +122,8 @@ export default function RegisterPage() {
         >
           {/* Logo (mobile) */}
           <Link to="/" className="lg:hidden inline-flex items-center gap-3 mb-10">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[var(--accent)] to-purple-400 flex items-center justify-center shadow-[0_0_20px_rgba(139,92,246,0.3)]">
-              <span className="text-lg">🔮</span>
+            <div className="w-10 h-10 rounded-xl overflow-hidden shadow-[0_0_20px_rgba(139,92,246,0.3)]">
+              <img src="/smalllogo.png" alt="AlchEx" className="w-full h-full object-cover" />
             </div>
             <span className="text-xl font-display font-bold text-gradient">AlchEx</span>
           </Link>
