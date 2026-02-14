@@ -8,6 +8,7 @@ import {
   BadRequestError, UnauthorizedError, ConflictError, NotFoundError
 } from '../utils/errors';
 import { RegisterInput, LoginInput } from '../utils/validators';
+import { sendWelcomeEmail } from './emailService';
 
 export class AuthService {
   async register(input: RegisterInput) {
@@ -27,7 +28,8 @@ export class AuthService {
       verificationToken,
     });
 
-    // TODO: Send verification email
+    // Send welcome email (non-blocking – won't fail registration)
+    sendWelcomeEmail(user.email, user.firstName);
 
     const payload: TokenPayload = {
       userId: user.id,
