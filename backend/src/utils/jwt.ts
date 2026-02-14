@@ -13,9 +13,11 @@ export function generateAccessToken(payload: TokenPayload): string {
   } as jwt.SignOptions);
 }
 
-export function generateRefreshToken(payload: TokenPayload): string {
+export function generateRefreshToken(payload: TokenPayload, rememberMe: boolean = false): string {
+  // Remember Me: 30 days, otherwise: 7 days (default)
+  const expiresIn = rememberMe ? '30d' : config.jwt.refreshExpiresIn;
   return jwt.sign(payload, config.jwt.refreshSecret, {
-    expiresIn: config.jwt.refreshExpiresIn,
+    expiresIn,
   } as jwt.SignOptions);
 }
 

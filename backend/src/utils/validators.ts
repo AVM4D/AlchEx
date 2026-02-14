@@ -35,6 +35,7 @@ export const registerSchema = z.object({
 export const loginSchema = z.object({
   email: z.string().trim().toLowerCase().email('Invalid email address').max(255),
   password: z.string().min(1, 'Password is required').max(128),
+  rememberMe: z.boolean().optional().default(false),
 });
 
 // ─── Post Schemas ───

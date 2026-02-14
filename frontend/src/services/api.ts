@@ -42,8 +42,8 @@ api.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
 
-    // Never retry refresh requests themselves — prevents infinite loop
-    if (originalRequest?.url?.includes('/auth/refresh')) {
+    // Never retry refresh or login requests — prevents infinite loop and wrong error messages
+    if (originalRequest?.url?.includes('/auth/refresh') || originalRequest?.url?.includes('/auth/login')) {
       return Promise.reject(error);
     }
 

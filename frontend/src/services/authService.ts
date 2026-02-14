@@ -9,7 +9,7 @@ export const authApi = {
     lastName: string;
   }) => api.post<ApiResponse<{ user: User; accessToken: string }>>('/auth/register', data),
 
-  login: (data: { email: string; password: string }) =>
+  login: (data: { email: string; password: string; rememberMe?: boolean }) =>
     api.post<ApiResponse<{ user: User; accessToken: string }>>('/auth/login', data),
 
   refresh: () => api.post<ApiResponse<{ accessToken: string }>>('/auth/refresh'),
