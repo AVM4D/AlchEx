@@ -15,6 +15,7 @@ const ease: [number, number, number, number] = [0.16, 1, 0.3, 1];
 const loginSchema = z.object({
   email: z.string().email('Invalid email address'),
   password: z.string().min(1, 'Password is required'),
+  rememberMe: z.boolean().optional().default(false),
 });
 
 type LoginForm = z.infer<typeof loginSchema>;
@@ -29,7 +30,7 @@ export default function LoginPage() {
 
   const onSubmit = async (data: LoginForm) => {
     try {
-      await login(data.email, data.password);
+      await login(data.email, data.password, data.rememberMe);
       toast.success('Welcome back!');
       navigate('/dashboard');
     } catch (error: any) {
@@ -112,6 +113,30 @@ export default function LoginPage() {
               error={errors.password?.message}
               {...register('password')}
             />
+
+            {/* Remember Me */}
+            <label className="flex items-center gap-3 cursor-pointer group">
+              <div className="relative">
+                <input
+                  type="checkbox"
+                  {...register('rememberMe')}
+                  className="peer sr-only"
+                />
+                <div className="w-5 h-5 rounded-md border-2 border-[var(--border)] bg-[var(--surface-2)] peer-checked:bg-[var(--accent)] peer-checked:border-[var(--accent)] transition-all duration-200" />
+                <svg
+                  className="absolute top-0.5 left-0.5 w-4 h-4 text-white opacity-0 peer-checked:opacity-100 transition-opacity duration-200"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth={3}
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+              <span className="text-sm text-[var(--text-2)] group-hover:text-[var(--text-1)] transition-colors">
+                Remember me for 30 days
+              </span>
+            </label>
 
             <button
               type="submit"

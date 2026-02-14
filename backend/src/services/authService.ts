@@ -57,7 +57,7 @@ export class AuthService {
   async login(input: LoginInput) {
     const user = await userRepository.findByEmail(input.email);
     if (!user || user.isDeleted) {
-      throw new UnauthorizedError('Invalid email or password');
+      throw new UnauthorizedError('No account found with this email');
     }
 
     if (user.isBanned) {
@@ -66,7 +66,7 @@ export class AuthService {
 
     const isPasswordValid = await bcrypt.compare(input.password, user.passwordHash);
     if (!isPasswordValid) {
-      throw new UnauthorizedError('Invalid email or password');
+      throw new UnauthorizedError('Incorrect password');
     }
 
     const payload: TokenPayload = {
@@ -76,11 +76,12 @@ export class AuthService {
     };
 
     const accessToken = generateAccessToken(payload);
-    const refreshToken = generateRefreshToken(payload);
+    const refreshToken = generateRefreshToken(payload, input.rememberMe);
 
     await userRepository.update(user.id, { refreshToken });
 
     return {
+      rememberMe: input.rememberMe ?? false,
       user: {
         id: user.id,
         email: user.email,

@@ -12,7 +12,7 @@ interface AuthState {
 
   setUser: (user: User | null) => void;
   setAccessToken: (token: string) => void;
-  login: (email: string, password: string) => Promise<void>;
+  login: (email: string, password: string, rememberMe?: boolean) => Promise<void>;
   register: (data: { email: string; password: string; firstName: string; lastName: string }) => Promise<void>;
   logout: () => void;
   refreshAuth: () => Promise<void>;
@@ -31,10 +31,10 @@ export const useAuthStore = create<AuthState>()(
 
       setAccessToken: (token) => set({ accessToken: token }),
 
-      login: async (email, password) => {
+      login: async (email, password, rememberMe = false) => {
         set({ isLoading: true });
         try {
-          const response = await authApi.login({ email, password });
+          const response = await authApi.login({ email, password, rememberMe });
           const { user, accessToken } = response.data.data;
           set({ user, accessToken, isAuthenticated: true, isLoading: false });
           connectSocket();

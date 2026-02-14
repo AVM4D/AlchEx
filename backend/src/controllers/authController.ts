@@ -30,11 +30,16 @@ export class AuthController {
     try {
       const result = await authService.login(req.body);
 
+      // Remember Me: 30 days, otherwise: 7 days
+      const cookieMaxAge = result.rememberMe
+        ? 30 * 24 * 60 * 60 * 1000  // 30 days
+        : 7 * 24 * 60 * 60 * 1000;  // 7 days
+
       res.cookie('refreshToken', result.refreshToken, {
         httpOnly: true,
         secure: config.nodeEnv === 'production',
         sameSite: 'lax',
-        maxAge: 7 * 24 * 60 * 60 * 1000,
+        maxAge: cookieMaxAge,
         path: '/api/auth',
       });
 
