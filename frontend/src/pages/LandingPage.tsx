@@ -296,7 +296,7 @@ export default function LandingPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {[
-              { icon: Shield, title: 'Verified .edu Only', desc: 'Only university students with verified .edu emails can join the community. Safe by design.', span: 'md:col-span-2' },
+              { icon: Shield, title: 'Verified .edu Only', desc: 'Only university students with verified .edu emails (including .edu.pk) can join the community. Safe by design.', span: 'md:col-span-2' },
               { icon: ArrowLeftRight, title: 'Fair Exchange', desc: 'Strict transaction lifecycle ensures both parties are satisfied before completion.', span: '' },
               { icon: MessageCircle, title: 'Real-Time Chat', desc: 'Built-in messaging with typing indicators. Negotiate exchanges instantly.', span: '' },
               { icon: Star, title: 'Reputation System', desc: 'Weighted rating algorithm builds trust. Your reputation is your currency.', span: '' },

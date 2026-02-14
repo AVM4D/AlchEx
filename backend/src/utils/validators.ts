@@ -17,8 +17,8 @@ export const registerSchema = z.object({
     .toLowerCase()
     .email('Invalid email address')
     .max(255)
-    .refine((email) => email.endsWith('.edu'), {
-      message: 'Only .edu email addresses are allowed',
+    .refine((email) => /\.edu(\.[a-z]{2})?$/.test(email), {
+      message: 'Only .edu email addresses are allowed (e.g. .edu, .edu.pk)',
     }),
   password: z
     .string()

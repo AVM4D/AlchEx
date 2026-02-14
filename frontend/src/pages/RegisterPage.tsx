@@ -15,8 +15,8 @@ const ease: [number, number, number, number] = [0.16, 1, 0.3, 1];
 const registerSchema = z.object({
   firstName: z.string().min(1, 'First name is required').max(50),
   lastName: z.string().min(1, 'Last name is required').max(50),
-  email: z.string().email('Invalid email').refine((e) => e.endsWith('.edu'), {
-    message: 'Only .edu email addresses are allowed',
+  email: z.string().email('Invalid email').refine((e) => /\.edu(\.[a-z]{2})?$/i.test(e), {
+    message: 'Only .edu email addresses are allowed (e.g. .edu, .edu.pk)',
   }),
   password: z.string()
     .min(8, 'At least 8 characters')
