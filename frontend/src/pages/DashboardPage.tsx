@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import {
   Package, ArrowRightLeft, Star, MessageSquare, TrendingUp,
-  Plus, Eye, Clock, ArrowUpRight,
+  Plus, Eye, Clock, ArrowUpRight, Search, X,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { postsApi, transactionsApi } from '../services/dataService';
@@ -18,6 +18,7 @@ export default function DashboardPage() {
   const [recentTx, setRecentTx] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({ posts: 0, transactions: 0, rating: '0.0', reputation: '0' });
+  const [dashSearch, setDashSearch] = useState('');
 
   useEffect(() => {
     const fetch = async () => {
@@ -44,6 +45,15 @@ export default function DashboardPage() {
     };
     fetch();
   }, [user]);
+
+  // Filter posts & transactions by search query
+  const q = dashSearch.toLowerCase();
+  const filteredPosts = recentPosts.filter(p =>
+    !q || p.title.toLowerCase().includes(q) || p.status.toLowerCase().includes(q)
+  );
+  const filteredTx = recentTx.filter(tx =>
+    !q || (tx.post?.title || '').toLowerCase().includes(q) || (tx.status || '').toLowerCase().replace('_', ' ').includes(q)
+  );
 
   const statItems = [
     { label: 'Active Posts', value: stats.posts, icon: Package, color: 'from-purple-500/20 to-purple-600/5', iconColor: 'text-[var(--accent)]' },
@@ -88,6 +98,27 @@ export default function DashboardPage() {
           </motion.div>
         </Link>
       </div>
+
+      {/* Search */}
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.15, duration: 0.4, ease }}
+        className="relative"
+      >
+        <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-3)]" />
+        <input
+          value={dashSearch}
+          onChange={(e) => setDashSearch(e.target.value)}
+          placeholder="Search your posts & transactions..."
+          className="w-full pl-9 pr-9 py-2.5 bg-[var(--surface-2)] border border-[var(--border)] rounded-lg text-white placeholder-[var(--text-3)] focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)] transition-all text-sm"
+        />
+        {dashSearch && (
+          <button onClick={() => setDashSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-3)] hover:text-white">
+            <X size={14} />
+          </button>
+        )}
+      </motion.div>
 
       {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
@@ -140,15 +171,17 @@ export default function DashboardPage() {
                   <div className="skeleton w-full h-12" />
                 </div>
               ))
-            ) : recentPosts.length === 0 ? (
+            ) : filteredPosts.length === 0 ? (
               <div className="p-8 text-center">
-                <p className="text-[var(--text-3)] text-sm">No posts yet</p>
-                <Link to="/posts/new" className="text-[var(--accent-2)] text-sm hover:underline mt-1 inline-block">
-                  Create your first post
-                </Link>
+                <p className="text-[var(--text-3)] text-sm">{dashSearch ? 'No matching posts' : 'No posts yet'}</p>
+                {!dashSearch && (
+                  <Link to="/posts/new" className="text-[var(--accent-2)] text-sm hover:underline mt-1 inline-block">
+                    Create your first post
+                  </Link>
+                )}
               </div>
             ) : (
-              recentPosts.slice(0, 4).map((post) => (
+              filteredPosts.slice(0, 4).map((post) => (
                 <Link
                   key={post.id}
                   to={`/posts/${post.id}`}
@@ -189,15 +222,17 @@ export default function DashboardPage() {
                   <div className="skeleton w-full h-12" />
                 </div>
               ))
-            ) : recentTx.length === 0 ? (
+            ) : filteredTx.length === 0 ? (
               <div className="p-8 text-center">
-                <p className="text-[var(--text-3)] text-sm">No transactions yet</p>
-                <Link to="/marketplace" className="text-[var(--accent-2)] text-sm hover:underline mt-1 inline-block">
-                  Browse marketplace
-                </Link>
+                <p className="text-[var(--text-3)] text-sm">{dashSearch ? 'No matching transactions' : 'No transactions yet'}</p>
+                {!dashSearch && (
+                  <Link to="/marketplace" className="text-[var(--accent-2)] text-sm hover:underline mt-1 inline-block">
+                    Browse marketplace
+                  </Link>
+                )}
               </div>
             ) : (
-              recentTx.slice(0, 4).map((tx) => (
+              filteredTx.slice(0, 4).map((tx) => (
                 <Link
                   key={tx.id}
                   to={`/transactions/${tx.id}`}

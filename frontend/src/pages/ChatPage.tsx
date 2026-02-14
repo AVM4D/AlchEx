@@ -18,6 +18,7 @@ export default function ChatPage() {
   const [loading, setLoading] = useState(true);
   const [msgLoading, setMsgLoading] = useState(false);
   const [sending, setSending] = useState(false);
+  const [chatSearch, setChatSearch] = useState('');
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -79,6 +80,16 @@ export default function ChatPage() {
   const getOtherUser = (tx: Transaction) =>
     tx.requesterId === user?.id ? tx.offerer : tx.requester;
 
+  // Filter conversations by search query (name or post title)
+  const filteredTransactions = transactions.filter(tx => {
+    if (!chatSearch.trim()) return true;
+    const q = chatSearch.toLowerCase();
+    const other = getOtherUser(tx);
+    const fullName = `${other.firstName} ${other.lastName}`.toLowerCase();
+    const postTitle = (tx.post?.title || '').toLowerCase();
+    return fullName.includes(q) || postTitle.includes(q);
+  });
+
   return (
     <div className="flex h-[calc(100vh-3.5rem)] -m-6 -mt-0">
       {/* Conversations sidebar */}
@@ -87,7 +98,12 @@ export default function ChatPage() {
           <h2 className="text-display text-lg text-white">Messages</h2>
           <div className="mt-3 relative">
             <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-3)]" />
-            <input placeholder="Search conversations..." className="w-full pl-9 pr-3 py-2 bg-[var(--surface-2)] border border-[var(--border)] rounded-lg text-xs text-white placeholder-[var(--text-3)] focus:border-[var(--accent)]" />
+            <input
+              value={chatSearch}
+              onChange={(e) => setChatSearch(e.target.value)}
+              placeholder="Search conversations..."
+              className="w-full pl-9 pr-3 py-2 bg-[var(--surface-2)] border border-[var(--border)] rounded-lg text-xs text-white placeholder-[var(--text-3)] focus:border-[var(--accent)]"
+            />
           </div>
         </div>
         <div className="flex-1 overflow-y-auto">
@@ -98,13 +114,16 @@ export default function ChatPage() {
                 <div className="flex-1 space-y-2"><div className="skeleton h-3 w-24" /><div className="skeleton h-3 w-32" /></div>
               </div>
             ))
-          ) : transactions.length === 0 ? (
+          ) : filteredTransactions.length === 0 ? (
             <div className="p-8 text-center">
               <MessageCircle size={32} className="mx-auto mb-3 text-[var(--text-3)]" />
-              <p className="text-sm text-[var(--text-3)]">No conversations yet</p>
+              <p className="text-sm text-[var(--text-3)]">{chatSearch ? 'No matching conversations' : 'No conversations yet'}</p>
+              {chatSearch && (
+                <button onClick={() => setChatSearch('')} className="text-xs text-[var(--accent)] mt-2 hover:underline">Clear search</button>
+              )}
             </div>
           ) : (
-            transactions.map(tx => {
+            filteredTransactions.map(tx => {
               const other = getOtherUser(tx);
               const active = tx.id === transactionId;
               return (
