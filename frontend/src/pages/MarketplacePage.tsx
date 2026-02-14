@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, Filter, Plus, Grid3X3, List, X, Clock, Tag, CheckCircle2, Edit3, AlertCircle } from 'lucide-react';
 import { Link, useSearchParams } from 'react-router-dom';
@@ -21,24 +21,40 @@ export default function MarketplacePage() {
   const [showFilters, setShowFilters] = useState(false);
 
   const [search, setSearch] = useState(searchParams.get('search') || '');
+  const [debouncedSearch, setDebouncedSearch] = useState(search);
   const [category, setCategory] = useState(searchParams.get('category') || 'All');
   const [sortBy, setSortBy] = useState(searchParams.get('sort') || 'newest');
   const [page, setPage] = useState(Number(searchParams.get('page')) || 1);
 
+  // Debounce search input (400ms)
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearch(search), 400);
+    return () => clearTimeout(timer);
+  }, [search]);
+
+  // Map frontend sort values to backend sortBy/sortOrder
+  const getSortParams = (sort: string) => {
+    switch (sort) {
+      case 'oldest': return { sortBy: 'createdAt', sortOrder: 'asc' };
+      case 'newest':
+      default: return { sortBy: 'createdAt', sortOrder: 'desc' };
+    }
+  };
+
   const fetchPosts = useCallback(async () => {
     setLoading(true);
     try {
-      const params: Record<string, any> = { page, limit: 12 };
-      if (search) params.search = search;
+      const { sortBy: sb, sortOrder } = getSortParams(sortBy);
+      const params: Record<string, any> = { page, limit: 12, sortBy: sb, sortOrder };
+      if (debouncedSearch) params.search = debouncedSearch;
       if (category !== 'All') params.category = category;
-      if (sortBy) params.sort = sortBy;
       const res = await postsApi.getMarketplace(params);
       const data = res.data.data;
       setPosts(data?.posts || (Array.isArray(data) ? data : []));
       setMeta(data?.pagination || (res.data as any).pagination || null);
     } catch { setPosts([]); }
     finally { setLoading(false); }
-  }, [page, search, category, sortBy]);
+  }, [page, debouncedSearch, category, sortBy]);
 
   useEffect(() => { fetchPosts(); }, [fetchPosts]);
 
@@ -87,8 +103,8 @@ export default function MarketplacePage() {
             </button>
             <select value={sortBy} onChange={(e) => { setSortBy(e.target.value); setPage(1); }}
               className="bg-[var(--surface-2)] border border-[var(--border)] rounded-lg text-xs text-[var(--text-2)] px-3 py-2 focus:border-[var(--accent)]">
-              <option value="newest">Newest</option>
-              <option value="oldest">Oldest</option>
+              <option value="newest">Newest First</option>
+              <option value="oldest">Oldest First</option>
             </select>
             <div className="hidden md:flex border border-[var(--border)] rounded-lg overflow-hidden">
               <button onClick={() => setViewMode('grid')} className={`p-2 transition-colors ${viewMode === 'grid' ? 'bg-[var(--accent)] text-white' : 'text-[var(--text-3)] hover:text-white'}`}>
