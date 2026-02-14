@@ -83,8 +83,8 @@ export default function LoginPage() {
         >
           {/* Logo (mobile) */}
           <Link to="/" className="lg:hidden inline-flex items-center gap-3 mb-10">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[var(--accent)] to-purple-400 flex items-center justify-center shadow-[0_0_20px_rgba(139,92,246,0.3)]">
-              <span className="text-lg">🔮</span>
+            <div className="w-10 h-10 rounded-xl overflow-hidden shadow-[0_0_20px_rgba(139,92,246,0.3)]">
+              <img src="/smalllogo.png" alt="AlchEx" className="w-full h-full object-cover" />
             </div>
             <span className="text-xl font-display font-bold text-gradient">AlchEx</span>
           </Link>
