@@ -119,9 +119,9 @@ initializeCronJobs();
 server.listen(config.port, () => {
   console.log(`
   ╔════════════════════════════════════════╗
-  ║  🔮 AlchEx Backend Server             ║
-  ║  Running on port ${config.port}                ║
-  ║  Environment: ${config.nodeEnv}          ║
+  ║  🔮 AlchEx Backend Server              ║
+  ║  Running on port ${config.port}        ║
+  ║  Environment: ${config.nodeEnv}        ║
   ╚════════════════════════════════════════╝
   `);
 });
