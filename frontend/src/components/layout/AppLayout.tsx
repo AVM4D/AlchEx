@@ -17,7 +17,7 @@ const AppLayout: React.FC = () => {
       <Sidebar />
       <div
         className={cn(
-          'transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]',
+          'transition-all duration-300 ease-out-expo',
           sidebarCollapsed ? 'lg:ml-[68px]' : 'lg:ml-[250px]'
         )}
       >

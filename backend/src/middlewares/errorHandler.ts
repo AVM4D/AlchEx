@@ -10,10 +10,16 @@ export function errorHandler(
 ): void {
   // ─── Log full error server-side (never exposed to client) ───
   const isProduction = process.env.NODE_ENV === 'production';
-  if (isProduction) {
-    console.error(`[ERROR] ${err.message}`);  // no stack traces in prod logs
-  } else {
-    console.error(`[ERROR] ${err.message}`, err.stack);
+
+  // Don't spam console with expected auth/client errors
+  const isExpectedError = err instanceof AppError && err.statusCode < 500;
+
+  if (!isExpectedError) {
+    if (isProduction) {
+      console.error(`[ERROR] ${err.message}`);
+    } else {
+      console.error(`[ERROR] ${err.message}`, err.stack);
+    }
   }
 
   // ─── Known application errors (safe to show message) ───
