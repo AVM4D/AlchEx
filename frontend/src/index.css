@@ -16,6 +16,9 @@
   .text-purple {
     color: var(--accent-2, #a855f7);
   }
+  .ease-out-expo {
+    transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+  }
 }
 
 /* ═══════════════════════════════════════════════════

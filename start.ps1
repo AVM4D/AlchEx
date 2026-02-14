@@ -187,22 +187,44 @@ Write-Host ""
 Write-Host "  Press Ctrl+C to stop both servers" -ForegroundColor DarkGray
 Write-Host ""
 
-# Start backend in background
-$backendJob = Start-Job -ScriptBlock {
-    param($dir)
-    Set-Location $dir
-    npm run dev 2>&1
-} -ArgumentList $Backend
+# Start backend in a separate window via cmd.exe
+# (npm on Windows is a .ps1/.cmd script, can't be launched directly by Start-Process)
+$backendProc = Start-Process cmd.exe `
+    -ArgumentList "/c","cd /d `"$Backend`" && npm run dev" `
+    -PassThru `
+    -WindowStyle Normal
+
+# Wait for backend to be healthy
+$maxWait = 30
+$elapsed = 0
+Write-Step "Waiting for backend to start..."
+while ($elapsed -lt $maxWait) {
+    if ($backendProc.HasExited) {
+        Write-Err "Backend process exited with code $($backendProc.ExitCode)"
+        exit 1
+    }
+    try {
+        $resp = Invoke-WebRequest -Uri "http://localhost:4000/health" `
+            -UseBasicParsing -TimeoutSec 2 -ErrorAction Stop
+        if ($resp.StatusCode -eq 200) { break }
+    } catch {}
+    Start-Sleep -Seconds 1
+    $elapsed++
+}
+if ($elapsed -lt $maxWait) {
+    Write-Ok "Backend is ready (took ~${elapsed}s)"
+} else {
+    Write-Host "  ⚠️  Backend didn't respond in ${maxWait}s, starting frontend anyway..." -ForegroundColor Yellow
+}
 
 # Start frontend in foreground
 Push-Location $Frontend
 try {
-    # Give backend a moment to start
-    Start-Sleep -Seconds 2
     npm run dev
 } finally {
-    # Cleanup backend job when frontend stops
-    Stop-Job $backendJob -ErrorAction SilentlyContinue
-    Remove-Job $backendJob -ErrorAction SilentlyContinue
+    # Kill backend process tree
+    if (-not $backendProc.HasExited) {
+        taskkill /PID $backendProc.Id /T /F 2>$null | Out-Null
+    }
     Pop-Location
 }
