@@ -4,6 +4,7 @@ import { Toaster } from 'react-hot-toast';
 import { Loader2 } from 'lucide-react';
 import { useAuthStore } from './store/authStore';
 import AppLayout from './components/layout/AppLayout';
+import SmoothScroller from './components/SmoothScroller';
 
 // Lazy-loaded pages for code splitting
 const LandingPage = lazy(() => import('./pages/LandingPage'));
@@ -61,9 +62,15 @@ function PublicOnlyRoute({ children }: { children: React.ReactNode }) {
 export default function App() {
   const { refreshAuth } = useAuthStore();
 
+  // Initialize theme from localStorage (default dark)
+  useEffect(() => {
+    const saved = localStorage.getItem('alchex-theme') || 'dark';
+    document.documentElement.setAttribute('data-theme', saved);
+  }, []);
+
   // Attempt to restore session on mount — run only once
   useEffect(() => {
-    refreshAuth().catch(() => {});
+    refreshAuth().catch(() => { });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -84,7 +91,7 @@ export default function App() {
       <Suspense fallback={<PageLoader />}>
         <Routes>
           {/* Public Routes */}
-          <Route path="/" element={<LandingPage />} />
+          <Route path="/" element={<SmoothScroller><LandingPage /></SmoothScroller>} />
           <Route
             path="/login"
             element={

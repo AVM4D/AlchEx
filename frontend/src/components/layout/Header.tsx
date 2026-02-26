@@ -8,6 +8,8 @@ import { useNotificationStore } from '../../store/notificationStore';
 import { cn } from '../../lib/utils';
 import { formatRelativeTime } from '../../lib/utils';
 
+import { ThemeToggle } from '../ui/ThemeToggle';
+
 const notifIcon = (type: string) => {
   switch (type) {
     case 'NEW_OFFER': return <Package size={14} className="text-[var(--accent)]" />;
@@ -100,6 +102,9 @@ export const Header: React.FC = () => {
 
       {/* Right */}
       <div className="flex items-center gap-2">
+        {/* Theme Toggle */}
+        <ThemeToggle />
+
         {/* Notifications */}
         <div className="relative" ref={notifRef}>
           <button
@@ -156,7 +161,7 @@ export const Header: React.FC = () => {
                               const d = JSON.parse(n.data);
                               if (d.postId) navigate(`/posts/${d.postId}`);
                               else if (d.transactionId) navigate(`/chat/${d.transactionId}`);
-                            } catch {}
+                            } catch { }
                           }
                         }}
                         className={cn(
