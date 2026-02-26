@@ -2,38 +2,29 @@ import React, { useEffect, useRef, useState, lazy, Suspense } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { ArrowRight, ArrowUpRight, Sparkles, ArrowLeftRight, Shield, Star, Zap, MessageCircle, Trophy, Users } from 'lucide-react';
+import gsap from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { ParticleField } from '../components/ui/ParticleField';
+import { TextScramble } from '../components/ui/TextScramble';
+import { MouseReveal } from '../components/ui/MouseReveal';
+import LiquidEther from '../components/ui/LiquidEther';
+import DarkVeil from '../components/ui/DarkVeil';
+import { LaserFlow } from '../components/ui/LaserFlow';
+import '../components/ui/StickyReveal.css';
+
+gsap.registerPlugin(ScrollTrigger);
 
 const ScrollVideoSection = lazy(() => import('../components/landing/ScrollVideoSection'));
 
-/* ─────────────────────── helpers ─────────────────────── */
+/* ─── helpers ─── */
 const ease: [number, number, number, number] = [0.16, 1, 0.3, 1];
-
-function SplitText({ text, className = '', delay = 0 }: { text: string; className?: string; delay?: number }) {
-  return (
-    <span className={className} aria-label={text}>
-      {text.split('').map((char, i) => (
-        <motion.span
-          key={i}
-          initial={{ opacity: 0, y: 80, rotateX: -90 }}
-          animate={{ opacity: 1, y: 0, rotateX: 0 }}
-          transition={{ duration: 0.8, delay: delay + i * 0.04, ease }}
-          className="inline-block"
-          style={{ transformOrigin: 'bottom' }}
-        >
-          {char === ' ' ? '\u00A0' : char}
-        </motion.span>
-      ))}
-    </span>
-  );
-}
 
 function MarqueeStrip({ children, speed = 30, reverse = false }: { children: React.ReactNode; speed?: number; reverse?: boolean }) {
   return (
     <div className="overflow-hidden whitespace-nowrap">
       <motion.div
-        className="flex gap-8 items-center"
-        animate={{ x: reverse ? ['0%', '50%'] : ['0%', '-50%'] }}
+        className="flex gap-8 items-center w-max"
+        animate={{ x: reverse ? ['-50%', '0%'] : ['0%', '-50%'] }}
         transition={{ duration: speed, repeat: Infinity, ease: 'linear' }}
       >
         {children}
@@ -71,78 +62,111 @@ function CountUp({ end, suffix = '', duration = 2, delay = 0 }: { end: number; s
   return <span ref={ref}>{count.toLocaleString()}{suffix}</span>;
 }
 
-/* ─────────────────────── page ─────────────────────── */
+/* ─── Sticky Scrolling Words — faithful to Jhey Tompkins' original ─── */
+const SCROLL_WORDS = ['exchange.', 'tutor.', 'trade.', 'mentor.', 'learn.', 'build.', 'grow.'];
+
+function ScrollingTextSection() {
+  return (
+    <div className="sticky-reveal__wrapper" style={{ '--count': SCROLL_WORDS.length } as React.CSSProperties}>
+      <header className="sticky-reveal__header">
+        <section className="sticky-reveal__section">
+          <h1 className="sticky-reveal__h1">
+            <span aria-hidden="true">you can&nbsp;</span>
+            <span className="sr-only">you can exchange, tutor, trade, mentor, learn, build, grow.</span>
+          </h1>
+          <ul className="sticky-reveal__ul" aria-hidden="true">
+            {SCROLL_WORDS.map((word, i) => (
+              <li key={i} className="sticky-reveal__li">
+                {word}
+              </li>
+            ))}
+          </ul>
+        </section>
+      </header>
+    </div>
+  );
+}
+
+/* ─── page ─── */
 export default function LandingPage() {
   const { scrollYProgress } = useScroll();
   const heroOpacity = useTransform(scrollYProgress, [0, 0.08], [1, 0]);
   const heroScale = useTransform(scrollYProgress, [0, 0.08], [1, 0.96]);
   const heroY = useTransform(scrollYProgress, [0, 0.08], [0, -60]);
 
-  return (
-    <div className="relative bg-[var(--bg)] text-[var(--text)] overflow-hidden">
+  useEffect(() => {
+    const ctx = gsap.context(() => {
+      const tl = gsap.timeline({ defaults: { ease: 'power3.out' } });
+      tl.fromTo('.hero-logo', { opacity: 0, scale: 0.92 }, { opacity: 1, scale: 1, duration: 0.9 }, 0.2)
+        .fromTo('.hero-tagline', { opacity: 0, y: 15 }, { opacity: 1, y: 0, duration: 0.6 }, 0.7)
+        .fromTo('.hero-cta', { opacity: 0, y: 15 }, { opacity: 1, y: 0, duration: 0.5 }, 1.0)
+        .fromTo('.hero-scroll', { opacity: 0 }, { opacity: 1, duration: 0.4 }, 1.3);
+    });
+    return () => ctx.revert();
+  }, []);
 
-      {/* ═══════════════════ HERO ═══════════════════ */}
+  return (
+    <div className="relative bg-[var(--bg)] text-[var(--text)]" style={{ overflowX: 'clip' }}>
+
+      {/* ═══ HERO ═══ */}
       <motion.section
         style={{ opacity: heroOpacity, scale: heroScale, y: heroY }}
         className="relative min-h-screen flex flex-col items-center justify-center px-6 overflow-hidden"
       >
-        {/* Orbs */}
-        <div className="orb orb-purple w-[500px] h-[500px] -top-40 -left-40 z-0" />
-        <div className="orb orb-blue w-[400px] h-[400px] top-1/3 -right-32 z-0" style={{ animationDelay: '-7s' }} />
-        <div className="orb orb-pink w-[300px] h-[300px] bottom-20 left-1/4 z-0" style={{ animationDelay: '-14s' }} />
-
-        {/* Particles */}
-        <div className="absolute inset-0 z-[1]">
-          <ParticleField particleCount={60} color="139, 92, 246" maxDistance={120} speed={0.15} />
+        {/* DarkVeil base layer */}
+        <div className="absolute inset-0 z-0" style={{ opacity: 0.5 }}>
+          <DarkVeil
+            hueShift={330}
+            noiseIntensity={0}
+            scanlineIntensity={0}
+            speed={0.4}
+            scanlineFrequency={0}
+            warpAmount={0}
+          />
         </div>
 
-        {/* Content */}
-        <div className="relative z-10 text-center max-w-6xl mx-auto">
-          {/* Pill badge */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3, duration: 0.8, ease }}
-            className="mb-8"
-          >
-            <span className="pill">
-              <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent)] animate-pulse" />
-              The Law of Equivalent Exchange
-            </span>
-          </motion.div>
+        {/* LiquidEther interactive layer */}
+        <div className="absolute inset-0 z-[1]" style={{ opacity: 0.7 }}>
+          <LiquidEther
+            colors={['#5227FF', '#FF9FFC', '#B19EEF']}
+            mouseForce={20}
+            cursorSize={100}
+            isViscous
+            viscous={30}
+            iterationsViscous={16}
+            iterationsPoisson={16}
+            resolution={0.25}
+            isBounce={false}
+            autoDemo
+            autoSpeed={0.5}
+            autoIntensity={2.2}
+            takeoverDuration={0.25}
+            autoResumeDelay={3000}
+            autoRampDuration={0.6}
+          />
+        </div>
 
-          {/* ALCHEX logo */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.5, duration: 1, ease }}
-            className="mb-6 flex justify-center"
-          >
+
+
+        <div className="absolute inset-0 z-[2]">
+          <ParticleField particleCount={40} color="139, 92, 246" maxDistance={120} speed={0.15} />
+        </div>
+
+        <div className="relative z-10 text-center max-w-6xl mx-auto">
+          <div className="hero-logo mb-6 flex justify-center opacity-0">
             <img
               src="/logo.jpeg"
               alt="AlchEx"
               className="w-[clamp(22rem,65vw,52rem)] h-auto drop-shadow-[0_0_60px_rgba(139,92,246,0.4)] rounded-2xl saturate-0"
             />
-          </motion.div>
+          </div>
 
-          {/* Tagline */}
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 1.4, duration: 0.8, ease }}
-            className="text-lg md:text-xl text-[var(--text-2)] max-w-2xl mx-auto mb-10 leading-relaxed font-light"
-          >
-            A non-monetary student exchange platform where skills, knowledge,
-            and resources flow freely. <span className="text-[var(--accent-2)]">No money. Just equivalent exchange.</span>
-          </motion.p>
+          <p className="hero-tagline text-lg md:text-xl text-[var(--text-2)] max-w-2xl mx-auto mb-10 leading-relaxed font-light opacity-0">
+            Trade skills, share knowledge, grow together — all without spending a dime.{' '}
+            <span className="text-[var(--accent-2)]">Zero money. Pure exchange.</span>
+          </p>
 
-          {/* CTA */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 1.8, duration: 0.6, ease }}
-            className="flex flex-col sm:flex-row items-center justify-center gap-4"
-          >
+          <div className="hero-cta flex items-center justify-center opacity-0">
             <Link to="/register" className="group relative">
               <div className="absolute -inset-1 bg-gradient-to-r from-[var(--accent)] to-purple-400 rounded-2xl blur-lg opacity-40 group-hover:opacity-70 transition-opacity duration-500" />
               <div className="relative flex items-center gap-3 px-8 py-4 bg-[var(--accent)] text-white rounded-xl font-semibold text-base hover:bg-purple-500 transition-all duration-300">
@@ -150,23 +174,10 @@ export default function LandingPage() {
                 <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
               </div>
             </Link>
-            <Link
-              to="/marketplace"
-              className="flex items-center gap-3 px-8 py-4 rounded-xl border border-[var(--border-hover)] text-[var(--text-2)] hover:text-white hover:border-[var(--accent)] transition-all duration-300 font-medium text-base"
-            >
-              Explore Marketplace
-              <ArrowUpRight size={16} />
-            </Link>
-          </motion.div>
+          </div>
         </div>
 
-        {/* Scroll indicator */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 2.5 }}
-          className="absolute bottom-10 left-1/2 -translate-x-1/2 z-10"
-        >
+        <div className="hero-scroll absolute bottom-10 left-1/2 -translate-x-1/2 z-10 opacity-0">
           <motion.div
             animate={{ y: [0, 8, 0] }}
             transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
@@ -181,16 +192,20 @@ export default function LandingPage() {
               />
             </div>
           </motion.div>
-        </motion.div>
-      </motion.section>
+        </div>
+      </motion.section >
 
-      {/* ═══════════════════ SCROLL VIDEO ═══════════════════ */}
-      <Suspense fallback={null}>
+      {/* ═══ SCROLL VIDEO ═══ */}
+      < Suspense fallback={null} >
         <ScrollVideoSection />
-      </Suspense>
+      </Suspense >
 
-      {/* ═══════════════════ MARQUEE DIVIDER ═══════════════════ */}
-      <section className="relative py-6 border-y border-[var(--border)] overflow-hidden bg-[var(--surface)]/50">
+      {/* ═══ SCROLLING "YOU CAN ___" ═══ */}
+      < ScrollingTextSection />
+
+
+      {/* ═══ MARQUEE DIVIDER ═══ */}
+      < section className="relative py-6 border-y border-[var(--border)] overflow-hidden" >
         <MarqueeStrip speed={40}>
           {['SKILL EXCHANGE', 'TUTORING', 'NOTES', 'LAB EQUIPMENT', 'TEXTBOOKS', 'PROJECTS', 'MENTORSHIP', 'RESEARCH', 'DESIGN', 'CODING'].map((t, i) => (
             <span key={i} className="text-sm font-mono uppercase tracking-[0.2em] text-[var(--text-3)] flex items-center gap-4">
@@ -199,10 +214,10 @@ export default function LandingPage() {
             </span>
           ))}
         </MarqueeStrip>
-      </section>
+      </section >
 
-      {/* ═══════════════════ STATS ═══════════════════ */}
-      <section className="relative py-32 px-6">
+      {/* ═══ STATS ═══ */}
+      < section className="relative py-32 px-6" >
         <div className="max-w-6xl mx-auto">
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-px bg-[var(--border)] rounded-2xl overflow-hidden">
             {[
@@ -220,7 +235,7 @@ export default function LandingPage() {
                 className="bg-[var(--surface)] p-8 text-center relative group"
               >
                 <div className="text-4xl md:text-5xl font-bold text-display mb-2">
-                  <span className={stat.accent ? 'text-gradient' : 'text-white'}>
+                  <span className={stat.accent ? 'text-gradient' : 'text-[var(--text)]'}>
                     {typeof stat.value === 'number' && stat.value >= 100
                       ? <CountUp end={stat.value} suffix={stat.suffix} delay={i * 0.15} />
                       : <>{stat.value}{stat.suffix}</>
@@ -233,10 +248,10 @@ export default function LandingPage() {
             ))}
           </div>
         </div>
-      </section>
+      </section >
 
-      {/* ═══════════════════ HOW IT WORKS ═══════════════════ */}
-      <section className="relative py-32 px-6">
+      {/* ═══ HOW IT WORKS (with Mouse Reveal) ═══ */}
+      < section className="relative py-32 px-6" >
         <div className="orb orb-purple w-[400px] h-[400px] top-0 right-0 z-0" style={{ animationDelay: '-5s' }} />
 
         <div className="max-w-6xl mx-auto relative z-10">
@@ -247,18 +262,23 @@ export default function LandingPage() {
             transition={{ duration: 0.6, ease }}
             className="mb-20"
           >
-            <span className="text-label text-[var(--accent-2)] mb-4 block">/ Process</span>
-            <h2 className="text-display text-4xl md:text-6xl text-white">
-              How it <span className="text-gradient">works</span>
-            </h2>
+            <span className="text-label text-[var(--accent-2)] mb-4 block">
+              <TextScramble text="/ Process" trigger="inView" />
+            </span>
+            <MouseReveal
+              className="text-display text-4xl md:text-6xl"
+              frontText="How it works"
+              backText="How it works"
+              revealSize={150}
+            />
           </motion.div>
 
           <div className="grid md:grid-cols-4 gap-6">
             {[
-              { step: '01', icon: Zap, title: 'Create Request', desc: 'Post what you need and what you can offer. Be specific—great posts attract great offers.' },
-              { step: '02', icon: MessageCircle, title: 'Get Proposals', desc: 'Students browse and submit proposals. Chat in real-time to negotiate the exchange.' },
-              { step: '03', icon: ArrowLeftRight, title: 'Exchange', desc: 'Accept the best offer. Both parties complete their side of the exchange.' },
-              { step: '04', icon: Trophy, title: 'Build Reputation', desc: 'Rate each other. Climb the leaderboard. Become a top alchemist.' },
+              { step: '01', icon: Zap, title: 'Create Request', desc: 'Post what you need and what you can offer in return.' },
+              { step: '02', icon: MessageCircle, title: 'Get Proposals', desc: 'Students browse and submit proposals. Chat to negotiate.' },
+              { step: '03', icon: ArrowLeftRight, title: 'Exchange', desc: 'Accept the best offer. Both sides deliver.' },
+              { step: '04', icon: Trophy, title: 'Build Reputation', desc: 'Rate each other. Climb the leaderboard.' },
             ].map((item, i) => (
               <motion.div
                 key={i}
@@ -269,18 +289,14 @@ export default function LandingPage() {
                 className="glass-card p-6 group relative"
               >
                 <span className="text-mono text-[var(--accent)] mb-6 block">{item.step}</span>
-
-                <span className="absolute -top-2 -right-1 text-[7rem] font-bold text-white/[0.02] group-hover:text-[rgba(139,92,246,0.05)] transition-colors duration-700 text-display leading-none pointer-events-none">
+                <span className="absolute -top-2 -right-1 text-[7rem] font-bold text-[var(--text)]/[0.015] group-hover:text-[var(--accent)]/[0.08] transition-colors duration-700 text-display leading-none pointer-events-none">
                   {item.step}
                 </span>
-
-                <div className="w-10 h-10 rounded-lg bg-[rgba(139,92,246,0.08)] border border-[rgba(139,92,246,0.2)] flex items-center justify-center mb-4 group-hover:bg-[rgba(139,92,246,0.2)] group-hover:shadow-[0_0_20px_rgba(139,92,246,0.2)] transition-all duration-500">
+                <div className="w-10 h-10 rounded-lg bg-[var(--accent-sub)] border border-[rgba(139,92,246,0.2)] flex items-center justify-center mb-4 group-hover:bg-[rgba(139,92,246,0.2)] group-hover:shadow-[0_0_20px_rgba(139,92,246,0.2)] transition-all duration-500">
                   <item.icon size={18} className="text-[var(--accent-2)]" />
                 </div>
-
-                <h3 className="font-display font-bold text-white text-lg mb-2">{item.title}</h3>
+                <h3 className="font-display font-bold text-[var(--text)] text-lg mb-2">{item.title}</h3>
                 <p className="text-sm text-[var(--text-2)] leading-relaxed">{item.desc}</p>
-
                 {i < 3 && (
                   <div className="hidden md:block absolute top-1/2 -right-3 w-6 h-px bg-gradient-to-r from-[rgba(139,92,246,0.4)] to-transparent" />
                 )}
@@ -288,12 +304,11 @@ export default function LandingPage() {
             ))}
           </div>
         </div>
-      </section>
+      </section >
 
-      {/* ═══════════════════ FEATURES BENTO GRID ═══════════════════ */}
-      <section className="relative py-32 px-6">
+      {/* ═══ FEATURES ═══ */}
+      < section className="relative py-32 px-6" >
         <div className="section-line mb-20" />
-
         <div className="max-w-6xl mx-auto">
           <motion.div
             initial={{ opacity: 0 }}
@@ -301,21 +316,23 @@ export default function LandingPage() {
             viewport={{ once: true }}
             className="mb-16"
           >
-            <span className="text-label text-[var(--accent-2)] mb-4 block">/ Features</span>
-            <h2 className="text-display text-4xl md:text-6xl text-white mb-4">
+            <span className="text-label text-[var(--accent-2)] mb-4 block">
+              <TextScramble text="/ Features" trigger="inView" />
+            </span>
+            <h2 className="text-display text-4xl md:text-6xl text-[var(--text)] mb-4">
               Built for <span className="text-gradient">excellence</span>
             </h2>
-            <p className="text-[var(--text-2)] max-w-lg text-lg">Every feature designed to make exchanging seamless, safe, and rewarding.</p>
+            <p className="text-[var(--text-2)] max-w-lg text-lg">Every feature crafted to make exchanging seamless, safe, and rewarding.</p>
           </motion.div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {[
-              { icon: Shield, title: 'Verified .edu Only', desc: 'Only university students with verified .edu emails (including .edu.pk) can join the community. Safe by design.', span: 'md:col-span-2' },
-              { icon: ArrowLeftRight, title: 'Fair Exchange', desc: 'Strict transaction lifecycle ensures both parties are satisfied before completion.', span: '' },
-              { icon: MessageCircle, title: 'Real-Time Chat', desc: 'Built-in messaging with typing indicators. Negotiate exchanges instantly.', span: '' },
-              { icon: Star, title: 'Reputation System', desc: 'Weighted rating algorithm builds trust. Your reputation is your currency.', span: '' },
-              { icon: Trophy, title: 'Leaderboard', desc: 'Top exchangers get recognition. Compete to be the best alchemist on campus.', span: '' },
-              { icon: Users, title: 'Multi-University', desc: 'Connect with students across different campuses and programs. Exchange knows no bounds.', span: 'md:col-span-2' },
+              { icon: Shield, title: 'Verified .edu Only', desc: 'Only university students with verified .edu emails can join. Safe by design.', span: 'md:col-span-2' },
+              { icon: ArrowLeftRight, title: 'Fair Exchange', desc: 'Structured transaction lifecycle ensures both sides are satisfied.', span: '' },
+              { icon: MessageCircle, title: 'Real-Time Chat', desc: 'Built-in messaging with typing indicators. Negotiate instantly.', span: '' },
+              { icon: Star, title: 'Reputation System', desc: 'Weighted ratings build trust. Your reputation is your currency.', span: '' },
+              { icon: Trophy, title: 'Leaderboard', desc: 'Top exchangers get recognition. Compete to be the best.', span: '' },
+              { icon: Users, title: 'Multi-University', desc: 'Connect with students across campuses and programs.', span: 'md:col-span-2' },
             ].map((feature, i) => (
               <motion.div
                 key={i}
@@ -323,14 +340,14 @@ export default function LandingPage() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.08, duration: 0.5, ease }}
-                className={`glass-card gradient-border p-6 group ${feature.span}`}
+                className={`glass-card p-6 group ${feature.span}`}
               >
                 <div className="flex items-start gap-4">
-                  <div className="w-10 h-10 rounded-lg bg-[rgba(139,92,246,0.08)] border border-[rgba(139,92,246,0.1)] flex items-center justify-center shrink-0 group-hover:bg-[rgba(139,92,246,0.2)] transition-all duration-500">
+                  <div className="w-10 h-10 rounded-lg bg-[var(--accent-sub)] border border-[rgba(139,92,246,0.1)] flex items-center justify-center shrink-0 group-hover:bg-[rgba(139,92,246,0.2)] transition-all duration-500">
                     <feature.icon size={18} className="text-[var(--accent-2)]" />
                   </div>
                   <div>
-                    <h3 className="font-display font-bold text-white mb-1.5">{feature.title}</h3>
+                    <h3 className="font-display font-bold text-[var(--text)] mb-1.5">{feature.title}</h3>
                     <p className="text-sm text-[var(--text-2)] leading-relaxed">{feature.desc}</p>
                   </div>
                 </div>
@@ -338,12 +355,11 @@ export default function LandingPage() {
             ))}
           </div>
         </div>
-      </section>
+      </section >
 
-      {/* ═══════════════════ TOP ALCHEMISTS ═══════════════════ */}
-      <section className="relative py-32 px-6 overflow-hidden">
+      {/* ═══ TOP ALCHEMISTS ═══ */}
+      < section className="relative py-32 px-6 overflow-hidden" >
         <div className="orb orb-purple w-[500px] h-[500px] top-1/4 left-1/2 -translate-x-1/2 z-0" />
-
         <div className="max-w-4xl mx-auto relative z-10">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
@@ -352,8 +368,10 @@ export default function LandingPage() {
             transition={{ duration: 0.6, ease }}
             className="text-center mb-16"
           >
-            <span className="text-label text-[var(--accent-2)] mb-4 block">/ Leaderboard</span>
-            <h2 className="text-display text-4xl md:text-6xl text-white">
+            <span className="text-label text-[var(--accent-2)] mb-4 block">
+              <TextScramble text="/ Leaderboard" trigger="inView" />
+            </span>
+            <h2 className="text-display text-4xl md:text-6xl text-[var(--text)]">
               Top <span className="text-gradient">alchemists</span>
             </h2>
           </motion.div>
@@ -382,18 +400,15 @@ export default function LandingPage() {
                         </span>
                       </div>
                     )}
-
                     <div className={`mx-auto mb-3 rounded-full bg-gradient-to-br from-[var(--accent)] to-purple-400 flex items-center justify-center font-bold text-white ${isFirst ? 'w-20 h-20 text-2xl shadow-[0_0_40px_rgba(139,92,246,0.3)]' : 'w-14 h-14 text-lg'}`}>
                       {user.name.charAt(0)}
                     </div>
-
-                    <h3 className="font-display font-bold text-white text-lg">{user.name}</h3>
+                    <h3 className="font-display font-bold text-[var(--text)] text-lg">{user.name}</h3>
                     <div className="flex items-center justify-center gap-1 mt-1">
                       <Star size={14} className="text-[var(--accent)] fill-[var(--accent)]" />
                       <span className="text-[var(--accent-2)] font-semibold">{user.score}</span>
                     </div>
                     <p className="text-label mt-2">{user.exchanges} exchanges</p>
-
                     <div className={`mt-4 rounded-t-lg bg-gradient-to-t from-[rgba(139,92,246,0.1)] to-transparent ${isFirst ? 'h-16' : user.rank === 2 ? 'h-10' : 'h-6'}`} />
                   </div>
                 </motion.div>
@@ -401,22 +416,41 @@ export default function LandingPage() {
             })}
           </div>
         </div>
-      </section>
+      </section >
 
-      {/* ═══════════════════ MARQUEE CTA ═══════════════════ */}
-      <section className="py-8 border-y border-[var(--border)] bg-[rgba(10,10,15,0.3)]">
+      {/* ═══ MARQUEE CTA ═══ */}
+      < section className="py-8 border-y border-[var(--border)]" >
         <MarqueeStrip speed={25} reverse>
-          {Array(6).fill(null).map((_, i) => (
-            <span key={i} className="text-display text-4xl md:text-5xl text-white/[0.04] tracking-tight flex items-center gap-8">
+          {Array(8).fill(null).map((_, i) => (
+            <span key={i} className="text-display text-4xl md:text-5xl text-[var(--text)]/[0.015] tracking-tight flex items-center gap-8">
               EQUIVALENT EXCHANGE
-              <span className="w-2 h-2 rounded-full bg-[var(--accent)] opacity-30" />
+              <span className="w-2 h-2 rounded-full bg-[var(--accent)] opacity-10" />
             </span>
           ))}
         </MarqueeStrip>
-      </section>
+      </section >
 
-      {/* ═══════════════════ FINAL CTA ═══════════════════ */}
-      <section className="relative py-40 px-6 overflow-hidden">
+      {/* ═══ FINAL CTA ═══ */}
+      < section className="relative py-32 px-6" >
+        {/* LaserFlow background — extends beyond section to blend into neighbors */}
+        < div className="absolute z-0" style={{ top: '0%', bottom: '0%', left: '-20%', right: '-20%' }} >
+          <LaserFlow
+            color="#8b5cf6"
+            horizontalBeamOffset={0}
+            verticalBeamOffset={-0.41}
+            verticalSizing={1.3}
+            horizontalSizing={0.35}
+            wispDensity={0.5}
+            fogIntensity={0.1}
+            fogScale={0.1}
+            wispSpeed={40}
+            wispIntensity={3}
+            flowSpeed={0.4}
+            decay={1}
+            falloffStart={1}
+            style={{ width: '100%', height: '100%' }}
+          />
+        </div >
         <div className="orb orb-purple w-[600px] h-[600px] top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-0" />
 
         <motion.div
@@ -426,13 +460,12 @@ export default function LandingPage() {
           transition={{ duration: 0.8, ease }}
           className="relative z-10 max-w-3xl mx-auto text-center"
         >
-          <h2 className="text-display text-5xl md:text-7xl text-white mb-6">
+          <h2 className="text-display text-5xl md:text-7xl text-[var(--text)] mb-6">
             Ready to{' '}
             <span className="text-gradient-shine">exchange?</span>
           </h2>
           <p className="text-lg text-[var(--text-2)] mb-12 max-w-xl mx-auto leading-relaxed">
-            Join thousands of students already exchanging skills, knowledge, and help.
-            Start your alchemy today.
+            Thousands of students. One community. Zero cost.
           </p>
           <Link to="/register" className="group relative inline-flex">
             <div className="absolute -inset-2 bg-gradient-to-r from-[var(--accent)] via-purple-500 to-pink-500 rounded-2xl blur-xl opacity-30 group-hover:opacity-60 transition-opacity duration-700" />
@@ -442,10 +475,10 @@ export default function LandingPage() {
             </div>
           </Link>
         </motion.div>
-      </section>
+      </section >
 
-      {/* ═══════════════════ FOOTER ═══════════════════ */}
-      <footer className="border-t border-[var(--border)] py-16 px-6">
+      {/* ═══ FOOTER ═══ */}
+      < footer className="border-t border-[var(--border)] py-16 px-6 bg-[var(--surface)]" >
         <div className="max-w-6xl mx-auto">
           <div className="flex flex-col md:flex-row items-start justify-between gap-12">
             <div>
@@ -453,49 +486,46 @@ export default function LandingPage() {
                 <div className="w-10 h-10 rounded-xl overflow-hidden shadow-[0_0_20px_rgba(139,92,246,0.3)]">
                   <img src="/smalllogo.png" alt="AlchEx" className="w-full h-full object-cover" />
                 </div>
-                <span className="text-xl font-display font-bold text-gradient">AlchEx</span>
+                <img src="/logo.jpeg" alt="AlchEx" className="h-8 w-auto saturate-0 brightness-200" />
               </div>
               <p className="text-sm text-[var(--text-3)] max-w-xs">
-                The student exchange platform built on the principle of equivalent exchange.
+                Where every skill finds its match.
               </p>
             </div>
-
             <div className="grid grid-cols-2 md:grid-cols-3 gap-12 text-sm">
               <div>
                 <h4 className="text-label mb-4">Platform</h4>
                 <div className="space-y-3">
-                  <Link to="/marketplace" className="block text-[var(--text-2)] hover:text-white transition-colors">Marketplace</Link>
-                  <Link to="/leaderboard" className="block text-[var(--text-2)] hover:text-white transition-colors">Leaderboard</Link>
-                  <Link to="/register" className="block text-[var(--text-2)] hover:text-white transition-colors">Get Started</Link>
+                  <Link to="/marketplace" className="block text-[var(--text-2)] hover:text-[var(--text)] transition-colors">Marketplace</Link>
+                  <Link to="/leaderboard" className="block text-[var(--text-2)] hover:text-[var(--text)] transition-colors">Leaderboard</Link>
+                  <Link to="/register" className="block text-[var(--text-2)] hover:text-[var(--text)] transition-colors">Get Started</Link>
                 </div>
               </div>
               <div>
                 <h4 className="text-label mb-4">Legal</h4>
                 <div className="space-y-3">
-                  <a href="#" className="block text-[var(--text-2)] hover:text-white transition-colors">Privacy</a>
-                  <a href="#" className="block text-[var(--text-2)] hover:text-white transition-colors">Terms</a>
-                  <a href="#" className="block text-[var(--text-2)] hover:text-white transition-colors">Contact</a>
+                  <a href="#" className="block text-[var(--text-2)] hover:text-[var(--text)] transition-colors">Privacy</a>
+                  <a href="#" className="block text-[var(--text-2)] hover:text-[var(--text)] transition-colors">Terms</a>
+                  <a href="#" className="block text-[var(--text-2)] hover:text-[var(--text)] transition-colors">Contact</a>
                 </div>
               </div>
               <div>
                 <h4 className="text-label mb-4">Community</h4>
                 <div className="space-y-3">
-                  <a href="#" className="block text-[var(--text-2)] hover:text-white transition-colors">Discord</a>
-                  <a href="#" className="block text-[var(--text-2)] hover:text-white transition-colors">Twitter</a>
-                  <a href="#" className="block text-[var(--text-2)] hover:text-white transition-colors">GitHub</a>
+                  <a href="#" className="block text-[var(--text-2)] hover:text-[var(--text)] transition-colors">Discord</a>
+                  <a href="#" className="block text-[var(--text-2)] hover:text-[var(--text)] transition-colors">Twitter</a>
+                  <a href="#" className="block text-[var(--text-2)] hover:text-[var(--text)] transition-colors">GitHub</a>
                 </div>
               </div>
             </div>
           </div>
-
           <div className="section-line mt-12 mb-8" />
-
           <div className="flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-[var(--text-3)]">
-            <p>&copy; 2026 AlchEx. Built with equivalent exchange in mind.</p>
+            <p>&copy; 2026 AlchEx. Where every skill finds its match.</p>
             <p className="text-mono">v1.0.0</p>
           </div>
         </div>
-      </footer>
-    </div>
+      </footer >
+    </div >
   );
 }

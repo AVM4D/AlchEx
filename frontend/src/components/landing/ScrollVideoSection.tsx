@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useCallback, useState } from 'react';
+import React, { useRef, useEffect, useCallback, useState, useMemo } from 'react';
 import { motion, useScroll, useTransform } from 'framer-motion';
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -14,11 +14,11 @@ import { motion, useScroll, useTransform } from 'framer-motion';
    ═══════════════════════════════════════════════════════════════════════════ */
 
 // ───── Configuration ─────
-const TOTAL_FRAMES = 242;           // Matches extracted frame count
+const TOTAL_FRAMES = 318;           // 60fps extracted frame count
 const FRAME_PATH = '/frames/hands'; // Relative to /public
-const PRELOAD_BATCH = 20;           // Immediately preload first N frames
-const LERP_FACTOR = 0.12;           // Smoothing (higher = more responsive)
-const SECTION_HEIGHT = '350vh';     // Enough room for forward + reverse cycle
+const PRELOAD_BATCH = 50;           // Preload first N frames immediately
+const LERP_FACTOR = 0.18;           // Responsive enough to hit every frame
+const SECTION_HEIGHT = '700vh';     // ~10px per frame per half — every frame visible
 
 // ───── Text overlays that animate with scroll ─────
 interface TextOverlay {
@@ -56,6 +56,104 @@ function easeInOutCubic(t: number): number {
     return t < 0.5
         ? 4 * t * t * t
         : 1 - Math.pow(-2 * t + 2, 3) / 2;
+}
+
+// ───── Utility: parse HTML into character metadata ─────
+interface CharMeta {
+    char: string;
+    className?: string;
+    style?: React.CSSProperties;
+}
+
+function parseToChars(html: string): CharMeta[] {
+    const div = document.createElement('div');
+    div.innerHTML = html;
+    const chars: CharMeta[] = [];
+
+    function walk(node: Node, cls?: string, style?: React.CSSProperties) {
+        if (node.nodeType === Node.TEXT_NODE) {
+            for (const c of (node.textContent || '')) {
+                chars.push({ char: c, className: cls, style });
+            }
+        } else if (node instanceof HTMLElement) {
+            const newCls = node.className || cls;
+            let newStyle = style;
+            const raw = node.getAttribute('style');
+            if (raw) {
+                const parsed: Record<string, string> = {};
+                raw.split(';').forEach(s => {
+                    const idx = s.indexOf(':');
+                    if (idx > 0) {
+                        const key = s.slice(0, idx).trim();
+                        const val = s.slice(idx + 1).trim();
+                        const camel = key.replace(/-([a-z])/g, (_, c) => c.toUpperCase());
+                        parsed[camel] = val;
+                    }
+                });
+                newStyle = { ...style, ...parsed };
+            }
+            node.childNodes.forEach(child => walk(child, newCls, newStyle));
+        }
+    }
+
+    div.childNodes.forEach(child => walk(child));
+    return chars;
+}
+
+// ───── TypewriterText: per-character reveal driven by MotionValue ─────
+import type { MotionValue } from 'framer-motion';
+
+interface TypewriterTextProps {
+    html: string;
+    reveal: MotionValue<number>;
+    className?: string;
+    fontStyle?: React.CSSProperties;
+}
+
+function TypewriterText({ html, reveal, className, fontStyle }: TypewriterTextProps) {
+    const containerRef = useRef<HTMLHeadingElement>(null);
+    const chars = useMemo(() => parseToChars(html), [html]);
+
+    useEffect(() => {
+        const container = containerRef.current;
+        if (!container) return;
+        const spans = container.querySelectorAll<HTMLSpanElement>('[data-ci]');
+        if (!spans.length) return;
+
+        const unsubscribe = reveal.on('change', (v) => {
+            const total = spans.length;
+            const revealed = v * total;
+            const floor = Math.floor(revealed);
+            const frac = revealed - floor;
+
+            for (let i = 0; i < total; i++) {
+                if (i < floor) {
+                    spans[i].style.opacity = '1';
+                } else if (i === floor) {
+                    spans[i].style.opacity = String(frac);
+                } else {
+                    spans[i].style.opacity = '0';
+                }
+            }
+        });
+
+        return unsubscribe;
+    }, [reveal, chars.length]);
+
+    return (
+        <h2 ref={containerRef} className={className} style={fontStyle}>
+            {chars.map((c, i) => (
+                <span
+                    key={i}
+                    data-ci={i}
+                    className={c.className}
+                    style={{ ...c.style, opacity: 0 }}
+                >
+                    {c.char === ' ' ? '\u00A0' : c.char}
+                </span>
+            ))}
+        </h2>
+    );
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -242,8 +340,8 @@ export default function ScrollVideoSection() {
     }, [animate, drawFrame, loadFrame, resizeCanvas]);
 
     // ── Update target frame when scroll changes ──
-    // Scroll 0→0.5: forward  frame 0 → frame 241  (last frame)
-    // Scroll 0.5→1: reverse  frame 241 → frame 0  (exact mirror)
+    // Scroll 0→0.5: forward  frame 0 → lastFrame
+    // Scroll 0.5→1: reverse  lastFrame → frame 0
     useEffect(() => {
         const lastFrame = TOTAL_FRAMES - 1;
         const unsubscribe = scrollYProgress.on('change', (v) => {
@@ -261,17 +359,27 @@ export default function ScrollVideoSection() {
         return unsubscribe;
     }, [scrollYProgress]);
 
-    // ── Compute text overlay opacity based on scroll ──
-    const overlayOpacities = TEXT_OVERLAYS.map((overlay) => {
-        const midpoint = (overlay.range[0] + overlay.range[1]) / 2;
-        const halfWidth = (overlay.range[1] - overlay.range[0]) / 2;
+    // ── Compute text overlay reveal (typewriter clip) based on scroll ──
+    // Returns 0→1 where 0 = fully hidden, 1 = fully revealed
+    const overlayReveals = TEXT_OVERLAYS.map((overlay) => {
+        const [start, end] = overlay.range;
+        const duration = end - start;
+        const typeInEnd = start + duration * 0.6;   // first 60%: type in
+        const holdEnd = start + duration * 0.8;     // middle 20%: hold
+        // last 20%: type out
         // eslint-disable-next-line react-hooks/rules-of-hooks
         return useTransform(scrollYProgress, (v: number) => {
-            const dist = Math.abs(v - midpoint);
-            if (dist > halfWidth) return 0;
-            // Smooth fade: fully visible in center 60%, fade at edges
-            const t = 1 - dist / halfWidth;
-            return clamp(t * 1.5, 0, 1);
+            if (v < start || v > end) return 0;
+            if (v <= typeInEnd) {
+                // Type in: 0→1
+                return clamp((v - start) / (typeInEnd - start), 0, 1);
+            }
+            if (v <= holdEnd) {
+                // Hold fully visible
+                return 1;
+            }
+            // Type out: 1→0
+            return clamp(1 - (v - holdEnd) / (end - holdEnd), 0, 1);
         });
     });
 
@@ -286,11 +394,11 @@ export default function ScrollVideoSection() {
         });
     });
 
-    // ── Overall section opacity: fade in at start, fade out at end ──
+
+    // ── Overall section opacity: fade in at start, stays visible at end ──
     const sectionOpacity = useTransform(scrollYProgress, (v: number) => {
-        // Fade in during 0→0.08, full during 0.08→0.92, fade out during 0.92→1.0
+        // Fade in during 0→0.08, fully visible for the rest
         if (v < 0.08) return v / 0.08;
-        if (v > 0.92) return (1 - v) / 0.08;
         return 1;
     });
 
@@ -329,21 +437,21 @@ export default function ScrollVideoSection() {
                     />
                 </motion.div>
 
-                {/* ── Text overlays: positioned above the hands animation ── */}
+                {/* ── Text overlays: character-by-character typewriter ── */}
                 {TEXT_OVERLAYS.map((overlay, i) => (
                     <motion.div
                         key={i}
                         className="absolute left-0 right-0 text-center px-6 pointer-events-none"
                         style={{
                             top: '10%',
-                            opacity: overlayOpacities[i],
                             y: overlayYs[i],
                         }}
                     >
-                        <h2
+                        <TypewriterText
+                            html={overlay.text}
+                            reveal={overlayReveals[i]}
                             className="text-4xl md:text-5xl lg:text-6xl text-white drop-shadow-[0_0_40px_rgba(139,92,246,0.3)] leading-tight font-light tracking-wide"
-                            style={{ fontFamily: "'Innovar', 'Cinzel Decorative', serif" }}
-                            dangerouslySetInnerHTML={{ __html: overlay.text }}
+                            fontStyle={{ fontFamily: "'Innovar', 'Cinzel Decorative', serif" }}
                         />
                     </motion.div>
                 ))}

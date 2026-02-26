@@ -60,7 +60,7 @@ const isProduction = config.nodeEnv === 'production';
 // Global API limiter
 const globalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: isProduction ? 100 : 1000,  // stricter in production
+  max: isProduction ? 100 : 5000,  // very generous in dev
   message: { success: false, message: 'Too many requests, please try again later' },
   standardHeaders: true,
   legacyHeaders: false,
@@ -70,7 +70,7 @@ app.use('/api/', globalLimiter);
 // Strict auth limiter (login, register, forgot-password)
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: isProduction ? 10 : 50,  // very strict on login attempts
+  max: isProduction ? 10 : 500,  // generous in dev
   message: { success: false, message: 'Too many authentication attempts, please try again later' },
   standardHeaders: true,
   legacyHeaders: false,

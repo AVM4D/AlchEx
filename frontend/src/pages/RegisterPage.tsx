@@ -1,16 +1,15 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Link, useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
 import { Mail, Lock, User, ArrowRight } from 'lucide-react';
+import gsap from 'gsap';
 import { Input } from '../components/ui/Input';
 import { useAuthStore } from '../store/authStore';
 import { ParticleField } from '../components/ui/ParticleField';
+import { TextScramble } from '../components/ui/TextScramble';
 import toast from 'react-hot-toast';
-
-const ease: [number, number, number, number] = [0.16, 1, 0.3, 1];
 
 const registerSchema = z.object({
   firstName: z.string().min(1, 'First name is required').max(50),
@@ -40,6 +39,79 @@ export default function RegisterPage() {
     resolver: zodResolver(registerSchema),
   });
 
+  // GSAP entrance timeline
+  useEffect(() => {
+    const ctx = gsap.context(() => {
+      const tl = gsap.timeline({ defaults: { ease: 'power3.out' } });
+
+      // Left panel
+      tl.fromTo(
+        '.register-logo',
+        { opacity: 0, scale: 0.85, y: 30 },
+        { opacity: 1, scale: 1, y: 0, duration: 1 },
+        0
+      )
+        .fromTo(
+          '.register-tagline',
+          { opacity: 0, y: 20 },
+          { opacity: 1, y: 0, duration: 0.8 },
+          0.4
+        )
+        .fromTo(
+          '.register-stats > div',
+          { opacity: 0, y: 20 },
+          { opacity: 1, y: 0, duration: 0.6, stagger: 0.1 },
+          0.6
+        );
+
+      // Form
+      tl.fromTo(
+        '.register-form-header',
+        { opacity: 0, x: 30 },
+        { opacity: 1, x: 0, duration: 0.6 },
+        0.2
+      )
+        .fromTo(
+          '.register-form-field',
+          { opacity: 0, y: 20, x: 10 },
+          { opacity: 1, y: 0, x: 0, duration: 0.5, stagger: 0.08 },
+          0.35
+        )
+        .fromTo(
+          '.register-form-submit',
+          { opacity: 0, y: 15 },
+          { opacity: 1, y: 0, duration: 0.5 },
+          0.7
+        )
+        .fromTo(
+          '.register-form-footer',
+          { opacity: 0 },
+          { opacity: 1, duration: 0.5 },
+          0.85
+        );
+
+      // Orb parallax
+      gsap.to('.register-orb-1', {
+        y: -25,
+        x: 15,
+        duration: 9,
+        repeat: -1,
+        yoyo: true,
+        ease: 'sine.inOut',
+      });
+      gsap.to('.register-orb-2', {
+        y: 20,
+        x: -20,
+        duration: 11,
+        repeat: -1,
+        yoyo: true,
+        ease: 'sine.inOut',
+      });
+    });
+
+    return () => ctx.revert();
+  }, []);
+
   const onSubmit = async (data: RegisterForm) => {
     try {
       await registerUser({
@@ -63,41 +135,26 @@ export default function RegisterPage() {
       {/* Left panel — decorative */}
       <div className="hidden lg:flex flex-1 relative items-center justify-center overflow-hidden">
         <div className="grid-lines absolute inset-0" />
-        <div className="orb orb-purple w-[400px] h-[400px] bottom-1/4 left-1/4 z-0" />
-        <div className="orb orb-pink w-[300px] h-[300px] top-1/4 right-1/4 z-0" style={{ animationDelay: '-10s' }} />
+        <div className="register-orb-1 orb orb-purple w-[400px] h-[400px] bottom-1/4 left-1/4 z-0" />
+        <div className="register-orb-2 orb orb-pink w-[300px] h-[300px] top-1/4 right-1/4 z-0" style={{ animationDelay: '-10s' }} />
 
         <div className="absolute inset-0 z-[1]">
           <ParticleField particleCount={60} color="139, 92, 246" maxDistance={120} speed={0.15} />
         </div>
 
         <div className="relative z-10 text-center px-12">
-          <motion.h2
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, ease }}
-            className="mb-6 flex justify-center"
-          >
+          <div className="register-logo mb-6 flex justify-center">
             <img
               src="/logo.jpeg"
               alt="AlchEx"
               className="w-[clamp(16rem,40vw,28rem)] h-auto drop-shadow-[0_0_60px_rgba(139,92,246,0.4)] rounded-2xl saturate-0"
             />
-          </motion.h2>
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3, duration: 0.8, ease }}
-            className="text-[var(--text-3)] text-lg max-w-sm mx-auto"
-          >
-            Join the exchange. Every skill has equal value.
-          </motion.p>
+          </div>
+          <p className="register-tagline text-[var(--text-3)] text-lg max-w-sm mx-auto">
+            Your next exchange starts here.
+          </p>
 
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.6, duration: 1 }}
-            className="mt-12 flex justify-center gap-6"
-          >
+          <div className="register-stats mt-12 flex justify-center gap-6">
             {[
               { val: '10K+', lbl: 'Students' },
               { val: '50+', lbl: 'Universities' },
@@ -108,18 +165,13 @@ export default function RegisterPage() {
                 <div className="text-label mt-1">{s.lbl}</div>
               </div>
             ))}
-          </motion.div>
+          </div>
         </div>
       </div>
 
       {/* Right panel — form */}
       <div className="flex-1 flex items-center justify-center px-6 py-12 relative z-10">
-        <motion.div
-          initial={{ opacity: 0, x: 30 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.6, ease }}
-          className="w-full max-w-md"
-        >
+        <div className="w-full max-w-md">
           {/* Logo (mobile) */}
           <Link to="/" className="lg:hidden inline-flex items-center gap-3 mb-10">
             <div className="w-10 h-10 rounded-xl overflow-hidden shadow-[0_0_20px_rgba(139,92,246,0.3)]">
@@ -128,14 +180,16 @@ export default function RegisterPage() {
             <span className="text-xl font-display font-bold text-gradient">AlchEx</span>
           </Link>
 
-          <div className="mb-8">
-            <span className="text-label text-[var(--accent-2)] mb-3 block">/ Create Account</span>
+          <div className="register-form-header mb-8">
+            <span className="text-label text-[var(--accent-2)] mb-3 block">
+              <TextScramble text="/ Create Account" trigger="mount" delay={300} />
+            </span>
             <h1 className="text-display text-3xl md:text-4xl text-white mb-2">Join AlchEx</h1>
             <p className="text-[var(--text-2)]">Start exchanging with fellow students</p>
           </div>
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="register-form-field grid grid-cols-2 gap-4">
               <Input
                 label="First Name"
                 placeholder="John"
@@ -151,56 +205,64 @@ export default function RegisterPage() {
               />
             </div>
 
-            <Input
-              label="University Email"
-              type="email"
-              placeholder="you@university.edu"
-              icon={<Mail size={16} />}
-              error={errors.email?.message}
-              {...register('email')}
-            />
+            <div className="register-form-field">
+              <Input
+                label="University Email"
+                type="email"
+                placeholder="you@university.edu"
+                icon={<Mail size={16} />}
+                error={errors.email?.message}
+                {...register('email')}
+              />
+            </div>
 
-            <Input
-              label="Password"
-              type="password"
-              placeholder="••••••••"
-              icon={<Lock size={16} />}
-              error={errors.password?.message}
-              {...register('password')}
-            />
+            <div className="register-form-field">
+              <Input
+                label="Password"
+                type="password"
+                placeholder="••••••••"
+                icon={<Lock size={16} />}
+                error={errors.password?.message}
+                {...register('password')}
+              />
+            </div>
 
-            <Input
-              label="Confirm Password"
-              type="password"
-              placeholder="••••••••"
-              icon={<Lock size={16} />}
-              error={errors.confirmPassword?.message}
-              {...register('confirmPassword')}
-            />
+            <div className="register-form-field">
+              <Input
+                label="Confirm Password"
+                type="password"
+                placeholder="••••••••"
+                icon={<Lock size={16} />}
+                error={errors.confirmPassword?.message}
+                {...register('confirmPassword')}
+              />
+            </div>
 
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="group relative w-full mt-2"
-            >
-              <div className="absolute -inset-0.5 bg-gradient-to-r from-[var(--accent)] to-purple-400 rounded-xl blur opacity-40 group-hover:opacity-70 transition-opacity duration-500" />
-              <div className="relative flex items-center justify-center gap-2 w-full px-6 py-3.5 bg-[var(--accent)] text-white rounded-xl font-semibold hover:bg-purple-500 transition-all duration-300 disabled:opacity-50">
-                {isLoading ? (
-                  <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24" fill="none">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                  </svg>
-                ) : (
-                  <>
-                    Create Account
-                    <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
-                  </>
-                )}
-              </div>
-            </button>
+            <div className="register-form-submit">
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="group relative w-full mt-2"
+              >
+                <div className="absolute -inset-0.5 bg-gradient-to-r from-[var(--accent)] to-purple-400 rounded-xl blur opacity-40 group-hover:opacity-70 transition-opacity duration-500" />
+                <div className="relative flex items-center justify-center gap-2 w-full px-6 py-3.5 bg-[var(--accent)] text-white rounded-xl font-semibold hover:bg-purple-500 transition-all duration-300 disabled:opacity-50">
+                  {isLoading ? (
+                    <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24" fill="none">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                    </svg>
+                  ) : (
+                    <>
+                      Create Account
+                      <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
+                    </>
+                  )}
+                </div>
+              </button>
+            </div>
           </form>
 
-          <div className="mt-8 text-center">
+          <div className="register-form-footer mt-8 text-center">
             <p className="text-sm text-[var(--text-3)]">
               Already have an account?{' '}
               <Link to="/login" className="text-[var(--accent-2)] hover:text-[var(--accent)] font-medium transition-colors">
@@ -208,7 +270,7 @@ export default function RegisterPage() {
               </Link>
             </p>
           </div>
-        </motion.div>
+        </div>
       </div>
     </div>
   );

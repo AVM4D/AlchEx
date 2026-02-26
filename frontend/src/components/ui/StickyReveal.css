@@ -1,0 +1,75 @@
+/* ═══════════════════════════════════════════════════════
+   Sticky Scroll Text Reveal
+   Based on Jhey Tompkins' component, contained for
+   use as a SECTION within a larger page.
+   ═══════════════════════════════════════════════════════ */
+
+/* Wrapper — provides scroll height that bounds the sticky.
+   Uses same font metrics so `lh` units are accurate. */
+.sticky-reveal__wrapper {
+    --start: 50vh;
+    --hue: 271;
+    --accent: hsl(var(--hue) 80% 72%);
+    --dimmed: color-mix(in oklch, var(--text, #fff), #0000 80%);
+    font-size: clamp(2.2rem, 6vw, 5rem);
+    line-height: 1.2;
+    /* padding-bottom gives exactly enough room for the sticky to end
+     after the last word scrolls through the focal point */
+    padding-bottom: 15vh;
+}
+
+/* Header — sticky chassis.
+   Negative top = (count-1) line-heights above viewport.
+   As user scrolls, each word passes through the focal point. */
+.sticky-reveal__header {
+    position: sticky;
+    top: calc((var(--count, 7) - 1) * -1lh);
+    line-height: 1.2;
+    display: flex;
+    align-items: flex-start;
+    width: 100%;
+    font-size: clamp(2.2rem, 6vw, 5rem);
+}
+
+/* Section — flex row, pushed down to the focal point */
+.sticky-reveal__section {
+    display: flex;
+    width: 100%;
+    align-items: flex-start;
+    justify-content: center;
+    padding-top: calc(var(--start) - 0.5lh);
+}
+
+/* "you can" — nested sticky at the focal point (50vh) */
+.sticky-reveal__h1 {
+    position: sticky;
+    top: calc(var(--start) - 0.5lh);
+    font-size: inherit;
+    margin: 0;
+    display: inline-block;
+    height: fit-content;
+    font-weight: 600;
+    color: var(--text, #fff);
+    font-family: var(--font-display, 'Syne', sans-serif);
+}
+
+/* Word list */
+.sticky-reveal__ul {
+    font-weight: 600;
+    padding-inline: 0;
+    margin: 0;
+    list-style-type: none;
+    font-family: var(--font-display, 'Syne', sans-serif);
+}
+
+/* Each word — fixed-background gradient highlight */
+.sticky-reveal__li {
+    background: linear-gradient(180deg,
+            var(--dimmed) 0 calc(var(--start) - 0.5lh),
+            var(--accent) calc(var(--start) - 0.55lh) calc(var(--start) + 0.55lh),
+            var(--dimmed) calc(var(--start) + 0.5lh));
+    background-attachment: fixed;
+    color: #0000;
+    -webkit-background-clip: text;
+    background-clip: text;
+}

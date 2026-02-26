@@ -34,19 +34,22 @@ export const Sidebar: React.FC = () => {
   const sidebarContent = (
     <div className="flex flex-col h-full">
       {/* Logo */}
-      <div className="p-5 flex items-center gap-3 border-b border-[var(--border)]">
-        <Link to="/dashboard" className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-lg overflow-hidden shadow-[0_0_15px_rgba(139,92,246,0.3)]">
+      <div className="p-4 flex items-center gap-3 border-b border-[var(--border)]">
+        <Link to="/dashboard" className="flex items-center gap-2">
+          <div className="w-9 h-9 rounded-lg overflow-hidden shadow-[0_0_15px_rgba(139,92,246,0.3)] shrink-0">
             <img src="/smalllogo.png" alt="AlchEx" className="w-full h-full object-cover" />
           </div>
           {!sidebarCollapsed && (
-            <motion.span
+            <motion.div
               initial={{ opacity: 0, x: -10 }}
               animate={{ opacity: 1, x: 0 }}
-              className="text-lg font-display font-bold text-gradient"
             >
-              AlchEx
-            </motion.span>
+              <img
+                src="/logo.jpeg"
+                alt="AlchEx"
+                className="h-7 w-auto saturate-0 brightness-200"
+              />
+            </motion.div>
           )}
         </Link>
       </div>
@@ -90,7 +93,7 @@ export const Sidebar: React.FC = () => {
       {/* User Footer */}
       {user && (
         <div className="p-4 border-t border-[var(--border)]">
-          <div className="flex items-center gap-3">
+          <div className={cn('flex items-center', sidebarCollapsed ? 'flex-col gap-2' : 'gap-3')}>
             <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[var(--accent)] to-purple-400 flex items-center justify-center text-white text-xs font-bold shrink-0">
               {user.firstName?.charAt(0)}{user.lastName?.charAt(0)}
             </div>
@@ -104,7 +107,10 @@ export const Sidebar: React.FC = () => {
             )}
             <button
               onClick={logout}
-              className="p-2 rounded-lg text-[var(--text-3)] hover:text-red-400 hover:bg-red-500/10 transition-colors"
+              className={cn(
+                'p-2 rounded-lg text-[var(--text-3)] hover:text-red-400 hover:bg-red-500/10 transition-colors',
+                sidebarCollapsed && 'mx-auto'
+              )}
               title="Logout"
             >
               <LogOut size={16} />
