@@ -1,13 +1,32 @@
 // ─── Database Connection Layer (mssql driver — SQL Server) ─────────────────
 // Every repository / service imports ONLY this module.
-// Uses the 'mssql' npm package with msnodesqlv8 for Windows Integrated Auth.
+//
+// Driver selection (automatic):
+//   • Windows Integrated Auth  → uses msnodesqlv8 (native ODBC driver)
+//   • Username/password auth   → uses tedious (pure JS, cross-platform)
+//
+// Teammates on Mac / Linux / Docker just need a DATABASE_URL with user=…;password=…
 // ────────────────────────────────────────────────────────────────────────────
 
-import sql from 'mssql/msnodesqlv8';
+import type * as MsSql from 'mssql';
+
+// ─── Dynamic driver loading ────────────────────────────────────────────────
+// Try the native Windows driver first; fall back to the pure-JS tedious driver
+// so the same codebase works on every OS and in Docker.
+let sql: typeof MsSql;
+let usingNativeDriver = false;
+
+try {
+  sql = require('mssql/msnodesqlv8');
+  usingNativeDriver = true;
+} catch {
+  sql = require('mssql');
+}
 
 // ─── Parse DATABASE_URL from .env ──────────────────────────────────────────
-function parseConnectionUrl(url: string): sql.config {
+function parseConnectionUrl(url: string): MsSql.config {
   // Format: sqlserver://host:port;database=name;integratedSecurity=true;...
+  //    or:  sqlserver://host;instanceName=SQLEXPRESS;database=name;...
   const cleaned = url.replace(/^["']|["']$/g, '');
   const params = new Map<string, string>();
 
@@ -25,21 +44,31 @@ function parseConnectionUrl(url: string): sql.config {
     }
   }
 
-  const cfg: sql.config = {
+  const cfg: MsSql.config = {
     server,
     port: parseInt(portStr, 10),
     database: params.get('database') || 'alchex',
     options: {
       trustServerCertificate: params.get('trustservercertificate') === 'true',
       encrypt: params.get('encrypt') !== 'DANGER_PLAINTEXT',
+      instanceName: params.get('instancename') || undefined,
     },
   };
 
-  // Windows Integrated Auth via msnodesqlv8
-  if (params.get('integratedsecurity') === 'true') {
+  // Windows Integrated Auth — only works when the native driver loaded
+  const wantsIntegrated = params.get('integratedsecurity') === 'true';
+  if (wantsIntegrated && usingNativeDriver) {
     (cfg as any).driver = 'ODBC Driver 18 for SQL Server';
     (cfg.options as any).trustedConnection = true;
+  } else if (wantsIntegrated && !usingNativeDriver) {
+    console.warn(
+      '[DB] integratedSecurity requested but msnodesqlv8 is not available.\n' +
+      '     Falling back to SQL auth — set user= and password= in DATABASE_URL.'
+    );
+    cfg.user = params.get('user') || '';
+    cfg.password = params.get('password') || '';
   } else {
+    // Standard SQL Server Authentication (username + password)
     cfg.user = params.get('user') || '';
     cfg.password = params.get('password') || '';
   }
@@ -48,18 +77,19 @@ function parseConnectionUrl(url: string): sql.config {
 }
 
 // ─── Connection pool (lazy-initialised) ────────────────────────────────────
-let pool: sql.ConnectionPool | null = null;
+let pool: MsSql.ConnectionPool | null = null;
 
-async function getPool(): Promise<sql.ConnectionPool> {
+async function getPool(): Promise<MsSql.ConnectionPool> {
   if (pool && pool.connected) return pool;
 
   const url = process.env.DATABASE_URL || '';
   if (!url) throw new Error('DATABASE_URL environment variable is not set');
 
   const cfg = parseConnectionUrl(url);
+  const driverLabel = usingNativeDriver ? 'msnodesqlv8 (native)' : 'tedious (pure JS)';
   pool = new sql.ConnectionPool(cfg);
   await pool.connect();
-  console.log(`[DB] Connected to SQL Server — ${cfg.server}:${cfg.port}/${cfg.database}`);
+  console.log(`[DB] Connected to SQL Server — ${cfg.server}:${cfg.port}/${cfg.database}  [${driverLabel}]`);
   return pool;
 }
 
@@ -67,7 +97,7 @@ async function getPool(): Promise<sql.ConnectionPool> {
 // NOTE: We use "v" prefix (not "p") because ODBC's sp_executesql generates
 // @P1, @P2, … for '?' placeholders and SQL Server is case-insensitive,
 // so @p1 would collide with ODBC's @P1.
-function addInputs(request: sql.Request, values: any[]): void {
+function addInputs(request: MsSql.Request, values: any[]): void {
   values.forEach((val, i) => {
     if (val === null || val === undefined) {
       request.input(`v${i}`, sql.NVarChar, null);
