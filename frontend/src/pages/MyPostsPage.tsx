@@ -42,7 +42,7 @@ export default function MyPostsPage() {
 
   return (
     <div className="space-y-6 max-w-4xl mx-auto">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-display text-2xl md:text-3xl text-white">My Posts</h1>
           <p className="text-sm text-[var(--text-2)] mt-1">{posts.length} posts created</p>
@@ -81,8 +81,8 @@ export default function MyPostsPage() {
                 <span className={`pill text-[10px] shrink-0 ${statusStyle[post.status] || ''}`}>{post.status}</span>
               </div>
 
-              <div className="flex items-center justify-between pt-3 border-t border-[var(--border)]">
-                <div className="flex items-center gap-3">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-2 pt-3 border-t border-[var(--border)]">
+                <div className="flex flex-wrap items-center gap-2 sm:gap-3">
                   {post.category && <span className="pill text-[10px]"><Tag size={10} /> {post.category}</span>}
                   <span className="text-[10px] text-[var(--text-3)] flex items-center gap-1"><MessageCircle size={10} /> {post._count?.offers ?? 0} offers</span>
                   <span className="text-[10px] text-[var(--text-3)] flex items-center gap-1"><Clock size={10} /> {formatRelativeTime(post.createdAt)}</span>

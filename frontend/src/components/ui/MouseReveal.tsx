@@ -7,6 +7,7 @@ interface MouseRevealProps {
     /** The hidden text revealed on hover */
     backText: string;
     className?: string;
+    style?: React.CSSProperties;
     revealSize?: number;
 }
 
@@ -14,6 +15,7 @@ export const MouseReveal: React.FC<MouseRevealProps> = ({
     frontText,
     backText,
     className = '',
+    style,
     revealSize = 120,
 }) => {
     const containerRef = useRef<HTMLDivElement>(null);
@@ -59,7 +61,7 @@ export const MouseReveal: React.FC<MouseRevealProps> = ({
         <div
             ref={containerRef}
             className={`relative cursor-crosshair overflow-hidden ${className}`}
-            style={{ userSelect: 'none' }}
+            style={{ userSelect: 'none', ...style }}
         >
             {/* Front text — always visible */}
             <div className="pointer-events-none">

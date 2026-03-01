@@ -58,7 +58,7 @@ export default function ProfilePage() {
   if (loading) return (
     <div className="max-w-4xl mx-auto space-y-6">
       <div className="glass-card p-8"><div className="flex gap-6"><div className="skeleton w-24 h-24 rounded-full" /><div className="space-y-3 flex-1"><div className="skeleton h-6 w-48" /><div className="skeleton h-4 w-32" /><div className="skeleton h-4 w-64" /></div></div></div>
-      <div className="grid grid-cols-3 gap-4">{[1,2,3].map(i => <div key={i} className="glass-card p-5 space-y-2"><div className="skeleton h-8 w-16" /><div className="skeleton h-4 w-24" /></div>)}</div>
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">{[1,2,3].map(i => <div key={i} className="glass-card p-5 space-y-2"><div className="skeleton h-8 w-16" /><div className="skeleton h-4 w-24" /></div>)}</div>
     </div>
   );
 
@@ -72,12 +72,12 @@ export default function ProfilePage() {
       {/* Hero card */}
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="glass-card gradient-border overflow-visible">
         {/* Banner */}
-        <div className="h-36 bg-gradient-to-r from-[var(--accent)] via-purple-600 to-blue-600 relative rounded-t-xl overflow-hidden">
+        <div className="h-28 sm:h-36 bg-gradient-to-r from-[var(--accent)] via-purple-600 to-blue-600 relative rounded-t-xl overflow-hidden">
           <div className="absolute inset-0 bg-[url('data:image/svg+xml,...')] opacity-10" />
         </div>
         <div className="px-6 pb-6">
-          <div className="flex flex-col md:flex-row items-start md:items-end gap-4 -mt-14 relative z-10">
-            <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-[var(--accent)] to-purple-400 flex items-center justify-center text-3xl font-bold text-white font-display border-4 border-[var(--bg)] shadow-xl shrink-0">
+          <div className="flex flex-col md:flex-row items-start md:items-end gap-4 -mt-12 sm:-mt-14 relative z-10">
+            <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl bg-gradient-to-br from-[var(--accent)] to-purple-400 flex items-center justify-center text-2xl sm:text-3xl font-bold text-white font-display border-4 border-[var(--bg)] shadow-xl shrink-0">
               {p.firstName.charAt(0)}{p.lastName.charAt(0)}
             </div>
             <div className="flex-1">

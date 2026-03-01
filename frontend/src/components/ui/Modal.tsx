@@ -19,7 +19,7 @@ export const Modal: React.FC<ModalProps> = ({
     sm: 'max-w-md',
     md: 'max-w-lg',
     lg: 'max-w-2xl',
-    xl: 'max-w-4xl',
+    xl: 'max-w-3xl xl:max-w-4xl',
   };
 
   return (
@@ -52,8 +52,8 @@ export const Modal: React.FC<ModalProps> = ({
           >
             {/* Header */}
             {title && (
-              <div className="flex items-center justify-between p-6 pb-0">
-                <h2 className="text-xl font-semibold text-white">{title}</h2>
+              <div className="flex items-center justify-between p-4 sm:p-6 pb-0">
+                <h2 className="text-lg sm:text-xl font-semibold text-white">{title}</h2>
                 <button
                   onClick={onClose}
                   className="p-2 rounded-lg text-gray-400 hover:text-white hover:bg-white/5 transition-colors"
@@ -64,7 +64,7 @@ export const Modal: React.FC<ModalProps> = ({
             )}
 
             {/* Body */}
-            <div className="p-6 overflow-y-auto">{children}</div>
+            <div className="p-4 sm:p-6 overflow-y-auto">{children}</div>
           </motion.div>
         </div>
       )}

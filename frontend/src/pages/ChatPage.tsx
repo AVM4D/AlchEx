@@ -91,9 +91,9 @@ export default function ChatPage() {
   });
 
   return (
-    <div className="flex h-[calc(100vh-3.5rem)] -m-6 -mt-0">
+    <div className="flex h-[calc(100vh-3.5rem)] -mx-5 md:-mx-6 -mb-5 md:-mb-6">
       {/* Conversations sidebar */}
-      <div className={`w-80 border-r border-[var(--border)] bg-[var(--surface)] flex flex-col shrink-0 ${transactionId ? 'hidden md:flex' : 'flex'}`}>
+      <div className={`w-full sm:w-72 md:w-80 border-r border-[var(--border)] bg-[var(--surface)] flex flex-col shrink-0 ${transactionId ? 'hidden md:flex' : 'flex'}`}>
         <div className="p-4 border-b border-[var(--border)]">
           <h2 className="text-display text-lg text-white">Messages</h2>
           <div className="mt-3 relative">
@@ -206,7 +206,7 @@ export default function ChatPage() {
                     return (
                       <motion.div key={msg.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
                         className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
-                        <div className={`max-w-[75%] relative group ${isMe ? 'order-2' : ''}`}>
+                        <div className={`max-w-[85%] sm:max-w-[75%] relative group ${isMe ? 'order-2' : ''}`}>
                           <div className={`px-3.5 py-2.5 rounded-2xl text-sm ${isMe
                             ? 'bg-gradient-to-r from-[var(--accent)] to-purple-500 text-white rounded-br-md'
                             : 'bg-[var(--surface-2)] text-[var(--text-1)] rounded-bl-md border border-[var(--border)]'

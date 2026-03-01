@@ -120,7 +120,7 @@ export default function TransactionsPage() {
                 <div className="flex items-start justify-between gap-4 mb-3">
                   <div className="flex-1 min-w-0">
                     <Link to={`/posts/${tx.postId}`} className="text-sm font-display font-bold text-white hover:text-[var(--accent-2)] transition-colors line-clamp-1">{tx.post.title}</Link>
-                    <div className="flex items-center gap-3 mt-1.5">
+                    <div className="flex flex-wrap items-center gap-3 mt-1.5">
                       <div className="flex items-center gap-1.5">
                         <div className="w-5 h-5 rounded-full bg-gradient-to-br from-[var(--accent)] to-purple-400 flex items-center justify-center text-[8px] font-bold text-white">
                           {other.firstName.charAt(0)}
@@ -147,7 +147,7 @@ export default function TransactionsPage() {
                 )}
 
                 {/* Actions */}
-                <div className="flex items-center gap-2 pt-3 border-t border-[var(--border)]">
+                <div className="flex flex-wrap items-center gap-2 pt-3 border-t border-[var(--border)]">
                   {tx.status === 'IN_PROGRESS' && !myDone && (
                     <button onClick={() => markComplete(tx.id)} className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-500/10 text-emerald-400 rounded-lg text-xs font-medium hover:bg-emerald-500/20 transition-colors">
                       <Check size={12} /> Mark Done
@@ -179,7 +179,7 @@ export default function TransactionsPage() {
       {ratingModal && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setRatingModal(null)}>
           <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
-            onClick={(e) => e.stopPropagation()} className="glass-card p-6 w-full max-w-sm">
+            onClick={(e) => e.stopPropagation()} className="glass-card p-5 sm:p-6 w-full max-w-[calc(100vw-2rem)] sm:max-w-sm">
             <h3 className="text-display text-lg text-white mb-4">Rate this exchange</h3>
             <div className="flex items-center gap-2 mb-4">
               {[1, 2, 3, 4, 5].map(s => (

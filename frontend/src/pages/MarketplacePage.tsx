@@ -70,7 +70,7 @@ export default function MarketplacePage() {
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
       {/* Header */}
-      <div className="flex items-start justify-between">
+      <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h1 className="text-display text-2xl md:text-3xl text-white">Marketplace</h1>
           <p className="text-[var(--text-2)] text-sm mt-1">
@@ -138,7 +138,7 @@ export default function MarketplacePage() {
 
       {/* Posts */}
       {loading ? (
-        <div className={viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4' : 'space-y-3'}>
+        <div className={viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4' : 'space-y-3'}>
           {Array(6).fill(0).map((_, i) => (
             <div key={i} className="glass-card p-5 space-y-3">
               <div className="skeleton h-5 w-2/3" />
@@ -158,7 +158,7 @@ export default function MarketplacePage() {
           </button>
         </div>
       ) : (
-        <div className={viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4' : 'space-y-3'}>
+        <div className={viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4' : 'space-y-3'}>
           {posts.map((post, i) => (
             <motion.div key={post.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05, ease }}>
               <Link to={`/posts/${post.id}`}>

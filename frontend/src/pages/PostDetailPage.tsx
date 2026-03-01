@@ -133,7 +133,7 @@ export default function PostDetailPage() {
         </div>
 
         {/* Meta */}
-        <div className="flex flex-wrap items-center gap-4 pt-4 border-t border-[var(--border)]">
+        <div className="flex flex-wrap items-center gap-3 sm:gap-4 pt-4 border-t border-[var(--border)]">
           <Link to={`/users/${post.user.id}`} className="flex items-center gap-2 hover:opacity-80 transition-opacity">
             <div className="w-7 h-7 rounded-full bg-gradient-to-br from-[var(--accent)] to-purple-400 flex items-center justify-center text-[10px] text-white font-bold">
               {post.user.firstName.charAt(0)}

@@ -83,6 +83,7 @@
   html {
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    overflow-x: hidden;
   }
 
   body {
@@ -90,6 +91,7 @@
     color: var(--text);
     font-family: var(--font-body);
     overflow-x: hidden;
+    max-width: 100vw;
     line-height: 1.6;
   }
 
