@@ -7,9 +7,9 @@ import type { LeaderboardEntry } from '../types';
 const PERIODS = ['All Time', 'Monthly', 'Weekly'] as const;
 
 const podiumConfig = [
-  { place: 2, height: 'h-28', color: 'from-gray-400 to-gray-500', label: '2nd', delay: 0.2 },
-  { place: 1, height: 'h-36', color: 'from-amber-400 to-yellow-500', label: '1st', delay: 0 },
-  { place: 3, height: 'h-24', color: 'from-orange-600 to-amber-700', label: '3rd', delay: 0.3 },
+  { place: 2, height: 'h-20 sm:h-24 md:h-28', color: 'from-gray-400 to-gray-500', label: '2nd', delay: 0.2 },
+  { place: 1, height: 'h-24 sm:h-30 md:h-36', color: 'from-amber-400 to-yellow-500', label: '1st', delay: 0 },
+  { place: 3, height: 'h-16 sm:h-20 md:h-24', color: 'from-orange-600 to-amber-700', label: '3rd', delay: 0.3 },
 ];
 
 export default function LeaderboardPage() {
@@ -56,8 +56,8 @@ export default function LeaderboardPage() {
 
       {loading ? (
         <div className="space-y-4">
-          <div className="flex justify-center gap-4 items-end h-64">
-            {[1,2,3].map(i => <div key={i} className="skeleton w-32 h-40 rounded-t-xl" />)}
+          <div className="flex justify-center gap-4 items-end h-48 sm:h-56 md:h-64">
+            {[1,2,3].map(i => <div key={i} className="skeleton w-24 sm:w-32 h-32 sm:h-40 rounded-t-xl" />)}
           </div>
           {Array(5).fill(0).map((_, i) => <div key={i} className="glass-card p-4 skeleton h-16" />)}
         </div>
@@ -72,7 +72,7 @@ export default function LeaderboardPage() {
           {/* Podium */}
           {top3.length >= 3 && (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.1 }}
-              className="flex justify-center items-end gap-3 md:gap-6 h-72 px-4">
+              className="flex justify-center items-end gap-2 sm:gap-3 md:gap-6 h-56 sm:h-64 md:h-72 px-2 sm:px-4">
               {podiumConfig.map(({ place, height, color, label, delay }) => {
                 const entry = top3[place - 1];
                 if (!entry) return null;
@@ -82,14 +82,14 @@ export default function LeaderboardPage() {
                     {/* Avatar */}
                     <div className="relative mb-3">
                       {place === 1 && <Crown size={24} className="text-amber-400 absolute -top-7 left-1/2 -translate-x-1/2 drop-shadow-lg" />}
-                      <div className={`w-16 h-16 md:w-20 md:h-20 rounded-2xl bg-gradient-to-br ${color} flex items-center justify-center text-xl md:text-2xl font-bold text-white font-display shadow-lg`}>
+                      <div className={`w-14 h-14 sm:w-16 sm:h-16 md:w-20 md:h-20 rounded-2xl bg-gradient-to-br ${color} flex items-center justify-center text-lg sm:text-xl md:text-2xl font-bold text-white font-display shadow-lg`}>
                         {entry.firstName.charAt(0)}{entry.lastName.charAt(0)}
                       </div>
                     </div>
                     <span className="text-sm font-display font-bold text-white mb-0.5">{entry.firstName}</span>
                     <span className="text-xs text-[var(--text-3)] mb-2">{entry.reputationScore} pts</span>
                     {/* Podium bar */}
-                    <div className={`w-24 md:w-32 ${height} rounded-t-xl bg-gradient-to-t ${color} relative overflow-hidden`}>
+                    <div className={`w-20 sm:w-24 md:w-32 ${height} rounded-t-xl bg-gradient-to-t ${color} relative overflow-hidden`}>
                       <div className="absolute inset-0 bg-white/5" />
                       <div className="absolute bottom-3 left-1/2 -translate-x-1/2 text-lg font-display font-bold text-white/80">{label}</div>
                     </div>

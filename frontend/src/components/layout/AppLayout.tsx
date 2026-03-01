@@ -22,7 +22,7 @@ const AppLayout: React.FC = () => {
         )}
       >
         <Header />
-        <main className="p-5 md:p-6">
+        <main className="p-4 sm:p-5 md:p-6">
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}

@@ -76,10 +76,10 @@ export default function AdminPage() {
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-2">
+      <div className="flex gap-2 overflow-x-auto pb-1">
         {TABS.map(t => (
           <button key={t} onClick={() => setTab(t)}
-            className={`px-5 py-2.5 rounded-lg text-xs font-medium transition-all ${tab === t ? 'bg-[var(--accent)] text-white shadow-[0_0_15px_rgba(139,92,246,0.3)]' : 'bg-[var(--surface-2)] text-[var(--text-2)] hover:text-white'}`}>
+            className={`px-5 py-2.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all ${tab === t ? 'bg-[var(--accent)] text-white shadow-[0_0_15px_rgba(139,92,246,0.3)]' : 'bg-[var(--surface-2)] text-[var(--text-2)] hover:text-white'}`}>
             {t}
           </button>
         ))}
@@ -122,7 +122,7 @@ export default function AdminPage() {
           <div className="space-y-2">
             {users.map((u, i) => (
               <motion.div key={u.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.02 }}
-                className="glass-card p-4 flex items-center gap-4">
+                className="glass-card p-4 flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
                 <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[var(--accent)] to-purple-400 flex items-center justify-center text-sm font-bold text-white">
                   {u.firstName?.charAt(0)}{u.lastName?.charAt(0)}
                 </div>
@@ -132,9 +132,9 @@ export default function AdminPage() {
                     <span className={`pill text-[10px] ${u.role === 'ADMIN' ? 'text-red-400 border-red-500/20' : 'text-[var(--text-3)]'}`}>{u.role}</span>
                     {u.isBanned && <span className="pill text-[10px] text-red-400 border-red-500/20 bg-red-500/10">BANNED</span>}
                   </div>
-                  <span className="text-[10px] text-[var(--text-3)]">{u.email} • Joined {formatDate(u.createdAt)}</span>
+                  <span className="text-[10px] text-[var(--text-3)] truncate max-w-[200px] sm:max-w-none inline-block">{u.email} • Joined {formatDate(u.createdAt)}</span>
                 </div>
-                <div className="flex items-center gap-4 shrink-0">
+                <div className="flex items-center gap-2 sm:gap-4 shrink-0 ml-auto">
                   <div className="text-right hidden md:block">
                     <div className="text-xs font-mono text-[var(--accent)]">{u.reputationScore}</div>
                     <div className="text-[9px] text-[var(--text-3)]">Rep</div>
@@ -179,7 +179,7 @@ export default function AdminPage() {
                       <span className={`pill text-[10px] ${r.status === 'PENDING' ? 'text-amber-400 border-amber-500/20' : r.status === 'RESOLVED' ? 'text-emerald-400 border-emerald-500/20' : 'text-gray-400'}`}>{r.status}</span>
                     </div>
                     <p className="text-xs text-[var(--text-2)]">{r.description}</p>
-                    <div className="flex items-center gap-3 mt-2 text-[10px] text-[var(--text-3)]">
+                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-2 text-[10px] text-[var(--text-3)]">
                       <span>By: {r.reporter?.firstName} {r.reporter?.lastName}</span>
                       <span>Against: {r.targetUser?.firstName} {r.targetUser?.lastName}</span>
                       <span>{formatRelativeTime(r.createdAt)}</span>

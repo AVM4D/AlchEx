@@ -216,27 +216,33 @@ export default function ScrollVideoSection() {
 
         lastDrawnFrameRef.current = frameIndex;
 
-        // Clear with transparent (preserves alpha channel content)
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        // ctx.scale(dpr) is active, so we must draw in CSS-pixel (logical)
+        // coordinates — NOT in backing-store pixels (canvas.width/height).
+        const dpr = dprRef.current;
+        const logicalW = canvas.width / dpr;
+        const logicalH = canvas.height / dpr;
 
-        // Draw frame centered / cover
-        const canvasAspect = canvas.width / canvas.height;
+        // Clear with transparent (preserves alpha channel content)
+        ctx.clearRect(0, 0, logicalW, logicalH);
+
+        // Draw frame centered / cover — using logical dimensions
+        const canvasAspect = logicalW / logicalH;
         const imgAspect = img.naturalWidth / img.naturalHeight;
 
         let drawW: number, drawH: number, drawX: number, drawY: number;
 
         if (imgAspect > canvasAspect) {
             // Image is wider — fit height, crop sides
-            drawH = canvas.height;
+            drawH = logicalH;
             drawW = drawH * imgAspect;
-            drawX = (canvas.width - drawW) / 2;
+            drawX = (logicalW - drawW) / 2;
             drawY = 0;
         } else {
             // Image is taller — fit width, crop top/bottom
-            drawW = canvas.width;
+            drawW = logicalW;
             drawH = drawW / imgAspect;
             drawX = 0;
-            drawY = (canvas.height - drawH) / 2;
+            drawY = (logicalH - drawH) / 2;
         }
 
         ctx.drawImage(img, drawX, drawY, drawW, drawH);
@@ -258,15 +264,23 @@ export default function ScrollVideoSection() {
     }, [drawFrame]);
 
     // ── Canvas sizing: retina-aware ──
+    const dprRef = useRef(Math.min(window.devicePixelRatio || 1, 2));
+
     const resizeCanvas = useCallback(() => {
         const canvas = canvasRef.current;
         if (!canvas) return;
 
         const dpr = Math.min(window.devicePixelRatio || 1, 2); // cap at 2x for perf
+        dprRef.current = dpr;
         const rect = canvas.getBoundingClientRect();
 
-        canvas.width = rect.width * dpr;
-        canvas.height = rect.height * dpr;
+        // Only resize if dimensions actually changed (avoids redundant work)
+        const newW = Math.round(rect.width * dpr);
+        const newH = Math.round(rect.height * dpr);
+        if (canvas.width === newW && canvas.height === newH) return;
+
+        canvas.width = newW;
+        canvas.height = newH;
 
         const ctx = canvas.getContext('2d', { alpha: true });
         if (ctx) {
@@ -306,6 +320,28 @@ export default function ScrollVideoSection() {
         // Listen for resize
         window.addEventListener('resize', resizeCanvas);
 
+        // Detect DPR changes (happens when dragging window between monitors)
+        // matchMedia only fires once per query, so we re-create it on each change
+        let currentDprQuery = window.matchMedia(`(resolution: ${window.devicePixelRatio}dppx)`);
+        const onDprChange = () => {
+            // DPR changed — resize canvas with new pixel ratio
+            resizeCanvas();
+            // Re-register with the NEW dpr value
+            currentDprQuery.removeEventListener('change', onDprChange);
+            currentDprQuery = window.matchMedia(`(resolution: ${window.devicePixelRatio}dppx)`);
+            currentDprQuery.addEventListener('change', onDprChange);
+        };
+        currentDprQuery.addEventListener('change', onDprChange);
+
+        // ResizeObserver also fires on cross-monitor moves where bounding rect changes
+        let resizeObserver: ResizeObserver | null = null;
+        if (typeof ResizeObserver !== 'undefined') {
+            resizeObserver = new ResizeObserver(() => {
+                resizeCanvas();
+            });
+            resizeObserver.observe(canvas);
+        }
+
         // ── Frame loading strategy ──
         // Phase 1: Load first batch for instant interaction
         const loadInitialFrames = async () => {
@@ -335,6 +371,8 @@ export default function ScrollVideoSection() {
         return () => {
             cancelAnimationFrame(rafIdRef.current);
             window.removeEventListener('resize', resizeCanvas);
+            currentDprQuery.removeEventListener('change', onDprChange);
+            if (resizeObserver) resizeObserver.disconnect();
             observer.disconnect();
         };
     }, [animate, drawFrame, loadFrame, resizeCanvas]);
@@ -441,7 +479,7 @@ export default function ScrollVideoSection() {
                 {TEXT_OVERLAYS.map((overlay, i) => (
                     <motion.div
                         key={i}
-                        className="absolute left-0 right-0 text-center px-6 pointer-events-none"
+                        className="absolute left-0 right-0 text-center px-[5vw] pointer-events-none"
                         style={{
                             top: '10%',
                             y: overlayYs[i],
@@ -450,8 +488,11 @@ export default function ScrollVideoSection() {
                         <TypewriterText
                             html={overlay.text}
                             reveal={overlayReveals[i]}
-                            className="text-4xl md:text-5xl lg:text-6xl text-white drop-shadow-[0_0_40px_rgba(139,92,246,0.3)] leading-tight font-light tracking-wide"
-                            fontStyle={{ fontFamily: "'Innovar', 'Cinzel Decorative', serif" }}
+                            className="text-white drop-shadow-[0_0_40px_rgba(139,92,246,0.3)] leading-tight font-light tracking-wide"
+                            fontStyle={{
+                                fontFamily: "'Innovar', 'Cinzel Decorative', serif",
+                                fontSize: 'clamp(1.1rem, 3vw, 3.75rem)',
+                            }}
                         />
                     </motion.div>
                 ))}

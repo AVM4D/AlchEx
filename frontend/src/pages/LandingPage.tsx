@@ -217,7 +217,7 @@ export default function LandingPage() {
       </section >
 
       {/* ═══ STATS ═══ */}
-      < section className="relative py-32 px-6" >
+      < section className="relative py-16 sm:py-24 md:py-32 px-4 sm:px-6" >
         <div className="max-w-6xl mx-auto">
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-px bg-[var(--border)] rounded-2xl overflow-hidden">
             {[
@@ -232,9 +232,9 @@ export default function LandingPage() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.1, duration: 0.6, ease }}
-                className="bg-[var(--surface)] p-8 text-center relative group"
+                className="bg-[var(--surface)] p-5 sm:p-8 text-center relative group"
               >
-                <div className="text-4xl md:text-5xl font-bold text-display mb-2">
+                <div className="font-bold text-display mb-2" style={{ fontSize: 'clamp(1.5rem, 4vw, 3rem)' }}>
                   <span className={stat.accent ? 'text-gradient' : 'text-[var(--text)]'}>
                     {typeof stat.value === 'number' && stat.value >= 100
                       ? <CountUp end={stat.value} suffix={stat.suffix} delay={i * 0.15} />
@@ -251,7 +251,7 @@ export default function LandingPage() {
       </section >
 
       {/* ═══ HOW IT WORKS (with Mouse Reveal) ═══ */}
-      < section className="relative py-32 px-6" >
+      < section className="relative py-16 sm:py-24 md:py-32 px-4 sm:px-6" >
         <div className="orb orb-purple w-[400px] h-[400px] top-0 right-0 z-0" style={{ animationDelay: '-5s' }} />
 
         <div className="max-w-6xl mx-auto relative z-10">
@@ -266,14 +266,15 @@ export default function LandingPage() {
               <TextScramble text="/ Process" trigger="inView" />
             </span>
             <MouseReveal
-              className="text-display text-4xl md:text-6xl"
+              className="text-display"
+              style={{ fontSize: 'clamp(1.75rem, 5vw, 3.75rem)' }}
               frontText="How it works"
               backText="How it works"
               revealSize={150}
             />
           </motion.div>
 
-          <div className="grid md:grid-cols-4 gap-6">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {[
               { step: '01', icon: Zap, title: 'Create Request', desc: 'Post what you need and what you can offer in return.' },
               { step: '02', icon: MessageCircle, title: 'Get Proposals', desc: 'Students browse and submit proposals. Chat to negotiate.' },
@@ -307,7 +308,7 @@ export default function LandingPage() {
       </section >
 
       {/* ═══ FEATURES ═══ */}
-      < section className="relative py-32 px-6" >
+      < section className="relative py-16 sm:py-24 md:py-32 px-4 sm:px-6" >
         <div className="section-line mb-20" />
         <div className="max-w-6xl mx-auto">
           <motion.div
@@ -319,20 +320,20 @@ export default function LandingPage() {
             <span className="text-label text-[var(--accent-2)] mb-4 block">
               <TextScramble text="/ Features" trigger="inView" />
             </span>
-            <h2 className="text-display text-4xl md:text-6xl text-[var(--text)] mb-4">
+            <h2 className="text-display text-[var(--text)] mb-4" style={{ fontSize: 'clamp(1.75rem, 5vw, 3.75rem)' }}>
               Built for <span className="text-gradient">excellence</span>
             </h2>
             <p className="text-[var(--text-2)] max-w-lg text-lg">Every feature crafted to make exchanging seamless, safe, and rewarding.</p>
           </motion.div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
             {[
-              { icon: Shield, title: 'Verified .edu Only', desc: 'Only university students with verified .edu emails can join. Safe by design.', span: 'md:col-span-2' },
+              { icon: Shield, title: 'Verified .edu Only', desc: 'Only university students with verified .edu emails can join. Safe by design.', span: 'sm:col-span-2 md:col-span-2' },
               { icon: ArrowLeftRight, title: 'Fair Exchange', desc: 'Structured transaction lifecycle ensures both sides are satisfied.', span: '' },
               { icon: MessageCircle, title: 'Real-Time Chat', desc: 'Built-in messaging with typing indicators. Negotiate instantly.', span: '' },
               { icon: Star, title: 'Reputation System', desc: 'Weighted ratings build trust. Your reputation is your currency.', span: '' },
               { icon: Trophy, title: 'Leaderboard', desc: 'Top exchangers get recognition. Compete to be the best.', span: '' },
-              { icon: Users, title: 'Multi-University', desc: 'Connect with students across campuses and programs.', span: 'md:col-span-2' },
+              { icon: Users, title: 'Multi-University', desc: 'Connect with students across campuses and programs.', span: 'sm:col-span-2 md:col-span-2' },
             ].map((feature, i) => (
               <motion.div
                 key={i}
@@ -358,7 +359,7 @@ export default function LandingPage() {
       </section >
 
       {/* ═══ TOP ALCHEMISTS ═══ */}
-      < section className="relative py-32 px-6 overflow-hidden" >
+      < section className="relative py-16 sm:py-24 md:py-32 px-4 sm:px-6 overflow-hidden" >
         <div className="orb orb-purple w-[500px] h-[500px] top-1/4 left-1/2 -translate-x-1/2 z-0" />
         <div className="max-w-4xl mx-auto relative z-10">
           <motion.div
@@ -371,7 +372,7 @@ export default function LandingPage() {
             <span className="text-label text-[var(--accent-2)] mb-4 block">
               <TextScramble text="/ Leaderboard" trigger="inView" />
             </span>
-            <h2 className="text-display text-4xl md:text-6xl text-[var(--text)]">
+            <h2 className="text-display text-[var(--text)]" style={{ fontSize: 'clamp(1.75rem, 5vw, 3.75rem)' }}>
               Top <span className="text-gradient">alchemists</span>
             </h2>
           </motion.div>
@@ -422,7 +423,7 @@ export default function LandingPage() {
       < section className="py-8 border-y border-[var(--border)]" >
         <MarqueeStrip speed={25} reverse>
           {Array(8).fill(null).map((_, i) => (
-            <span key={i} className="text-display text-4xl md:text-5xl text-[var(--text)]/[0.015] tracking-tight flex items-center gap-8">
+            <span key={i} className="text-display text-[var(--text)]/[0.015] tracking-tight flex items-center gap-8" style={{ fontSize: 'clamp(1.5rem, 4vw, 3rem)' }}>
               EQUIVALENT EXCHANGE
               <span className="w-2 h-2 rounded-full bg-[var(--accent)] opacity-10" />
             </span>
@@ -431,7 +432,7 @@ export default function LandingPage() {
       </section >
 
       {/* ═══ FINAL CTA ═══ */}
-      < section className="relative py-32 px-6" >
+      < section className="relative py-16 sm:py-24 md:py-32 px-4 sm:px-6" >
         {/* LaserFlow background — extends beyond section to blend into neighbors */}
         < div className="absolute z-0" style={{ top: '0%', bottom: '0%', left: '-20%', right: '-20%' }} >
           <LaserFlow
@@ -460,7 +461,7 @@ export default function LandingPage() {
           transition={{ duration: 0.8, ease }}
           className="relative z-10 max-w-3xl mx-auto text-center"
         >
-          <h2 className="text-display text-5xl md:text-7xl text-[var(--text)] mb-6">
+          <h2 className="text-display text-[var(--text)] mb-6" style={{ fontSize: 'clamp(1.75rem, 5vw, 4.5rem)' }}>
             Ready to{' '}
             <span className="text-gradient-shine">exchange?</span>
           </h2>

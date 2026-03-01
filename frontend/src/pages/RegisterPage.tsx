@@ -189,7 +189,7 @@ export default function RegisterPage() {
           </div>
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-            <div className="register-form-field grid grid-cols-2 gap-4">
+            <div className="register-form-field grid grid-cols-1 sm:grid-cols-2 gap-4">
               <Input
                 label="First Name"
                 placeholder="John"

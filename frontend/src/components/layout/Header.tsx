@@ -71,7 +71,7 @@ export const Header: React.FC = () => {
 
   return (
     <header className={cn(
-      'sticky top-0 z-30 h-14 flex items-center justify-between px-6',
+      'sticky top-0 z-30 h-14 flex items-center justify-between px-4 sm:px-6',
       'bg-[var(--bg)]/80 backdrop-blur-xl border-b border-[var(--border)]'
     )}>
       {/* Left */}

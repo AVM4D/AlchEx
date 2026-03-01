@@ -51,10 +51,10 @@ export default function MyOffersPage() {
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-2">
+      <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1">
         {['All', 'PENDING', 'ACCEPTED', 'REJECTED', 'EXPIRED'].map(s => (
           <button key={s} onClick={() => setTab(s)}
-            className={`px-4 py-2 rounded-lg text-xs font-medium transition-all ${tab === s ? 'bg-[var(--accent)] text-white shadow-[0_0_15px_rgba(139,92,246,0.3)]' : 'bg-[var(--surface-2)] text-[var(--text-2)] hover:text-white'}`}>
+            className={`px-4 py-2 rounded-lg text-xs font-medium whitespace-nowrap transition-all ${tab === s ? 'bg-[var(--accent)] text-white shadow-[0_0_15px_rgba(139,92,246,0.3)]' : 'bg-[var(--surface-2)] text-[var(--text-2)] hover:text-white'}`}>
             {s === 'All' ? 'All' : s.charAt(0) + s.slice(1).toLowerCase()}
           </button>
         ))}
@@ -91,14 +91,14 @@ export default function MyOffersPage() {
                 <span className={`pill text-[10px] shrink-0 ${statusStyle[offer.status] || ''}`}>{offer.status}</span>
               </div>
 
-              <div className="flex items-center justify-between pt-3 border-t border-[var(--border)]">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-2 pt-3 border-t border-[var(--border)]">
                 <div className="flex items-center gap-3">
                   <span className="text-[10px] text-[var(--text-3)] flex items-center gap-1"><Clock size={10} /> {formatRelativeTime(offer.createdAt)}</span>
                   {offer.status === 'PENDING' && offer.expiresAt && (
                     <OfferCountdown expiresAt={offer.expiresAt} compact />
                   )}
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   {offer.status === 'ACCEPTED' && offer.transaction && (
                     <Link to={`/chat/${offer.transaction.id}`}
                       className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-500/10 text-emerald-400 rounded-lg text-xs font-medium hover:bg-emerald-500/20 transition-colors">
