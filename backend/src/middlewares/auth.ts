@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { verifyAccessToken, TokenPayload } from '../utils/jwt';
 import { UnauthorizedError, ForbiddenError } from '../utils/errors';
-import prisma from '../prisma/client';
+import db from '../db/connection';
 
 // Extend Express Request to include user
 declare global {
@@ -27,10 +27,10 @@ export async function authenticateUser(
     const payload = verifyAccessToken(token);
 
     // Check if user still exists and is not banned
-    const user = await prisma.user.findUnique({
-      where: { id: payload.userId },
-      select: { id: true, isBanned: true, isDeleted: true },
-    });
+    const rows: any[] = await db.query`
+      SELECT id, isBanned, isDeleted FROM users WHERE id = ${payload.userId}
+    `;
+    const user = rows[0];
 
     if (!user || user.isDeleted) {
       throw new UnauthorizedError('User not found');
@@ -67,10 +67,10 @@ export async function optionalAuth(
     const token = authHeader.split(' ')[1];
     const payload = verifyAccessToken(token);
 
-    const user = await prisma.user.findUnique({
-      where: { id: payload.userId },
-      select: { id: true, isBanned: true, isDeleted: true },
-    });
+    const rows: any[] = await db.query`
+      SELECT id, isBanned, isDeleted FROM users WHERE id = ${payload.userId}
+    `;
+    const user = rows[0];
 
     if (user && !user.isDeleted && !user.isBanned) {
       req.user = payload;

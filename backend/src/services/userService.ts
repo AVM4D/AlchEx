@@ -58,7 +58,7 @@ export class UserService {
         dateFilter = undefined;
     }
 
-    return userRepository.getLeaderboard(limit, dateFilter);
+    return userRepository.getLeaderboard(limit);
   }
 }
 

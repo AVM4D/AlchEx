@@ -32,13 +32,15 @@ export class RatingService {
     // Update receiver reputation
     await userRepository.updateReputation(receiverId);
 
-    await notificationRepository.create({
-      userId: receiverId,
-      type: 'SYSTEM',
-      title: 'New Rating Received',
-      message: `You received a ${score}-star rating!`,
-      data: JSON.stringify({ transactionId, ratingId: rating.id }),
-    });
+    if (rating) {
+      await notificationRepository.create({
+        userId: receiverId,
+        type: 'SYSTEM',
+        title: 'New Rating Received',
+        message: `You received a ${score}-star rating!`,
+        data: JSON.stringify({ transactionId, ratingId: rating.id }),
+      });
+    }
 
     return rating;
   }

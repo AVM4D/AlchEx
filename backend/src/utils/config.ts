@@ -7,6 +7,9 @@ export const config = {
   
   database: {
     url: process.env.DATABASE_URL || '',
+    server: process.env.DB_SERVER || 'localhost',
+    port: parseInt(process.env.DB_PORT || '1433', 10),
+    name: process.env.DB_NAME || 'alchex',
   },
 
   jwt: {

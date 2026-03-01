@@ -5,6 +5,7 @@ import { notificationRepository } from '../repositories/notificationRepository';
 import { transactionService } from './transactionService';
 import { BadRequestError, ForbiddenError, NotFoundError } from '../utils/errors';
 import { paginate, paginationMeta } from '../utils/helpers';
+import db from '../db/connection';
 
 export class AdminService {
   // ─── User Management ───
@@ -102,28 +103,25 @@ export class AdminService {
     return { message: 'Report deleted successfully' };
   }
 
-  // ─── Dashboard Stats ───
+  // ─── Dashboard Stats (Raw SQL) ───
   async getDashboardStats() {
-    const [
-      totalUsers, totalPosts, totalTransactions,
-      activeTransactions, successfulTransactions,
-      pendingReports,
-    ] = await Promise.all([
-      (await import('../prisma/client')).default.user.count({ where: { isDeleted: false } }),
-      (await import('../prisma/client')).default.post.count({ where: { isDeleted: false } }),
-      (await import('../prisma/client')).default.transaction.count({ where: { isDeleted: false } }),
-      (await import('../prisma/client')).default.transaction.count({ where: { status: 'IN_PROGRESS' } }),
-      (await import('../prisma/client')).default.transaction.count({ where: { status: 'SUCCESSFUL' } }),
-      (await import('../prisma/client')).default.report.count({ where: { status: 'PENDING' } }),
-    ]);
-
+    const result: any[] = await db.query`
+      SELECT
+        (SELECT COUNT(*) FROM users WHERE isDeleted = 0) AS totalUsers,
+        (SELECT COUNT(*) FROM posts WHERE isDeleted = 0) AS totalPosts,
+        (SELECT COUNT(*) FROM transactions WHERE isDeleted = 0) AS totalTransactions,
+        (SELECT COUNT(*) FROM transactions WHERE status = 'IN_PROGRESS') AS activeTransactions,
+        (SELECT COUNT(*) FROM transactions WHERE status = 'SUCCESSFUL') AS successfulTransactions,
+        (SELECT COUNT(*) FROM reports WHERE status = 'PENDING') AS pendingReports
+    `;
+    const r = result[0];
     return {
-      totalUsers,
-      totalPosts,
-      totalTransactions,
-      activeTransactions,
-      successfulTransactions,
-      pendingReports,
+      totalUsers: Number(r.totalUsers),
+      totalPosts: Number(r.totalPosts),
+      totalTransactions: Number(r.totalTransactions),
+      activeTransactions: Number(r.activeTransactions),
+      successfulTransactions: Number(r.successfulTransactions),
+      pendingReports: Number(r.pendingReports),
     };
   }
 }

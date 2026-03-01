@@ -1,16 +1,14 @@
-import prisma from '../prisma/client';
-import { Prisma } from '@prisma/client';
+import db from '../db/connection';
 
 // ─────────────────────────────────────────────────────────
-// Repository using $queryRaw to execute SQL views & queries
-// Demonstrates raw SQL usage alongside Prisma ORM
+// Repository using raw SQL to execute views & queries
 // ─────────────────────────────────────────────────────────
 
 export class ViewRepository {
 
   // ─── Q1: Top Exchangers from vw_Leaderboard ───
   async getLeaderboard(limit: number = 10) {
-    return prisma.$queryRaw`
+    return db.query`
       SELECT TOP (${limit}) *
       FROM vw_Leaderboard
       ORDER BY rank ASC
@@ -20,7 +18,7 @@ export class ViewRepository {
   // ─── Q2: Active Posts by Category from vw_ActivePostsByCategory ───
   async getActivePostsByCategory(category?: string, offset: number = 0, limit: number = 20) {
     if (category) {
-      return prisma.$queryRaw`
+      return db.query`
         SELECT *
         FROM vw_ActivePostsByCategory
         WHERE category = ${category}
@@ -28,7 +26,7 @@ export class ViewRepository {
         OFFSET ${offset} ROWS FETCH NEXT ${limit} ROWS ONLY
       `;
     }
-    return prisma.$queryRaw`
+    return db.query`
       SELECT *
       FROM vw_ActivePostsByCategory
       ORDER BY createdAt DESC
@@ -39,7 +37,7 @@ export class ViewRepository {
   // ─── Q3: Search Posts by Keyword ───
   async searchPosts(keyword: string) {
     const searchTerm = `%${keyword}%`;
-    return prisma.$queryRaw`
+    return db.query`
       SELECT *
       FROM vw_ActivePostsByCategory
       WHERE title       LIKE ${searchTerm}
@@ -52,7 +50,7 @@ export class ViewRepository {
 
   // ─── Q4: User Rating Statistics from vw_UserRatingStats ───
   async getUserRatingStats(userId: string) {
-    const result = await prisma.$queryRaw`
+    const result = await db.query`
       SELECT *
       FROM vw_UserRatingStats
       WHERE userId = ${userId}
@@ -62,7 +60,7 @@ export class ViewRepository {
 
   // ─── Q5: Top Rated Users ───
   async getTopRatedUsers(limit: number = 10) {
-    return prisma.$queryRaw`
+    return db.query`
       SELECT TOP (${limit})
         userId, firstName, lastName,
         averageRating, totalRatings
@@ -74,7 +72,7 @@ export class ViewRepository {
 
   // ─── Q6: Most Popular Categories from vw_PopularCategories ───
   async getPopularCategories() {
-    return prisma.$queryRaw`
+    return db.query`
       SELECT *
       FROM vw_PopularCategories
       ORDER BY totalPosts DESC
@@ -83,7 +81,7 @@ export class ViewRepository {
 
   // ─── Q7: Transaction Summary from vw_TransactionSummary ───
   async getTransactionSummary(transactionId: string) {
-    const result = await prisma.$queryRaw`
+    const result = await db.query`
       SELECT *
       FROM vw_TransactionSummary
       WHERE transactionId = ${transactionId}
@@ -93,7 +91,7 @@ export class ViewRepository {
 
   // ─── Q8: Recently Completed Exchanges ───
   async getRecentCompletedExchanges(limit: number = 10) {
-    return prisma.$queryRaw`
+    return db.query`
       SELECT TOP (${limit})
         transactionId, transactionStatus,
         postTitle, category,
@@ -108,7 +106,7 @@ export class ViewRepository {
 
   // ─── Q9: User Exchange History from vw_UserExchangeHistory ───
   async getUserExchangeHistory(userId: string) {
-    return prisma.$queryRaw`
+    return db.query`
       SELECT *
       FROM vw_UserExchangeHistory
       WHERE oduserId = ${userId}
@@ -118,7 +116,7 @@ export class ViewRepository {
 
   // ─── Q10: Pending Reports from vw_PendingReports (Admin) ───
   async getPendingReports() {
-    return prisma.$queryRaw`
+    return db.query`
       SELECT *
       FROM vw_PendingReports
       ORDER BY createdAt DESC
@@ -127,7 +125,7 @@ export class ViewRepository {
 
   // ─── Q11: Admin Dashboard Stats from vw_AdminDashboard ───
   async getAdminDashboard() {
-    const result = await prisma.$queryRaw`
+    const result = await db.query`
       SELECT * FROM vw_AdminDashboard
     `;
     return (result as any[])[0] || null;
@@ -135,14 +133,14 @@ export class ViewRepository {
 
   // ─── Q12: Post Status Distribution from vw_PostStatusDistribution ───
   async getPostStatusDistribution() {
-    return prisma.$queryRaw`
+    return db.query`
       SELECT * FROM vw_PostStatusDistribution
     `;
   }
 
   // ─── Q13: Transaction Completion Rate ───
   async getTransactionCompletionRate() {
-    const result = await prisma.$queryRaw`
+    const result = await db.query`
       SELECT
         COUNT(*)                                                       AS totalTransactions,
         SUM(CASE WHEN status = 'SUCCESSFUL' THEN 1 ELSE 0 END)        AS successful,
@@ -161,7 +159,7 @@ export class ViewRepository {
 
   // ─── Q14: Expiring Posts (next 24 hours) ───
   async getExpiringPosts() {
-    return prisma.$queryRaw`
+    return db.query`
       SELECT
         p.id, p.title, p.category, p.expiresAt,
         u.firstName, u.lastName,
@@ -177,7 +175,7 @@ export class ViewRepository {
 
   // ─── Q15: Pending Offers per Post (for a post owner) ───
   async getPendingOffersPerPost(userId: string) {
-    return prisma.$queryRaw`
+    return db.query`
       SELECT
         p.id       AS postId,
         p.title,
@@ -194,7 +192,7 @@ export class ViewRepository {
 
   // ─── Q16: Monthly Exchange Activity ───
   async getMonthlyActivity() {
-    return prisma.$queryRaw`
+    return db.query`
       SELECT
         FORMAT(createdAt, 'yyyy-MM') AS month,
         COUNT(*)                      AS totalTransactions,
@@ -209,7 +207,7 @@ export class ViewRepository {
 
   // ─── Q17: User Profile with Exchange Stats (raw SQL join) ───
   async getUserProfileStats(userId: string) {
-    const result = await prisma.$queryRaw`
+    const result = await db.query`
       SELECT
         u.id, u.firstName, u.lastName, u.email,
         u.profilePicture, u.bio, u.batch, u.program,
@@ -240,7 +238,7 @@ export class ViewRepository {
 
   // ─── Q18: User's Active Conversations ───
   async getUserConversations(userId: string) {
-    return prisma.$queryRaw`
+    return db.query`
       SELECT
         t.id              AS transactionId,
         p.title           AS postTitle,

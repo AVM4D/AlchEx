@@ -2,7 +2,7 @@ import { transactionRepository } from '../repositories/transactionRepository';
 import { userRepository } from '../repositories/userRepository';
 import { notificationRepository } from '../repositories/notificationRepository';
 import { BadRequestError, ForbiddenError, NotFoundError } from '../utils/errors';
-import prisma from '../prisma/client';
+import db from '../db/connection';
 import { paginate, paginationMeta } from '../utils/helpers';
 
 export class TransactionService {
@@ -39,10 +39,9 @@ export class TransactionService {
       updateData.completedAt = new Date();
 
       // Also update post status
-      await prisma.post.update({
-        where: { id: transaction.postId },
-        data: { status: 'SUCCESSFUL' },
-      });
+      await db.execute`
+        UPDATE posts SET status = 'SUCCESSFUL', updatedAt = GETDATE() WHERE id = ${transaction.postId}
+      `;
 
       // Update reputation for both users
       await userRepository.updateReputation(transaction.requesterId);
@@ -83,18 +82,21 @@ export class TransactionService {
     const isOfferer = transaction.offererId === userId;
     if (!isRequester && !isOfferer) throw new ForbiddenError('Not authorized');
 
-    await prisma.$transaction(async (tx) => {
-      const updateData: any = { cancelledAt: new Date() };
-      if (isRequester) updateData.requesterCancel = true;
-      if (isOfferer) updateData.offererCancel = true;
-      updateData.status = 'CANCELLED';
-
-      await tx.transaction.update({ where: { id: transactionId }, data: updateData });
-      await tx.post.update({
-        where: { id: transaction.postId },
-        data: { status: 'CANCELLED' },
-      });
-    });
+    // Cancel transaction + update post status
+    const cancelledAt = new Date();
+    const reqCancel = isRequester ? 1 : 0;
+    const offCancel = isOfferer ? 1 : 0;
+    await db.execute`
+      UPDATE transactions
+      SET status = 'CANCELLED', cancelledAt = ${cancelledAt},
+          requesterCancel = CASE WHEN ${reqCancel} = 1 THEN 1 ELSE requesterCancel END,
+          offererCancel = CASE WHEN ${offCancel} = 1 THEN 1 ELSE offererCancel END,
+          updatedAt = GETDATE()
+      WHERE id = ${transactionId}
+    `;
+    await db.execute`
+      UPDATE posts SET status = 'CANCELLED', updatedAt = GETDATE() WHERE id = ${transaction.postId}
+    `;
 
     const otherUserId = isRequester ? transaction.offererId : transaction.requesterId;
     await notificationRepository.create({
@@ -112,16 +114,13 @@ export class TransactionService {
     const transaction = await transactionRepository.findById(transactionId);
     if (!transaction) throw new NotFoundError('Transaction not found');
 
-    await prisma.$transaction(async (tx) => {
-      await tx.transaction.update({
-        where: { id: transactionId },
-        data: { status: 'CANCELLED', cancelledAt: new Date() },
-      });
-      await tx.post.update({
-        where: { id: transaction.postId },
-        data: { status: 'CANCELLED' },
-      });
-    });
+    await db.execute`
+      UPDATE transactions SET status = 'CANCELLED', cancelledAt = GETDATE(), updatedAt = GETDATE()
+      WHERE id = ${transactionId}
+    `;
+    await db.execute`
+      UPDATE posts SET status = 'CANCELLED', updatedAt = GETDATE() WHERE id = ${transaction.postId}
+    `;
 
     // Notify both users
     for (const uid of [transaction.requesterId, transaction.offererId]) {
