@@ -1,7 +1,7 @@
 -- ============================================================================
 -- AlchEx – Student Exchange Platform
 -- DQL Queries & Views for All Project Functionalities
--- Database: SQL Server (via Prisma ORM)
+-- Database: SQL Server (via mssql native driver)
 -- ============================================================================
 
 

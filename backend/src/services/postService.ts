@@ -3,7 +3,7 @@ import { offerRepository } from '../repositories/offerRepository';
 import { transactionRepository } from '../repositories/transactionRepository';
 import { notificationRepository } from '../repositories/notificationRepository';
 import { userRepository } from '../repositories/userRepository';
-import prisma from '../prisma/client';
+import db from '../db/connection';
 import {
   BadRequestError, ForbiddenError, NotFoundError, ConflictError
 } from '../utils/errors';
@@ -80,16 +80,16 @@ export class PostService {
     let postsWithMyOffer = posts as any[];
     if (userId) {
       const postIds = posts.map((p: any) => p.id);
-      const myOffers = postIds.length
-        ? await prisma.offer.findMany({
-            where: { postId: { in: postIds }, userId, isDeleted: false },
-            select: {
-              id: true, postId: true, proposalDescription: true,
-              counterExchange: true, status: true, createdAt: true, expiresAt: true,
-            },
-          })
-        : [];
-      const offerMap = new Map(myOffers.map((o) => [o.postId, o]));
+      let myOffers: any[] = [];
+      if (postIds.length > 0) {
+        const idList = postIds.map((pid: string) => `'${pid}'`).join(',');
+        myOffers = await db.queryUnsafe(`
+          SELECT id, postId, proposalDescription, counterExchange, status, createdAt, expiresAt
+          FROM offers
+          WHERE postId IN (${idList}) AND userId = @v0 AND isDeleted = 0
+        `, userId) as any[];
+      }
+      const offerMap = new Map(myOffers.map((o: any) => [o.postId, o]));
       postsWithMyOffer = posts.map((p: any) => ({
         ...p,
         myOffer: offerMap.get(p.id) || null,

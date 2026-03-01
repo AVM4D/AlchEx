@@ -1,44 +1,89 @@
-import prisma from '../prisma/client';
-import { Prisma } from '@prisma/client';
+import db from '../db/connection';
+
+// ─── User Repository — All Raw SQL ─────────────────────────────────────────
 
 export class UserRepository {
+
+  // SELECT single user by ID
   async findById(id: string) {
-    return prisma.user.findUnique({ where: { id, isDeleted: false } });
+    const rows: any[] = await db.query`
+      SELECT * FROM users WHERE id = ${id} AND isDeleted = 0
+    `;
+    return rows[0] || null;
   }
 
+  // SELECT single user by email (auth — includes banned/deleted so caller can check)
   async findByEmail(email: string) {
-    return prisma.user.findUnique({ where: { email } });
+    const rows: any[] = await db.query`
+      SELECT * FROM users WHERE email = ${email}
+    `;
+    return rows[0] || null;
   }
 
-  async create(data: Prisma.UserCreateInput) {
-    return prisma.user.create({ data });
+  // INSERT new user
+  async create(data: {
+    email: string; passwordHash: string; firstName: string; lastName: string;
+    verificationToken?: string | null; role?: string;
+  }) {
+    const id = crypto.randomUUID();
+    const role = data.role || 'STUDENT';
+    const now = new Date();
+    await db.execute`
+      INSERT INTO users
+        (id, email, passwordHash, firstName, lastName, verificationToken,
+         role, emailVerified, isBanned, reputationScore, totalExchanges,
+         isDeleted, createdAt, updatedAt)
+      VALUES
+        (${id}, ${data.email}, ${data.passwordHash}, ${data.firstName}, ${data.lastName},
+         ${data.verificationToken ?? null},
+         ${role}, 0, 0, 0, 0, 0, ${now}, ${now})
+    `;
+    return this.findById(id);
   }
 
-  async update(id: string, data: Prisma.UserUpdateInput) {
-    return prisma.user.update({ where: { id }, data });
+  // UPDATE user — builds SET clause dynamically
+  async update(id: string, data: Record<string, any>) {
+    const keys = Object.keys(data);
+    if (keys.length === 0) return this.findById(id);
+    data.updatedAt = new Date();
+
+    const setParts: string[] = [];
+    const values: any[] = [];
+    for (const [key, val] of Object.entries(data)) {
+      setParts.push(`[${key}] = @v${values.length}`);
+      values.push(val);
+    }
+    const sql = `UPDATE users SET ${setParts.join(', ')} WHERE id = @v${values.length}`;
+    values.push(id);
+
+    await db.executeUnsafe(sql, ...values);
+    return this.findById(id);
   }
 
+  // SOFT DELETE
   async softDelete(id: string) {
-    return prisma.user.update({ where: { id }, data: { isDeleted: true } });
+    await db.execute`
+      UPDATE users SET isDeleted = 1, updatedAt = GETDATE() WHERE id = ${id}
+    `;
+    return { id };
   }
 
-  async findAll(params: { skip?: number; take?: number; where?: Prisma.UserWhereInput }) {
+  // SELECT all users with optional search filter + pagination (admin)
+  async findAll(params: { skip?: number; take?: number; where?: any }) {
     const { skip = 0, take = 20, where } = params;
-
-    // Build dynamic WHERE
     const conditions: string[] = ['isDeleted = 0'];
     if (where?.OR && Array.isArray(where.OR)) {
       const orParts: string[] = [];
-      for (const cond of where.OR as any[]) {
+      for (const cond of where.OR) {
         if (cond.firstName?.contains) orParts.push(`firstName LIKE '%${cond.firstName.contains}%'`);
-        if (cond.lastName?.contains) orParts.push(`lastName LIKE '%${cond.lastName.contains}%'`);
-        if (cond.email?.contains) orParts.push(`email LIKE '%${cond.email.contains}%'`);
+        if (cond.lastName?.contains)  orParts.push(`lastName LIKE '%${cond.lastName.contains}%'`);
+        if (cond.email?.contains)     orParts.push(`email LIKE '%${cond.email.contains}%'`);
       }
       if (orParts.length > 0) conditions.push(`(${orParts.join(' OR ')})`);
     }
     const whereClause = conditions.join(' AND ');
 
-    const users = await prisma.$queryRawUnsafe(`
+    const users = await db.queryUnsafe(`
       SELECT id, email, firstName, lastName, profilePicture, bio, batch, program,
              section, university, campus, role, isBanned, reputationScore,
              totalExchanges, createdAt
@@ -47,69 +92,49 @@ export class UserRepository {
       ORDER BY createdAt DESC
       OFFSET ${skip} ROWS FETCH NEXT ${take} ROWS ONLY
     `);
-
-    const countResult: any[] = await prisma.$queryRawUnsafe(`
+    const countResult: any[] = await db.queryUnsafe(`
       SELECT COUNT(*) AS total FROM users WHERE ${whereClause}
     `);
-    const total = Number(countResult[0]?.total ?? 0);
-
-    return { users: users as any[], total };
+    return { users: users as any[], total: Number(countResult[0]?.total ?? 0) };
   }
 
-  async getLeaderboard(limit: number, dateFilter?: Date) {
-    const where: Prisma.UserWhereInput = {
-      isDeleted: false,
-      isBanned: false,
-      totalExchanges: { gt: 0 },
-    };
-
-    return prisma.user.findMany({
-      where,
-      select: {
-        id: true, firstName: true, lastName: true, profilePicture: true,
-        university: true, reputationScore: true, totalExchanges: true,
-      },
-      orderBy: { reputationScore: 'desc' },
-      take: limit,
-    });
+  // SELECT top users by reputation (leaderboard)
+  async getLeaderboard(limit: number) {
+    return db.query`
+      SELECT id, firstName, lastName, profilePicture, university,
+             reputationScore, totalExchanges
+      FROM users
+      WHERE isDeleted = 0 AND isBanned = 0 AND totalExchanges > 0
+      ORDER BY reputationScore DESC
+      OFFSET 0 ROWS FETCH NEXT ${limit} ROWS ONLY
+    `;
   }
 
+  // Recalculate reputation from ratings + exchange volume
   async updateReputation(userId: string) {
-    // Step 1: Get average rating and count using raw SQL aggregate
-    const ratingStats: any[] = await prisma.$queryRaw`
-      SELECT
-        ISNULL(AVG(CAST(score AS FLOAT)), 0) AS avgRating,
-        COUNT(score) AS ratingCount
+    const ratingStats: any[] = await db.query`
+      SELECT ISNULL(AVG(CAST(score AS FLOAT)), 0) AS avgRating,
+             COUNT(score) AS ratingCount
       FROM ratings
       WHERE receiverId = ${userId} AND isDeleted = 0
     `;
     const avgRating = ratingStats[0]?.avgRating ?? 0;
-    const ratingCount = ratingStats[0]?.ratingCount ?? 0;
 
-    // Step 2: Count successful exchanges with OR condition
-    const exchangeStats: any[] = await prisma.$queryRaw`
-      SELECT COUNT(*) AS exchangeCount
-      FROM transactions
-      WHERE (requesterId = ${userId} OR offererId = ${userId})
-        AND status = 'SUCCESSFUL'
+    const exchangeStats: any[] = await db.query`
+      SELECT COUNT(*) AS exchangeCount FROM transactions
+      WHERE (requesterId = ${userId} OR offererId = ${userId}) AND status = 'SUCCESSFUL'
     `;
     const exchangeCount = Number(exchangeStats[0]?.exchangeCount ?? 0);
 
-    // Step 3: Compute weighted reputation: 60% rating + 40% volume (normalized)
     const normalizedExchanges = Math.min(exchangeCount / 50, 1) * 5;
-    const reputationScore = (avgRating * 0.6 + normalizedExchanges * 0.4);
-    const roundedScore = Math.round(reputationScore * 100) / 100;
+    const reputationScore = Math.round((avgRating * 0.6 + normalizedExchanges * 0.4) * 100) / 100;
 
-    // Step 4: Update the user record
-    await prisma.$executeRaw`
+    await db.execute`
       UPDATE users
-      SET reputationScore = ${roundedScore},
-          totalExchanges = ${exchangeCount},
-          updatedAt = GETDATE()
+      SET reputationScore = ${reputationScore}, totalExchanges = ${exchangeCount}, updatedAt = GETDATE()
       WHERE id = ${userId}
     `;
-
-    return prisma.user.findUnique({ where: { id: userId } });
+    return this.findById(userId);
   }
 }
 

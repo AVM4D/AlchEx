@@ -33,24 +33,21 @@ export function errorHandler(
     return;
   }
 
-  // ─── Prisma errors (generic messages — never expose DB details) ───
-  if (err.constructor.name === 'PrismaClientKnownRequestError') {
-    const prismaError = err as any;
-    if (prismaError.code === 'P2002') {
+  // ─── SQL Server errors (generic messages — never expose DB details) ───
+  if (err.constructor.name === 'RequestError' || err.constructor.name === 'ConnectionError') {
+    const sqlErr = err as any;
+    // Unique constraint violation (SQL Server error 2627 / 2601)
+    if (sqlErr.number === 2627 || sqlErr.number === 2601) {
       res.status(409).json(errorResponse('A record with this value already exists', 'DUPLICATE'));
       return;
     }
-    if (prismaError.code === 'P2025') {
-      res.status(404).json(errorResponse('Record not found', 'NOT_FOUND'));
+    // FK constraint violation
+    if (sqlErr.number === 547) {
+      res.status(400).json(errorResponse('Invalid reference — related record not found', 'FK_VIOLATION'));
       return;
     }
-    // Catch-all for other Prisma errors — NEVER expose raw Prisma messages
+    // Catch-all for other SQL errors — NEVER expose raw messages
     res.status(500).json(errorResponse('A database error occurred', 'DATABASE_ERROR'));
-    return;
-  }
-
-  if (err.constructor.name === 'PrismaClientValidationError') {
-    res.status(400).json(errorResponse('Invalid data provided', 'VALIDATION_ERROR'));
     return;
   }
 

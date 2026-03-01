@@ -5,7 +5,7 @@ import { notificationRepository } from '../repositories/notificationRepository';
 import {
   BadRequestError, ForbiddenError, NotFoundError, ConflictError
 } from '../utils/errors';
-import prisma from '../prisma/client';
+import db from '../db/connection';
 
 export class OfferService {
   async create(userId: string, postId: string, proposalDescription: string, counterExchange?: string) {
@@ -31,7 +31,7 @@ export class OfferService {
     });
 
     // Notify post owner only if they opted in
-    if (post.notifyOnOffers !== false) {
+    if (post.notifyOnOffers !== false && offer) {
       await notificationRepository.create({
         userId: post.userId,
         type: 'OFFER_RECEIVED',
@@ -52,46 +52,32 @@ export class OfferService {
     if (offer.post.status !== 'ACTIVE') throw new BadRequestError('Post is not active');
     if (offer.expiresAt && new Date(offer.expiresAt) < new Date()) throw new BadRequestError('This offer has expired');
 
-    // Use transaction to ensure atomicity
-    const result = await prisma.$transaction(async (tx) => {
-      // Accept the offer
-      await tx.offer.update({
-        where: { id: offerId },
-        data: { status: 'ACCEPTED' },
-      });
+    // Accept offer + reject others + update post + create transaction (all raw SQL)
+    const now = new Date();
+    await db.execute`
+      UPDATE offers SET status = 'ACCEPTED', updatedAt = ${now} WHERE id = ${offerId}
+    `;
+    await db.execute`
+      UPDATE offers SET status = 'REJECTED', updatedAt = ${now}
+      WHERE postId = ${offer.postId} AND id != ${offerId} AND status = 'PENDING'
+    `;
+    await db.execute`
+      UPDATE posts SET status = 'IN_PROGRESS', updatedAt = ${now} WHERE id = ${offer.postId}
+    `;
 
-      // Reject all other offers
-      await tx.offer.updateMany({
-        where: {
-          postId: offer.postId,
-          id: { not: offerId },
-          status: 'PENDING',
-        },
-        data: { status: 'REJECTED' },
-      });
-
-      // Update post status
-      await tx.post.update({
-        where: { id: offer.postId },
-        data: { status: 'IN_PROGRESS' },
-      });
-
-      // Create transaction
-      const expiresAt = new Date();
-      expiresAt.setDate(expiresAt.getDate() + 14); // 14 days to complete
-
-      const transaction = await tx.transaction.create({
-        data: {
-          postId: offer.postId,
-          offerId: offer.id,
-          requesterId: userId,
-          offererId: offer.userId,
-          expiresAt,
-        },
-      });
-
-      return transaction;
-    });
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + 14); // 14 days to complete
+    const txId = crypto.randomUUID();
+    await db.execute`
+      INSERT INTO transactions
+        (id, postId, offerId, requesterId, offererId, status, requesterDone, offererDone,
+         requesterCancel, offererCancel, expiresAt, isDeleted, createdAt, updatedAt)
+      VALUES
+        (${txId}, ${offer.postId}, ${offer.id}, ${userId}, ${offer.userId},
+         'IN_PROGRESS', 0, 0, 0, 0, ${expiresAt}, 0, ${now}, ${now})
+    `;
+    const txRows: any[] = await db.query`SELECT * FROM transactions WHERE id = ${txId}`;
+    const result = txRows[0];
 
     // Notify the offer creator
     await notificationRepository.create({

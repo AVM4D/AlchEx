@@ -1,8 +1,9 @@
+import crypto from 'crypto';
 import cron from 'node-cron';
 import { postRepository } from '../repositories/postRepository';
 import { transactionRepository } from '../repositories/transactionRepository';
 import { offerRepository } from '../repositories/offerRepository';
-import prisma from '../prisma/client';
+import db from '../db/connection';
 
 export function initializeCronJobs() {
   // Expire posts every 15 minutes
@@ -36,14 +37,16 @@ export function initializeCronJobs() {
       if (result.count > 0) {
         console.log(`[Cron] Expired ${result.count} transactions`);
 
-        // Also update related posts
-        await prisma.post.updateMany({
-          where: {
-            transaction: { status: 'EXPIRED' },
-            status: 'IN_PROGRESS',
-          },
-          data: { status: 'EXPIRED' },
-        });
+        // Also update related posts whose transaction expired
+        await db.execute`
+          UPDATE posts SET status = 'EXPIRED', updatedAt = GETDATE()
+          WHERE status = 'IN_PROGRESS'
+            AND id IN (
+              SELECT p.id FROM posts p
+              INNER JOIN transactions t ON t.postId = p.id
+              WHERE t.status = 'EXPIRED'
+            )
+        `;
       }
     } catch (error) {
       console.error('[Cron] Error expiring transactions:', error);
@@ -53,36 +56,38 @@ export function initializeCronJobs() {
   // Leaderboard snapshot - daily at midnight
   cron.schedule('0 0 * * *', async () => {
     try {
-      const topUsers = await prisma.user.findMany({
-        where: { isDeleted: false, isBanned: false, totalExchanges: { gt: 0 } },
-        orderBy: { reputationScore: 'desc' },
-        take: 100,
-        select: {
-          id: true,
-          reputationScore: true,
-          totalExchanges: true,
-        },
-      });
+      // Fetch top 100 users by reputation
+      const topUsers = await db.query<Array<{ id: string; reputationScore: number; totalExchanges: number }>>`
+        SELECT TOP 100 id, reputationScore, totalExchanges
+        FROM users
+        WHERE isDeleted = 0 AND isBanned = 0 AND totalExchanges > 0
+        ORDER BY reputationScore DESC
+      `;
 
-      const ratings = await prisma.rating.groupBy({
-        by: ['receiverId'],
-        _avg: { score: true },
-      });
-      const ratingMap = new Map(ratings.map((r) => [r.receiverId, r._avg.score || 0]));
+      // Get average ratings per user
+      const ratings = await db.query<Array<{ receiverId: string; avgScore: number }>>`
+        SELECT receiverId, AVG(CAST(score AS FLOAT)) AS avgScore
+        FROM ratings
+        WHERE isDeleted = 0
+        GROUP BY receiverId
+      `;
+      const ratingMap = new Map(ratings.map((r) => [r.receiverId, r.avgScore || 0]));
 
-      const snapshots = topUsers.map((user, index) => ({
-        userId: user.id,
-        rank: index + 1,
-        reputationScore: user.reputationScore,
-        totalExchanges: user.totalExchanges,
-        averageRating: ratingMap.get(user.id) || 0,
-        period: 'DAILY',
-        snapshotDate: new Date(),
-      }));
-
-      if (snapshots.length > 0) {
-        await prisma.leaderboardSnapshot.createMany({ data: snapshots });
-        console.log(`[Cron] Created ${snapshots.length} leaderboard snapshots`);
+      // Insert leaderboard snapshots one by one
+      let insertedCount = 0;
+      const now = new Date();
+      for (let i = 0; i < topUsers.length; i++) {
+        const user = topUsers[i];
+        const snapshotId = crypto.randomUUID();
+        const avgRating = ratingMap.get(user.id) || 0;
+        await db.execute`
+          INSERT INTO leaderboard_snapshots (id, userId, rank, reputationScore, totalExchanges, averageRating, period, snapshotDate, createdAt)
+          VALUES (${snapshotId}, ${user.id}, ${i + 1}, ${user.reputationScore}, ${user.totalExchanges}, ${avgRating}, 'DAILY', ${now}, GETDATE())
+        `;
+        insertedCount++;
+      }
+      if (insertedCount > 0) {
+        console.log(`[Cron] Created ${insertedCount} leaderboard snapshots`);
       }
     } catch (error) {
       console.error('[Cron] Error creating leaderboard snapshot:', error);

@@ -1,86 +1,136 @@
-import prisma from '../prisma/client';
-import { Prisma } from '@prisma/client';
+import db from '../db/connection';
+
+// ─── Post Repository — All Raw SQL ─────────────────────────────────────────
 
 export class PostRepository {
+
+  // SELECT single post by ID with user info + offers + offer count
   async findById(id: string) {
-    return prisma.post.findUnique({
-      where: { id, isDeleted: false },
-      include: {
-        user: {
-          select: {
-            id: true, firstName: true, lastName: true, profilePicture: true,
-            university: true, reputationScore: true,
-          },
-        },
-        offers: {
-          where: { isDeleted: false },
-          include: {
-            user: {
-              select: {
-                id: true, firstName: true, lastName: true, profilePicture: true,
-                reputationScore: true,
-              },
-            },
-          },
-        },
-        _count: { select: { offers: { where: { isDeleted: false } } } },
+    // Main post + owner
+    const rows: any[] = await db.query`
+      SELECT
+        p.*, 
+        u.id AS [user.id], u.firstName AS [user.firstName], u.lastName AS [user.lastName],
+        u.profilePicture AS [user.profilePicture], u.university AS [user.university],
+        u.reputationScore AS [user.reputationScore]
+      FROM posts p
+      JOIN users u ON u.id = p.userId
+      WHERE p.id = ${id} AND p.isDeleted = 0
+    `;
+    if (rows.length === 0) return null;
+    const row = rows[0];
+
+    // Offers on this post
+    const offers: any[] = await db.query`
+      SELECT
+        o.id, o.postId, o.userId, o.proposalDescription, o.counterExchange,
+        o.status, o.expiresAt, o.createdAt, o.updatedAt,
+        u.id AS [user.id], u.firstName AS [user.firstName], u.lastName AS [user.lastName],
+        u.profilePicture AS [user.profilePicture], u.reputationScore AS [user.reputationScore]
+      FROM offers o
+      JOIN users u ON u.id = o.userId
+      WHERE o.postId = ${id} AND o.isDeleted = 0
+      ORDER BY o.createdAt DESC
+    `;
+
+    // Offer count
+    const countResult: any[] = await db.query`
+      SELECT COUNT(*) AS cnt FROM offers WHERE postId = ${id} AND isDeleted = 0
+    `;
+
+    return {
+      id: row.id, userId: row.userId, title: row.title, description: row.description,
+      whatINeed: row.whatINeed, whatIOffer: row.whatIOffer, category: row.category,
+      tags: row.tags, status: row.status, notifyOnOffers: row.notifyOnOffers,
+      expiresAt: row.expiresAt, isDeleted: row.isDeleted, createdAt: row.createdAt, updatedAt: row.updatedAt,
+      user: {
+        id: row['user.id'], firstName: row['user.firstName'], lastName: row['user.lastName'],
+        profilePicture: row['user.profilePicture'], university: row['user.university'],
+        reputationScore: row['user.reputationScore'],
       },
-    });
+      offers: offers.map((o: any) => ({
+        id: o.id, postId: o.postId, userId: o.userId,
+        proposalDescription: o.proposalDescription, counterExchange: o.counterExchange,
+        status: o.status, expiresAt: o.expiresAt, createdAt: o.createdAt, updatedAt: o.updatedAt,
+        user: {
+          id: o['user.id'], firstName: o['user.firstName'], lastName: o['user.lastName'],
+          profilePicture: o['user.profilePicture'], reputationScore: o['user.reputationScore'],
+        },
+      })),
+      _count: { offers: Number(countResult[0]?.cnt ?? 0) },
+    };
   }
 
-  async create(data: Prisma.PostCreateInput) {
-    return prisma.post.create({ data });
+  // INSERT new post
+  async create(data: {
+    user: { connect: { id: string } };
+    title: string; description: string; whatINeed: string; whatIOffer: string;
+    category: string; tags?: string | null; expiresAt: Date; notifyOnOffers?: boolean;
+  }) {
+    const id = crypto.randomUUID();
+    const now = new Date();
+    const notify = data.notifyOnOffers !== false ? 1 : 0;
+    await db.execute`
+      INSERT INTO posts
+        (id, userId, title, description, whatINeed, whatIOffer, category, tags,
+         status, notifyOnOffers, expiresAt, isDeleted, createdAt, updatedAt)
+      VALUES
+        (${id}, ${data.user.connect.id}, ${data.title}, ${data.description},
+         ${data.whatINeed}, ${data.whatIOffer}, ${data.category}, ${data.tags ?? null},
+         'ACTIVE', ${notify}, ${data.expiresAt}, 0, ${now}, ${now})
+    `;
+    return this.findById(id);
   }
 
-  async update(id: string, data: Prisma.PostUpdateInput) {
-    return prisma.post.update({ where: { id }, data });
+  // UPDATE post — dynamic SET
+  async update(id: string, data: Record<string, any>) {
+    const keys = Object.keys(data);
+    if (keys.length === 0) return this.findById(id);
+    data.updatedAt = new Date();
+
+    const setParts: string[] = [];
+    const values: any[] = [];
+    for (const [key, val] of Object.entries(data)) {
+      setParts.push(`[${key}] = @v${values.length}`);
+      values.push(val);
+    }
+    const sql = `UPDATE posts SET ${setParts.join(', ')} WHERE id = @v${values.length}`;
+    values.push(id);
+
+    await db.executeUnsafe(sql, ...values);
+    return this.findById(id);
   }
 
+  // SOFT DELETE
   async softDelete(id: string) {
-    return prisma.post.update({ where: { id }, data: { isDeleted: true } });
+    await db.execute`
+      UPDATE posts SET isDeleted = 1, updatedAt = GETDATE() WHERE id = ${id}
+    `;
+    return { id };
   }
 
+  // SELECT all posts — marketplace / my-posts with dynamic filters + pagination
   async findAll(params: {
-    skip?: number;
-    take?: number;
-    where?: Prisma.PostWhereInput;
-    orderBy?: Prisma.PostOrderByWithRelationInput;
+    skip?: number; take?: number; where?: any; orderBy?: any;
   }) {
     const { skip = 0, take = 20, where, orderBy } = params;
 
-    // Build dynamic WHERE conditions
     const conditions: string[] = ['p.isDeleted = 0'];
-    const values: any[] = [];
-
-    if (where?.status) {
-      conditions.push(`p.status = '${where.status}'`);
-    }
-    if (where?.userId) {
-      values.push(where.userId);
-    }
-    if (where?.category) {
-      conditions.push(`p.category = '${where.category}'`);
-    }
+    if (where?.status) conditions.push(`p.status = '${where.status}'`);
+    if (where?.category) conditions.push(`p.category = '${where.category}'`);
+    if (where?.userId) conditions.push(`p.userId = '${where.userId}'`);
     if (where?.OR && Array.isArray(where.OR)) {
       const orParts: string[] = [];
-      for (const cond of where.OR as any[]) {
-        if (cond.title?.contains) orParts.push(`p.title LIKE '%${cond.title.contains}%'`);
+      for (const cond of where.OR) {
+        if (cond.title?.contains)       orParts.push(`p.title LIKE '%${cond.title.contains}%'`);
         if (cond.description?.contains) orParts.push(`p.description LIKE '%${cond.description.contains}%'`);
-        if (cond.whatINeed?.contains) orParts.push(`p.whatINeed LIKE '%${cond.whatINeed.contains}%'`);
-        if (cond.whatIOffer?.contains) orParts.push(`p.whatIOffer LIKE '%${cond.whatIOffer.contains}%'`);
+        if (cond.whatINeed?.contains)    orParts.push(`p.whatINeed LIKE '%${cond.whatINeed.contains}%'`);
+        if (cond.whatIOffer?.contains)   orParts.push(`p.whatIOffer LIKE '%${cond.whatIOffer.contains}%'`);
       }
-      if (orParts.length > 0) {
-        conditions.push(`(${orParts.join(' OR ')})`);
-      }
+      if (orParts.length > 0) conditions.push(`(${orParts.join(' OR ')})`);
     }
-
-    if (where?.userId) {
-      conditions.push(`p.userId = '${where.userId}'`);
-    }
-
     const whereClause = conditions.join(' AND ');
 
-    // Determine ORDER BY
     let orderClause = 'p.createdAt DESC';
     if (orderBy) {
       const key = Object.keys(orderBy)[0];
@@ -88,7 +138,7 @@ export class PostRepository {
       orderClause = `p.${key} ${dir === 'asc' ? 'ASC' : 'DESC'}`;
     }
 
-    const posts = await prisma.$queryRawUnsafe(`
+    const posts = await db.queryUnsafe(`
       SELECT
         p.id, p.userId, p.title, p.description, p.whatINeed, p.whatIOffer,
         p.category, p.tags, p.status, p.notifyOnOffers, p.expiresAt,
@@ -100,27 +150,23 @@ export class PostRepository {
       FROM posts p
       JOIN users u ON u.id = p.userId
       LEFT JOIN (
-        SELECT postId, COUNT(*) AS offerCount
-        FROM offers WHERE isDeleted = 0
-        GROUP BY postId
+        SELECT postId, COUNT(*) AS offerCount FROM offers WHERE isDeleted = 0 GROUP BY postId
       ) oc ON oc.postId = p.id
       WHERE ${whereClause}
       ORDER BY ${orderClause}
       OFFSET ${skip} ROWS FETCH NEXT ${take} ROWS ONLY
     `);
 
-    const countResult: any[] = await prisma.$queryRawUnsafe(`
+    const countResult: any[] = await db.queryUnsafe(`
       SELECT COUNT(*) AS total FROM posts p WHERE ${whereClause}
     `);
-    const total = countResult[0]?.total ?? 0;
+    const total = Number(countResult[0]?.total ?? 0);
 
-    // Restructure to match Prisma's nested shape
     const formatted = (posts as any[]).map((row: any) => ({
       id: row.id, userId: row.userId, title: row.title, description: row.description,
       whatINeed: row.whatINeed, whatIOffer: row.whatIOffer, category: row.category,
       tags: row.tags, status: row.status, notifyOnOffers: row.notifyOnOffers,
-      expiresAt: row.expiresAt, isDeleted: row.isDeleted,
-      createdAt: row.createdAt, updatedAt: row.updatedAt,
+      expiresAt: row.expiresAt, isDeleted: row.isDeleted, createdAt: row.createdAt, updatedAt: row.updatedAt,
       user: {
         id: row['user.id'], firstName: row['user.firstName'], lastName: row['user.lastName'],
         profilePicture: row['user.profilePicture'], university: row['user.university'],
@@ -129,22 +175,21 @@ export class PostRepository {
       _count: { offers: row.offerCount },
     }));
 
-    return { posts: formatted, total: Number(total) };
+    return { posts: formatted, total };
   }
 
+  // Shortcut: SELECT by user
   async findByUserId(userId: string, skip?: number, take?: number) {
     return this.findAll({ skip, take, where: { userId } });
   }
 
+  // UPDATE expired active posts → status = 'EXPIRED'
   async expirePosts() {
-    return prisma.post.updateMany({
-      where: {
-        status: 'ACTIVE',
-        expiresAt: { lte: new Date() },
-        isDeleted: false,
-      },
-      data: { status: 'EXPIRED' },
-    });
+    const result = await db.execute`
+      UPDATE posts SET status = 'EXPIRED', updatedAt = GETDATE()
+      WHERE status = 'ACTIVE' AND expiresAt <= GETDATE() AND isDeleted = 0
+    `;
+    return { count: result };
   }
 }
 
