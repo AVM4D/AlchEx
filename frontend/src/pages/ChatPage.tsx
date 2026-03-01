@@ -56,19 +56,27 @@ export default function ChatPage() {
     if (!transactionId) return;
     connectSocket();
     const socket = getSocket();
-    socket.emit('join_transaction', transactionId);
+    socket.emit('join:transaction', transactionId);
     const onMsg = (msg: Message) => {
-      if (msg.transactionId === transactionId) setMessages(prev => [...prev, msg]);
+      if (msg.transactionId === transactionId) {
+        setMessages(prev => {
+          // Avoid duplicates (in case REST response already added it)
+          if (prev.some(m => m.id === msg.id)) return prev;
+          return [...prev, msg];
+        });
+      }
     };
-    socket.on('new_message', onMsg);
-    return () => { socket.off('new_message', onMsg); socket.emit('leave_transaction', transactionId); };
+    socket.on('message:new', onMsg);
+    return () => { socket.off('message:new', onMsg); socket.emit('leave:transaction', transactionId); };
   }, [transactionId]);
 
   const sendMessage = useCallback(async () => {
     if (!newMsg.trim() || !transactionId || sending) return;
     setSending(true);
     try {
-      await chatApi.sendMessage({ transactionId, content: newMsg.trim() });
+      // Send via socket for real-time delivery to both parties
+      const socket = getSocket();
+      socket.emit('message:send', { transactionId, content: newMsg.trim() });
       setNewMsg('');
       inputRef.current?.focus();
     } catch {}

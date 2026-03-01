@@ -70,8 +70,14 @@ export default function CreatePostPage() {
         toast.success('Post created');
       }
       navigate('/my-posts');
-    } catch {
-      toast.error(`Failed to ${isEdit ? 'update' : 'create'} post`);
+    } catch (err: any) {
+      const data = err?.response?.data;
+      if (data?.errors && typeof data.errors === 'object') {
+        const msgs = Object.values(data.errors).flat();
+        msgs.forEach((m: any) => toast.error(String(m)));
+      } else {
+        toast.error(data?.message || `Failed to ${isEdit ? 'update' : 'create'} post`);
+      }
     }
     setLoading(false);
   };
