@@ -142,6 +142,14 @@ export class TransactionService {
     const { transactions, total } = await transactionRepository.findByUser(userId, skip, take);
     return { transactions, pagination: paginationMeta(total, page, limit) };
   }
+
+  async getAll(page: number = 1, limit: number = 20, status?: string) {
+    const { skip, take } = paginate(page, limit);
+    const where: any = {};
+    if (status) where.status = status;
+    const { transactions, total } = await transactionRepository.findAll(skip, take, where);
+    return { transactions, pagination: paginationMeta(total, page, limit) };
+  }
 }
 
 export const transactionService = new TransactionService();

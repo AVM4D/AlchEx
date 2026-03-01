@@ -14,5 +14,6 @@ router.post('/reports', authenticateUser, validate(createReportSchema), (req, re
 router.get('/notifications', authenticateUser, (req, res, next) => notificationController.getMyNotifications(req, res, next));
 router.patch('/notifications/:id/read', authenticateUser, (req, res, next) => notificationController.markAsRead(req, res, next));
 router.patch('/notifications/read-all', authenticateUser, (req, res, next) => notificationController.markAllAsRead(req, res, next));
+router.delete('/notifications/:id', authenticateUser, (req, res, next) => notificationController.delete(req, res, next));
 
 export default router;

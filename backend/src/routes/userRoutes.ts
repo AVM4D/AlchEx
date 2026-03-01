@@ -14,5 +14,8 @@ router.get('/:id', (req, res, next) => userController.getPublicProfile(req, res,
 router.get('/:id/ratings', (req, res, next) => ratingController.getByUser(req, res, next));
 router.get('/:id/rating-stats', (req, res, next) => userController.getRatingStats(req, res, next));
 router.post('/ratings', authenticateUser, validate(createRatingSchema), (req, res, next) => ratingController.create(req, res, next));
+router.get('/ratings/:id', (req, res, next) => ratingController.getById(req, res, next));
+router.put('/ratings/:id', authenticateUser, (req, res, next) => ratingController.update(req, res, next));
+router.delete('/ratings/:id', authenticateUser, (req, res, next) => ratingController.delete(req, res, next));
 
 export default router;

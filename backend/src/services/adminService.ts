@@ -90,6 +90,18 @@ export class AdminService {
     return transactionService.forceCancel(transactionId);
   }
 
+  async getAllTransactions(page: number = 1, limit: number = 20, status?: string) {
+    return transactionService.getAll(page, limit, status);
+  }
+
+  // ─── Report Management (Delete) ───
+  async deleteReport(reportId: string) {
+    const report = await reportRepository.findById(reportId);
+    if (!report) throw new NotFoundError('Report not found');
+    await reportRepository.softDelete(reportId);
+    return { message: 'Report deleted successfully' };
+  }
+
   // ─── Dashboard Stats ───
   async getDashboardStats() {
     const [

@@ -48,6 +48,42 @@ export class RatingService {
     return ratingRepository.findByReceiver(userId, skip, limit);
   }
 
+  async getById(ratingId: string) {
+    const rating = await ratingRepository.findById(ratingId);
+    if (!rating) throw new NotFoundError('Rating not found');
+    return rating;
+  }
+
+  async update(ratingId: string, userId: string, data: { score?: number; review?: string }) {
+    const rating = await ratingRepository.findById(ratingId);
+    if (!rating) throw new NotFoundError('Rating not found');
+    if (rating.giverId !== userId) throw new ForbiddenError('Not authorized to edit this rating');
+
+    const updateData: any = {};
+    if (data.score !== undefined) updateData.score = data.score;
+    if (data.review !== undefined) updateData.review = data.review;
+
+    const updated = await ratingRepository.update(ratingId, updateData);
+
+    // Recalculate receiver reputation after rating update
+    await userRepository.updateReputation(rating.receiverId);
+
+    return updated;
+  }
+
+  async delete(ratingId: string, userId: string) {
+    const rating = await ratingRepository.findById(ratingId);
+    if (!rating) throw new NotFoundError('Rating not found');
+    if (rating.giverId !== userId) throw new ForbiddenError('Not authorized to delete this rating');
+
+    await ratingRepository.softDelete(ratingId);
+
+    // Recalculate receiver reputation after rating deletion
+    await userRepository.updateReputation(rating.receiverId);
+
+    return { message: 'Rating deleted successfully' };
+  }
+
   async getStats(userId: string) {
     return ratingRepository.getStats(userId);
   }

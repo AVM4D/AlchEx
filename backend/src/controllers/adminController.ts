@@ -73,6 +73,27 @@ export class AdminController {
       next(error);
     }
   }
+
+  async getAllTransactions(req: Request, res: Response, next: NextFunction) {
+    try {
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 20;
+      const status = req.query.status as string;
+      const result = await adminService.getAllTransactions(page, limit, status);
+      res.json(successResponse(result));
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async deleteReport(req: Request, res: Response, next: NextFunction) {
+    try {
+      const result = await adminService.deleteReport(param(req, 'id'));
+      res.json(successResponse(result, 'Report deleted'));
+    } catch (error) {
+      next(error);
+    }
+  }
 }
 
 export const adminController = new AdminController();
