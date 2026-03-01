@@ -641,8 +641,8 @@ ORDER BY month DESC;
 
 
 -- ════════════════════════════════════════════════════════════════════════════
--- SECTION 3: CRUD OPERATIONS (used by Node.js APIs via Prisma ORM)
--- These are the SQL equivalents of what Prisma generates for each entity.
+-- SECTION 3: CRUD OPERATIONS (used by Node.js APIs via mssql driver)
+-- These are the parameterized SQL queries executed by each repository.
 -- ════════════════════════════════════════════════════════════════════════════
 
 
@@ -909,3 +909,195 @@ WHERE userId = '<user_id>' AND isRead = 0;
 -- Delete Notification
 DELETE FROM notifications
 WHERE id = '<notification_id>' AND userId = '<user_id>';
+
+
+-- ════════════════════════════════════════════════════════════════════════════
+-- SECTION 4: AUTOMATED / CRON JOB QUERIES
+-- These run on scheduled intervals (node-cron) to maintain data integrity.
+-- ════════════════════════════════════════════════════════════════════════════
+
+
+-- ─────────────────────────────────────────────────────────
+-- C1: Expire Active Posts Past Their Expiry Date
+-- Runs every 15 minutes via cron
+-- ─────────────────────────────────────────────────────────
+UPDATE posts
+SET status = 'EXPIRED', updatedAt = GETDATE()
+WHERE status = 'ACTIVE'
+  AND expiresAt <= GETDATE()
+  AND isDeleted = 0;
+
+
+-- ─────────────────────────────────────────────────────────
+-- C2: Expire Stale Pending Offers Past Their Expiry Date
+-- Runs every 15 minutes via cron
+-- ─────────────────────────────────────────────────────────
+UPDATE offers
+SET status = 'EXPIRED', updatedAt = GETDATE()
+WHERE status = 'PENDING'
+  AND expiresAt <= GETDATE()
+  AND isDeleted = 0;
+
+
+-- ─────────────────────────────────────────────────────────
+-- C3: Expire In-Progress Transactions Past Their Expiry Date
+-- Runs every 30 minutes via cron
+-- ─────────────────────────────────────────────────────────
+UPDATE transactions
+SET status = 'EXPIRED', updatedAt = GETDATE()
+WHERE status = 'IN_PROGRESS'
+  AND expiresAt <= GETDATE()
+  AND isDeleted = 0;
+
+
+-- ─────────────────────────────────────────────────────────
+-- C4: Expire Posts Whose Transaction Has Expired (subquery)
+-- Runs after C3 when expired transactions are found
+-- ─────────────────────────────────────────────────────────
+UPDATE posts
+SET status = 'EXPIRED', updatedAt = GETDATE()
+WHERE status = 'IN_PROGRESS'
+  AND id IN (
+    SELECT p.id
+    FROM posts p
+    INNER JOIN transactions t ON t.postId = p.id
+    WHERE t.status = 'EXPIRED'
+  );
+
+
+-- ─────────────────────────────────────────────────────────
+-- C5: Daily Leaderboard Snapshot – Get Top 100 Users
+-- ─────────────────────────────────────────────────────────
+SELECT TOP 100 id, reputationScore, totalExchanges
+FROM users
+WHERE isDeleted = 0 AND isBanned = 0 AND totalExchanges > 0
+ORDER BY reputationScore DESC;
+
+
+-- ─────────────────────────────────────────────────────────
+-- C6: Daily Leaderboard Snapshot – Get Average Ratings
+-- ─────────────────────────────────────────────────────────
+SELECT receiverId, AVG(CAST(score AS FLOAT)) AS avgScore
+FROM ratings
+WHERE isDeleted = 0
+GROUP BY receiverId;
+
+
+-- ─────────────────────────────────────────────────────────
+-- C7: Daily Leaderboard Snapshot – Insert Snapshot Row
+-- ─────────────────────────────────────────────────────────
+INSERT INTO leaderboard_snapshots
+    (id, userId, rank, reputationScore, totalExchanges, averageRating, period, snapshotDate, createdAt)
+VALUES
+    (NEWID(), '<user_id>', 1, 4.50, 10, 4.80, 'DAILY', GETDATE(), GETDATE());
+
+
+-- ════════════════════════════════════════════════════════════════════════════
+-- SECTION 5: BUSINESS WORKFLOW QUERIES
+-- Multi-step operations triggered by user actions (accept offer, complete
+-- transaction, cancel, recalculate reputation, etc.)
+-- ════════════════════════════════════════════════════════════════════════════
+
+
+-- ─────────────────────────────────────────────────────────
+-- W1: Accept Offer Workflow (4 steps)
+-- Triggered when a post owner accepts an offer
+-- ─────────────────────────────────────────────────────────
+
+-- Step 1: Mark the chosen offer as ACCEPTED
+UPDATE offers
+SET status = 'ACCEPTED', updatedAt = GETDATE()
+WHERE id = '<offer_id>';
+
+-- Step 2: Reject all other pending offers on the same post
+UPDATE offers
+SET status = 'REJECTED', updatedAt = GETDATE()
+WHERE postId = '<post_id>'
+  AND id != '<offer_id>'
+  AND status = 'PENDING';
+
+-- Step 3: Set the post to IN_PROGRESS
+UPDATE posts
+SET status = 'IN_PROGRESS', updatedAt = GETDATE()
+WHERE id = '<post_id>';
+
+-- Step 4: Create the transaction record
+INSERT INTO transactions
+    (id, postId, offerId, requesterId, offererId, status,
+     requesterDone, offererDone, requesterCancel, offererCancel,
+     expiresAt, isDeleted, createdAt, updatedAt)
+VALUES
+    (NEWID(), '<post_id>', '<offer_id>', '<requester_id>', '<offerer_id>',
+     'IN_PROGRESS', 0, 0, 0, 0,
+     DATEADD(DAY, 14, GETDATE()), 0, GETDATE(), GETDATE());
+
+
+-- ─────────────────────────────────────────────────────────
+-- W2: Mark Transaction Complete (both sides done)
+-- Sets post to SUCCESSFUL when requesterDone AND offererDone
+-- ─────────────────────────────────────────────────────────
+UPDATE posts
+SET status = 'SUCCESSFUL', updatedAt = GETDATE()
+WHERE id = '<post_id>';
+
+
+-- ─────────────────────────────────────────────────────────
+-- W3: Cancel Transaction (by participant)
+-- Updates transaction with cancel flags + sets post CANCELLED
+-- ─────────────────────────────────────────────────────────
+
+-- Step 1: Cancel the transaction with participant flags
+UPDATE transactions
+SET status = 'CANCELLED',
+    cancelledAt = GETDATE(),
+    requesterCancel = CASE WHEN '<canceller>' = 'REQUESTER' THEN 1 ELSE requesterCancel END,
+    offererCancel   = CASE WHEN '<canceller>' = 'OFFERER'   THEN 1 ELSE offererCancel END,
+    updatedAt = GETDATE()
+WHERE id = '<transaction_id>';
+
+-- Step 2: Set the post status to CANCELLED
+UPDATE posts
+SET status = 'CANCELLED', updatedAt = GETDATE()
+WHERE id = '<post_id>';
+
+
+-- ─────────────────────────────────────────────────────────
+-- W4: Admin Force-Cancel Transaction
+-- ─────────────────────────────────────────────────────────
+
+-- Step 1: Force cancel the transaction
+UPDATE transactions
+SET status = 'CANCELLED', cancelledAt = GETDATE(), updatedAt = GETDATE()
+WHERE id = '<transaction_id>';
+
+-- Step 2: Set the post status to CANCELLED
+UPDATE posts
+SET status = 'CANCELLED', updatedAt = GETDATE()
+WHERE id = '<post_id>';
+
+
+-- ─────────────────────────────────────────────────────────
+-- W5: Recalculate User Reputation Score
+-- Called after a transaction completes or a rating is given
+-- ─────────────────────────────────────────────────────────
+
+-- Step 1: Get average rating for the user
+SELECT ISNULL(AVG(CAST(score AS FLOAT)), 0) AS avgRating,
+       COUNT(score) AS ratingCount
+FROM ratings
+WHERE receiverId = '<user_id>' AND isDeleted = 0;
+
+-- Step 2: Count successful exchanges
+SELECT COUNT(*) AS exchangeCount
+FROM transactions
+WHERE (requesterId = '<user_id>' OR offererId = '<user_id>')
+  AND status = 'SUCCESSFUL';
+
+-- Step 3: Update the computed reputation score and total exchanges
+-- Formula: reputationScore = avgRating * 0.6 + normalizedExchanges * 0.4
+-- Where normalizedExchanges = MIN(exchangeCount / 50, 1) * 5
+UPDATE users
+SET reputationScore = '<computed_score>',
+    totalExchanges  = '<exchange_count>',
+    updatedAt = GETDATE()
+WHERE id = '<user_id>';
