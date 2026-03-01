@@ -15,6 +15,8 @@ router.post('/users/ban', validate(banUserSchema), (req, res, next) => adminCont
 router.post('/users/:id/unban', (req, res, next) => adminController.unbanUser(req, res, next));
 router.get('/reports', (req, res, next) => adminController.getReports(req, res, next));
 router.post('/reports/resolve', validate(resolveReportSchema), (req, res, next) => adminController.resolveReport(req, res, next));
+router.delete('/reports/:id', (req, res, next) => adminController.deleteReport(req, res, next));
+router.get('/transactions', (req, res, next) => adminController.getAllTransactions(req, res, next));
 router.post('/transactions/:id/force-cancel', (req, res, next) => adminController.forceCancel(req, res, next));
 
 export default router;

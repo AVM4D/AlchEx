@@ -12,5 +12,6 @@ router.post('/:id/accept', authenticateUser, (req, res, next) => offerController
 router.post('/:id/withdraw', authenticateUser, (req, res, next) => offerController.withdraw(req, res, next));
 router.get('/post/:postId', authenticateUser, (req, res, next) => offerController.getByPost(req, res, next));
 router.get('/my', authenticateUser, (req, res, next) => offerController.getMyOffers(req, res, next));
+router.delete('/:id', authenticateUser, (req, res, next) => offerController.delete(req, res, next));
 
 export default router;

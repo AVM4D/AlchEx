@@ -44,6 +44,13 @@ export class ReportRepository {
   async update(id: string, data: Prisma.ReportUpdateInput) {
     return prisma.report.update({ where: { id }, data });
   }
+
+  async softDelete(id: string) {
+    return prisma.report.update({
+      where: { id },
+      data: { isDeleted: true },
+    });
+  }
 }
 
 export const reportRepository = new ReportRepository();

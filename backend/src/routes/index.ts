@@ -7,6 +7,7 @@ import chatRoutes from './chatRoutes';
 import userRoutes from './userRoutes';
 import miscRoutes from './miscRoutes';
 import adminRoutes from './adminRoutes';
+import viewRoutes from './viewRoutes';
 
 const router = Router();
 
@@ -18,5 +19,6 @@ router.use('/chat', chatRoutes);
 router.use('/users', userRoutes);
 router.use('/', miscRoutes);
 router.use('/admin', adminRoutes);
+router.use('/views', viewRoutes);
 
 export default router;

@@ -141,6 +141,17 @@ export class OfferService {
     return offerRepository.update(offerId, { status: 'WITHDRAWN' });
   }
 
+  async delete(offerId: string, userId: string) {
+    const offer = await offerRepository.findById(offerId);
+    if (!offer) throw new NotFoundError('Offer not found');
+    if (offer.userId !== userId) throw new ForbiddenError('Not authorized');
+    if (offer.status !== 'PENDING' && offer.status !== 'WITHDRAWN') {
+      throw new BadRequestError('Only pending or withdrawn offers can be deleted');
+    }
+
+    return offerRepository.softDelete(offerId);
+  }
+
   async getByPost(postId: string) {
     return offerRepository.findByPost(postId);
   }

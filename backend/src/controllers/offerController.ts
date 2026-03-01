@@ -62,6 +62,15 @@ export class OfferController {
       next(error);
     }
   }
+
+  async delete(req: Request, res: Response, next: NextFunction) {
+    try {
+      await offerService.delete(param(req, 'id'), req.user!.userId);
+      res.json(successResponse(null, 'Offer deleted'));
+    } catch (error) {
+      next(error);
+    }
+  }
 }
 
 export const offerController = new OfferController();
