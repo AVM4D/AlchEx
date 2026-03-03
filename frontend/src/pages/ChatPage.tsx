@@ -29,7 +29,7 @@ export default function ChatPage() {
         const res = await transactionsApi.getMyTransactions({ limit: '50' });
         const d = res.data.data;
         setTransactions(d?.transactions || (Array.isArray(d) ? d : []));
-      } catch {}
+      } catch { }
       setLoading(false);
     })();
   }, []);
@@ -43,7 +43,7 @@ export default function ChatPage() {
         const res = await chatApi.getMessages(transactionId, { limit: '100' });
         const d = res.data.data;
         setMessages(d?.messages || (Array.isArray(d) ? d : []));
-      } catch {}
+      } catch { }
       setMsgLoading(false);
     })();
   }, [transactionId]);
@@ -79,7 +79,7 @@ export default function ChatPage() {
       socket.emit('message:send', { transactionId, content: newMsg.trim() });
       setNewMsg('');
       inputRef.current?.focus();
-    } catch {}
+    } catch { }
     setSending(false);
   }, [newMsg, transactionId, sending]);
 
