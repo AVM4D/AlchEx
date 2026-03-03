@@ -1,6 +1,7 @@
 # AlchEx — API Documentation
 
-> **Base URL:** `http://localhost:4000/api`
+> **Base URL:** `http://localhost:4000`
+> (Note: Most endpoints are prefixed with `/api`, e.g., `http://localhost:4000/api/auth/login`)
 >
 > **Authentication:** JWT Bearer Token sent in `Authorization: Bearer <token>` header.
 > Login/Register endpoints return the access token. Refresh token is stored as an httpOnly cookie.
@@ -18,19 +19,38 @@
 
 ## Table of Contents
 
-1. [Authentication](#1-authentication)
-2. [Posts (CRUD)](#2-posts-crud)
-3. [Offers (CRUD)](#3-offers-crud)
-4. [Transactions (CRUD)](#4-transactions-crud)
-5. [Chat / Messages (CRUD)](#5-chat--messages-crud)
-6. [Users & Ratings (CRUD)](#6-users--ratings-crud)
-7. [Reports & Notifications (CRUD)](#7-reports--notifications-crud)
-8. [Admin](#8-admin)
-9. [Views & Analytics](#9-views--analytics-sql-views)
+1. [System / Health](#1-system--health)
+2. [Authentication](#2-authentication)
+3. [Posts (CRUD)](#3-posts-crud)
+4. [Offers (CRUD)](#4-offers-crud)
+5. [Transactions (CRUD)](#5-transactions-crud)
+6. [Chat / Messages (CRUD)](#6-chat--messages-crud)
+7. [Users & Ratings (CRUD)](#7-users--ratings-crud)
+8. [Reports & Notifications (CRUD)](#8-reports--notifications-crud)
+9. [Admin](#9-admin)
+10. [Views & Analytics](#10-views--analytics-sql-views)
 
 ---
 
-## 1. Authentication
+## 1. System / Health
+
+### GET `/health`
+
+Basic health check endpoint to verify the server is running. (Note: no `/api` prefix)
+
+**Auth:** None
+
+**Response (200):**
+```json
+{
+  "status": "ok",
+  "timestamp": "2025-01-15T10:30:00.000Z"
+}
+```
+
+---
+
+## 2. Authentication
 
 ### POST `/api/auth/register`
 
