@@ -26,7 +26,7 @@ export default function LeaderboardPage() {
         const res = await usersApi.getLeaderboard(params);
         const d = res.data.data;
         setEntries(Array.isArray(d) ? d : (d as any)?.users || []);
-      } catch {}
+      } catch { }
       setLoading(false);
     })();
   }, [period]);
@@ -57,7 +57,7 @@ export default function LeaderboardPage() {
       {loading ? (
         <div className="space-y-4">
           <div className="flex justify-center gap-4 items-end h-48 sm:h-56 md:h-64">
-            {[1,2,3].map(i => <div key={i} className="skeleton w-24 sm:w-32 h-32 sm:h-40 rounded-t-xl" />)}
+            {[1, 2, 3].map(i => <div key={i} className="skeleton w-24 sm:w-32 h-32 sm:h-40 rounded-t-xl" />)}
           </div>
           {Array(5).fill(0).map((_, i) => <div key={i} className="glass-card p-4 skeleton h-16" />)}
         </div>

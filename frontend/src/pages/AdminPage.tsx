@@ -31,7 +31,7 @@ export default function AdminPage() {
           const d = res.data.data;
           setReports(d?.reports || (Array.isArray(d) ? d : []));
         }
-      } catch {}
+      } catch { }
       setLoading(false);
     })();
   }, [tab]);

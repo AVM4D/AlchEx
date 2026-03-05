@@ -147,17 +147,19 @@
   }
 
   .glass-card {
-    background: linear-gradient(135deg, var(--accent-sub), var(--surface));
+    background: rgba(255, 255, 255, 0.03);
     backdrop-filter: blur(40px);
-    border: 1px solid var(--border);
+    border: 1px solid rgba(255, 255, 255, 0.06);
     border-radius: 16px;
-    transition: all 0.5s var(--ease);
+    transition: border-color 0.5s var(--ease), box-shadow 0.5s var(--ease), transform 0.5s var(--ease);
+    will-change: transform;
+    transform: translateZ(0);
   }
 
   .glass-card:hover {
-    border-color: var(--border-hover);
-    box-shadow: 0 0 40px var(--accent-glow);
-    transform: translateY(-2px);
+    border-color: rgba(255, 255, 255, 0.1);
+    box-shadow: 0 0 30px rgba(139, 92, 246, 0.08);
+    transform: translateY(-2px) translateZ(0);
   }
 
   /* ── Gradient border ── */
@@ -217,7 +219,7 @@
     font-family: var(--font-display);
     font-weight: 800;
     letter-spacing: -0.04em;
-    line-height: 0.95;
+    line-height: 1.15;
   }
 
   .text-mono {
@@ -518,4 +520,203 @@ html.lenis body {
   -webkit-text-fill-color: transparent;
   background-clip: text;
   animation: text-shimmer 6s ease-in-out infinite;
+}
+
+/* ═══════════════════════════════════════════════════
+   HYPRLAND CAELESTIA — Desktop-Inspired Layout
+   ═══════════════════════════════════════════════════ */
+
+/* ── Background atmosphere ── */
+.hypr-bg {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  background: #1a0a2e;
+}
+
+.hypr-atmosphere {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background:
+    radial-gradient(ellipse 140% 100% at 50% 50%, rgba(139, 92, 246, 0.30) 0%, transparent 65%),
+    radial-gradient(ellipse 120% 80% at 20% 80%, rgba(124, 58, 237, 0.25) 0%, transparent 55%),
+    radial-gradient(ellipse 110% 70% at 85% 20%, rgba(167, 139, 250, 0.20) 0%, transparent 50%),
+    linear-gradient(180deg, #1e0c35 0%, #1a0a2e 50%, #150826 100%);
+}
+
+@keyframes hypr-atmo-shift {
+  0% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.85;
+  }
+
+  100% {
+    opacity: 1;
+  }
+}
+
+/* ── Desktop dock ── */
+.hypr-dock {
+  position: fixed;
+  left: 8px;
+  top: 8px;
+  bottom: 8px;
+  width: 56px;
+  z-index: 40;
+  background: rgba(8, 8, 12, 0.88);
+  backdrop-filter: blur(40px) saturate(140%);
+  -webkit-backdrop-filter: blur(40px) saturate(140%);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 18px;
+  padding: 12px 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+/* ── Content wrapper ── */
+.hypr-content-wrapper {
+  position: absolute;
+  z-index: 10;
+  overflow: hidden;
+
+  /* Desktop: offset by dock + gaps */
+  top: 8px;
+  right: 8px;
+  bottom: 8px;
+  left: 72px;
+  /* 8px gap + 56px dock + 8px gap */
+}
+
+@media (max-width: 1023px) {
+  .hypr-content-wrapper {
+    left: 6px;
+    top: 6px;
+    right: 6px;
+    bottom: 62px;
+    /* room for mobile dock */
+  }
+}
+
+/* ── Main content "window" ── */
+.hypr-window {
+  width: 100%;
+  height: 100%;
+  background: rgba(6, 6, 10, 0.85);
+  backdrop-filter: blur(30px) saturate(130%);
+  -webkit-backdrop-filter: blur(30px) saturate(130%);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow:
+    0 12px 48px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.03);
+}
+
+.hypr-window-inner {
+  width: 100%;
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 20px 24px;
+}
+
+@media (max-width: 768px) {
+  .hypr-window-inner {
+    padding: 16px 14px;
+  }
+}
+
+.hypr-window-inner::-webkit-scrollbar {
+  width: 4px;
+}
+
+.hypr-window-inner::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.hypr-window-inner::-webkit-scrollbar-thumb {
+  background: rgba(139, 92, 246, 0.2);
+  border-radius: 4px;
+}
+
+/* ── Floating panels (notifications, user menu) ── */
+.hypr-float-panel {
+  background: rgba(14, 12, 22, 0.92);
+  backdrop-filter: blur(40px) saturate(150%);
+  -webkit-backdrop-filter: blur(40px) saturate(150%);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow:
+    0 16px 48px rgba(0, 0, 0, 0.6),
+    0 0 0 1px rgba(255, 255, 255, 0.03);
+}
+
+/* ── Command Palette ── */
+.hypr-palette {
+  background: rgba(14, 12, 22, 0.95);
+  backdrop-filter: blur(60px) saturate(160%);
+  -webkit-backdrop-filter: blur(60px) saturate(160%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow:
+    0 24px 80px rgba(0, 0, 0, 0.6),
+    0 0 60px rgba(139, 92, 246, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+/* ── Mobile bottom dock ── */
+.hypr-mobile-dock {
+  background: rgba(12, 10, 18, 0.8);
+  backdrop-filter: blur(40px) saturate(140%);
+  -webkit-backdrop-filter: blur(40px) saturate(140%);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 20px;
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+/* ── Light theme overrides for Hyprland layout ── */
+[data-theme='light'] .hypr-atmosphere {
+  background:
+    radial-gradient(ellipse 120% 80% at 20% 80%, rgba(139, 92, 246, 0.06) 0%, transparent 60%),
+    radial-gradient(ellipse 100% 60% at 80% 20%, rgba(167, 139, 250, 0.05) 0%, transparent 50%),
+    linear-gradient(180deg, #f0eff4 0%, #e8e6ee 30%, #ededf2 60%, #f5f4f8 100%);
+}
+
+[data-theme='light'] .hypr-dock {
+  background: rgba(255, 255, 255, 0.75);
+  border-color: rgba(0, 0, 0, 0.08);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+
+[data-theme='light'] .hypr-window {
+  background: rgba(255, 255, 255, 0.8);
+  border-color: rgba(0, 0, 0, 0.06);
+  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.08);
+}
+
+[data-theme='light'] .hypr-float-panel,
+[data-theme='light'] .hypr-palette {
+  background: rgba(255, 255, 255, 0.95);
+  border-color: rgba(0, 0, 0, 0.08);
+}
+
+[data-theme='light'] .hypr-mobile-dock {
+  background: rgba(255, 255, 255, 0.8);
+  border-color: rgba(0, 0, 0, 0.08);
+}
+
+[data-theme='light'] .hypr-bg {
+  background: #f0eff4;
 }

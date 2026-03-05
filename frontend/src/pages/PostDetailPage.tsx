@@ -184,13 +184,12 @@ export default function PostDetailPage() {
           {myOffer ? (
             <div className="bg-[var(--surface-2)] rounded-xl p-4 border border-[var(--border)]">
               <div className="flex items-start justify-between gap-3 mb-2">
-                <span className={`pill text-[10px] ${
-                  myOffer.status === 'PENDING' ? 'text-amber-400 border-amber-500/20 bg-amber-500/10' :
-                  myOffer.status === 'ACCEPTED' ? 'text-emerald-400 border-emerald-500/20 bg-emerald-500/10' :
-                  myOffer.status === 'REJECTED' ? 'text-red-400 border-red-500/20 bg-red-500/10' :
-                  myOffer.status === 'EXPIRED' ? 'text-red-400 border-red-500/20 bg-red-500/10' :
-                  'text-gray-400 bg-gray-500/10 border-gray-500/20'
-                }`}>{myOffer.status}</span>
+                <span className={`pill text-[10px] ${myOffer.status === 'PENDING' ? 'text-amber-400 border-amber-500/20 bg-amber-500/10' :
+                    myOffer.status === 'ACCEPTED' ? 'text-emerald-400 border-emerald-500/20 bg-emerald-500/10' :
+                      myOffer.status === 'REJECTED' ? 'text-red-400 border-red-500/20 bg-red-500/10' :
+                        myOffer.status === 'EXPIRED' ? 'text-red-400 border-red-500/20 bg-red-500/10' :
+                          'text-gray-400 bg-gray-500/10 border-gray-500/20'
+                  }`}>{myOffer.status}</span>
                 {myOffer.status === 'PENDING' && myOffer.expiresAt ? (
                   <OfferCountdown expiresAt={myOffer.expiresAt} />
                 ) : (
