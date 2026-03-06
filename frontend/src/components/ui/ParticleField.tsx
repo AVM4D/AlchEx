@@ -72,6 +72,14 @@ export const ParticleField: React.FC<ParticleFieldProps> = ({
     canvas.addEventListener('mousemove', handleMouse);
     canvas.addEventListener('mouseleave', handleMouseLeave);
 
+    // Re-init when container becomes visible (e.g. after display:none → block)
+    const ro = new ResizeObserver(() => {
+      if (canvas.offsetWidth > 0 && canvas.offsetHeight > 0) {
+        resize();
+      }
+    });
+    ro.observe(canvas);
+
     // Pause when completely off-screen — saves GPU when hero is scrolled past
     let inView = true;
     const io = new IntersectionObserver(
@@ -137,6 +145,7 @@ export const ParticleField: React.FC<ParticleFieldProps> = ({
 
     return () => {
       cancelAnimationFrame(animRef.current);
+      ro.disconnect();
       io.disconnect();
       window.removeEventListener('resize', resize);
       canvas.removeEventListener('mousemove', handleMouse);

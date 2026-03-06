@@ -8,8 +8,7 @@ import SmoothScroller from './components/SmoothScroller';
 
 // Lazy-loaded pages for code splitting
 const LandingPage = lazy(() => import('./pages/LandingPage'));
-const LoginPage = lazy(() => import('./pages/LoginPage'));
-const RegisterPage = lazy(() => import('./pages/RegisterPage'));
+const AuthPage = lazy(() => import('./pages/AuthPage'));
 const DashboardPage = lazy(() => import('./pages/DashboardPage'));
 const MarketplacePage = lazy(() => import('./pages/MarketplacePage'));
 const PostDetailPage = lazy(() => import('./pages/PostDetailPage'));
@@ -96,7 +95,7 @@ export default function App() {
             path="/login"
             element={
               <PublicOnlyRoute>
-                <LoginPage />
+                <AuthPage initialMode="login" />
               </PublicOnlyRoute>
             }
           />
@@ -104,7 +103,7 @@ export default function App() {
             path="/register"
             element={
               <PublicOnlyRoute>
-                <RegisterPage />
+                <AuthPage initialMode="register" />
               </PublicOnlyRoute>
             }
           />
