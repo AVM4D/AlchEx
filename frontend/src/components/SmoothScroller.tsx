@@ -1,11 +1,16 @@
 import { useEffect, useRef } from 'react';
 import Lenis from 'lenis';
+import gsap from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
+
+gsap.registerPlugin(ScrollTrigger);
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   SmoothScroller — Premium Lenis-powered smooth scrolling
-   
-   Wraps children with Lenis for silky smooth inertial scrolling.
-   Uses RAF loop for buttery 60fps interpolation.
+   SmoothScroller — Butter-smooth Lenis + GSAP ScrollTrigger integration
+
+   • Lenis drives inertial scrolling (lerp-based, no duration lag)
+   • GSAP ticker drives Lenis so ScrollTrigger stays perfectly in sync
+   • Framer Motion useScroll works because Lenis updates native scrollY
    ═══════════════════════════════════════════════════════════════════════════ */
 
 interface SmoothScrollerProps {
@@ -17,23 +22,29 @@ export default function SmoothScroller({ children }: SmoothScrollerProps) {
 
     useEffect(() => {
         const lenis = new Lenis({
-            duration: 1.2,              // Luxurious momentum duration
-            easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)), // Expo decay
-            smoothWheel: true,          // Smooth mouse wheel
-            wheelMultiplier: 1,         // Natural wheel speed  
-            touchMultiplier: 2,         // Responsive touch
+            lerp: 0.08,                 // Interpolation factor — lower = silkier
+            smoothWheel: true,
+            wheelMultiplier: 1.2,       // Slightly snappier wheel response
+            touchMultiplier: 1.5,       // Natural touch feel
+            infinite: false,
         });
 
         lenisRef.current = lenis;
 
-        // RAF loop — drives the smooth interpolation
-        function raf(time: number) {
-            lenis.raf(time);
-            requestAnimationFrame(raf);
-        }
-        requestAnimationFrame(raf);
+        // ── Sync Lenis with GSAP's ticker so ScrollTrigger stays in lockstep ──
+        // This replaces the manual RAF loop and prevents double-timing issues.
+        lenis.on('scroll', ScrollTrigger.update);
+
+        gsap.ticker.add((time) => {
+            lenis.raf(time * 1000);
+        });
+
+        // Disable GSAP's built-in lag smoothing so it doesn't fight Lenis
+        gsap.ticker.lagSmoothing(0);
 
         return () => {
+            lenis.off('scroll', ScrollTrigger.update);
+            gsap.ticker.remove((time) => lenis.raf(time * 1000));
             lenis.destroy();
             lenisRef.current = null;
         };

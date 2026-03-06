@@ -102,7 +102,17 @@ export default function LandingPage() {
         .fromTo('.hero-cta', { opacity: 0, y: 15 }, { opacity: 1, y: 0, duration: 0.5 }, 1.0)
         .fromTo('.hero-scroll', { opacity: 0 }, { opacity: 1, duration: 0.4 }, 1.3);
     });
-    return () => ctx.revert();
+
+    // Refresh ScrollTrigger after Lenis initialises so all trigger positions
+    // are computed against the correct scroll geometry.
+    const rafId = requestAnimationFrame(() => {
+      ScrollTrigger.refresh();
+    });
+
+    return () => {
+      cancelAnimationFrame(rafId);
+      ctx.revert();
+    };
   }, []);
 
   return (

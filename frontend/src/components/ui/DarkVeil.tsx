@@ -137,8 +137,22 @@ export default function DarkVeil({
 
         const start = performance.now();
         let frame = 0;
+        let inView = true;
+
+        // Pause the render loop when completely off-screen to free GPU for
+        // components that ARE visible (LaserFlow, ScrollVideoSection, etc.)
+        const io = new IntersectionObserver(
+            (entries) => { inView = entries[0]?.isIntersecting ?? true; },
+            { threshold: 0 }
+        );
+        io.observe(canvas);
+
+        const onVisibility = () => { if (document.hidden) { inView = false; } };
+        document.addEventListener('visibilitychange', onVisibility, { passive: true });
 
         const loop = () => {
+            frame = requestAnimationFrame(loop);
+            if (!inView) return;
             program.uniforms.uTime.value = ((performance.now() - start) / 1000) * speed;
             program.uniforms.uHueShift.value = hueShift;
             program.uniforms.uNoise.value = noiseIntensity;
@@ -146,13 +160,14 @@ export default function DarkVeil({
             program.uniforms.uScanFreq.value = scanlineFrequency;
             program.uniforms.uWarp.value = warpAmount;
             renderer.render({ scene: mesh });
-            frame = requestAnimationFrame(loop);
         };
 
         loop();
 
         return () => {
             cancelAnimationFrame(frame);
+            io.disconnect();
+            document.removeEventListener('visibilitychange', onVisibility);
             window.removeEventListener('resize', resize);
         };
     }, [hueShift, noiseIntensity, scanlineIntensity, speed, scanlineFrequency, warpAmount, resolutionScale]);

@@ -493,18 +493,33 @@
   }
 }
 
-/* ─── Lenis ─── */
+/* ─── Lenis smooth scroll ─── */
 html.lenis,
 html.lenis body {
   height: auto;
+}
+
+/* Prevent native scroll-behavior fighting Lenis interpolation */
+html {
+  scroll-behavior: auto !important;
 }
 
 .lenis.lenis-smooth {
   scroll-behavior: auto;
 }
 
+.lenis.lenis-smooth [data-lenis-prevent] {
+  overscroll-behavior: contain;
+}
+
 .lenis.lenis-stopped {
   overflow: hidden;
+}
+
+/* Eliminate bounce/rubber-band fighting Lenis on macOS / iOS */
+html,
+body {
+  overscroll-behavior: none;
 }
 
 /* ─── Text Shimmer Utility ─── */

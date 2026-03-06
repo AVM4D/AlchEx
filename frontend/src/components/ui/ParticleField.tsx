@@ -72,7 +72,17 @@ export const ParticleField: React.FC<ParticleFieldProps> = ({
     canvas.addEventListener('mousemove', handleMouse);
     canvas.addEventListener('mouseleave', handleMouseLeave);
 
+    // Pause when completely off-screen — saves GPU when hero is scrolled past
+    let inView = true;
+    const io = new IntersectionObserver(
+      (entries) => { inView = entries[0]?.isIntersecting ?? true; },
+      { threshold: 0 }
+    );
+    io.observe(canvas);
+
     const animate = () => {
+      animRef.current = requestAnimationFrame(animate);
+      if (!inView) return;
       const w = canvas.offsetWidth;
       const h = canvas.offsetHeight;
       ctx.clearRect(0, 0, w, h);
@@ -121,13 +131,13 @@ export const ParticleField: React.FC<ParticleFieldProps> = ({
         }
       }
 
-      animRef.current = requestAnimationFrame(animate);
     };
 
     animate();
 
     return () => {
       cancelAnimationFrame(animRef.current);
+      io.disconnect();
       window.removeEventListener('resize', resize);
       canvas.removeEventListener('mousemove', handleMouse);
       canvas.removeEventListener('mouseleave', handleMouseLeave);
