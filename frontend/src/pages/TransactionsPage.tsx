@@ -35,7 +35,7 @@ export default function TransactionsPage() {
       const res = await transactionsApi.getMyTransactions(params);
       const d = res.data.data;
       setTransactions(d?.transactions || (Array.isArray(d) ? d : []));
-    } catch {}
+    } catch { }
     setLoading(false);
   }, [tab]);
 

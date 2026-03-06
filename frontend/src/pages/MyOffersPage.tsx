@@ -21,7 +21,7 @@ export default function MyOffersPage() {
       const res = await offersApi.getMyOffers(params);
       const d = res.data.data;
       setOffers(d?.offers || (Array.isArray(d) ? d : []));
-    } catch {}
+    } catch { }
     setLoading(false);
   };
 

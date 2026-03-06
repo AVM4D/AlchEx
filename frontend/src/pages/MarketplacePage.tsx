@@ -174,16 +174,15 @@ export default function MarketplacePage() {
                   {user && post.userId !== user.id && (
                     <div className="mb-2">
                       {post.myOffer ? (
-                        <div className={`flex items-center gap-1.5 text-[10px] px-2.5 py-1.5 rounded-lg ${
-                          post.myOffer.status === 'PENDING' ? 'bg-amber-500/10 text-amber-400' :
-                          post.myOffer.status === 'ACCEPTED' ? 'bg-emerald-500/10 text-emerald-400' :
-                          post.myOffer.status === 'REJECTED' ? 'bg-red-500/10 text-red-400' :
-                          post.myOffer.status === 'EXPIRED' ? 'bg-red-500/10 text-red-400' :
-                          'bg-gray-500/10 text-gray-400'
-                        }`}>
+                        <div className={`flex items-center gap-1.5 text-[10px] px-2.5 py-1.5 rounded-lg ${post.myOffer.status === 'PENDING' ? 'bg-amber-500/10 text-amber-400' :
+                            post.myOffer.status === 'ACCEPTED' ? 'bg-emerald-500/10 text-emerald-400' :
+                              post.myOffer.status === 'REJECTED' ? 'bg-red-500/10 text-red-400' :
+                                post.myOffer.status === 'EXPIRED' ? 'bg-red-500/10 text-red-400' :
+                                  'bg-gray-500/10 text-gray-400'
+                          }`}>
                           {post.myOffer.status === 'ACCEPTED' ? <CheckCircle2 size={10} /> :
-                           post.myOffer.status === 'PENDING' ? <Clock size={10} /> :
-                           <AlertCircle size={10} />}
+                            post.myOffer.status === 'PENDING' ? <Clock size={10} /> :
+                              <AlertCircle size={10} />}
                           Your offer: {post.myOffer.status.charAt(0) + post.myOffer.status.slice(1).toLowerCase()}
                           {post.myOffer.status === 'PENDING' && (
                             <span className="ml-1.5"><OfferCountdown expiresAt={post.myOffer.expiresAt} compact /></span>

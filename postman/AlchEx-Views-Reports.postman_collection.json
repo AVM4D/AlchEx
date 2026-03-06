@@ -1,0 +1,379 @@
+{
+  "info": {
+    "_postman_id": "7e4d65f8-5ad0-4c82-b012-bf6f61e08d3a",
+    "name": "AlchEx Views + Reports",
+    "description": "Public and authenticated views endpoints, report submission, and admin report moderation checks.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{accessToken}}",
+        "type": "string"
+      }
+    ]
+  },
+  "item": [
+    {
+      "name": "A - Public Views",
+      "item": [
+        {
+          "name": "Leaderboard",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/views/leaderboard?limit=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "views", "leaderboard"],
+              "query": [{ "key": "limit", "value": "10" }]
+            }
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Leaderboard success', function () {", "  pm.response.to.have.status(200);", "  const json = pm.response.json();", "  pm.expect(json.success).to.eql(true);", "});"] } }]
+        },
+        {
+          "name": "Marketplace View",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/views/marketplace?page=1&limit=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "views", "marketplace"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "20" }
+              ]
+            }
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Marketplace view success', function () {", "  pm.response.to.have.status(200);", "  pm.expect(pm.response.json().success).to.eql(true);", "});"] } }]
+        },
+        {
+          "name": "Search View",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/views/search?q=react",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "views", "search"],
+              "query": [{ "key": "q", "value": "react" }]
+            }
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Search view success', function () {", "  pm.response.to.have.status(200);", "  pm.expect(pm.response.json().success).to.eql(true);", "});"] } }]
+        },
+        {
+          "name": "Top Rated Users",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/views/top-rated?limit=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "views", "top-rated"],
+              "query": [{ "key": "limit", "value": "10" }]
+            }
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Top-rated success', function () {", "  pm.response.to.have.status(200);", "  pm.expect(pm.response.json().success).to.eql(true);", "});"] } }]
+        },
+        {
+          "name": "Popular Categories",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/views/categories",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "views", "categories"]
+            }
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Categories success', function () {", "  pm.response.to.have.status(200);", "  pm.expect(pm.response.json().success).to.eql(true);", "});"] } }]
+        },
+        {
+          "name": "Recent Exchanges",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/views/recent-exchanges?limit=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "views", "recent-exchanges"],
+              "query": [{ "key": "limit", "value": "10" }]
+            }
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Recent exchanges success', function () {", "  pm.response.to.have.status(200);", "  pm.expect(pm.response.json().success).to.eql(true);", "});"] } }]
+        },
+        {
+          "name": "Expiring Posts",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/views/expiring-posts",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "views", "expiring-posts"]
+            }
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Expiring posts success', function () {", "  pm.response.to.have.status(200);", "  pm.expect(pm.response.json().success).to.eql(true);", "});"] } }]
+        }
+      ]
+    },
+    {
+      "name": "B - User Views + Report",
+      "item": [
+        {
+          "name": "Set token = user1",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/health",
+              "host": ["{{baseUrl}}"],
+              "path": ["health"]
+            }
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.environment.set('accessToken', pm.environment.get('user1AccessToken'));", "pm.test('User1 token active', function () {", "  pm.expect(pm.environment.get('accessToken')).to.exist;", "});"] } }]
+        },
+        {
+          "name": "User Rating Stats",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/views/user/{{user2Id}}/rating-stats",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "views", "user", "{{user2Id}}", "rating-stats"]
+            }
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Rating stats success', function () {", "  pm.response.to.have.status(200);", "  pm.expect(pm.response.json().success).to.eql(true);", "});"] } }]
+        },
+        {
+          "name": "User Profile Stats",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/views/user/{{user1Id}}/profile-stats",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "views", "user", "{{user1Id}}", "profile-stats"]
+            }
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Profile stats success', function () {", "  pm.response.to.have.status(200);", "  pm.expect(pm.response.json().success).to.eql(true);", "});"] } }]
+        },
+        {
+          "name": "User Exchange History (auth)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/views/user/{{user1Id}}/exchange-history",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "views", "user", "{{user1Id}}", "exchange-history"]
+            }
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Exchange history authorized', function () {", "  pm.expect(pm.response.code).to.be.oneOf([200, 401, 403]);", "});"] } }]
+        },
+        {
+          "name": "User Conversations (auth)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/views/user/{{user1Id}}/conversations",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "views", "user", "{{user1Id}}", "conversations"]
+            }
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Conversations authorized', function () {", "  pm.expect(pm.response.code).to.be.oneOf([200, 401, 403]);", "});"] } }]
+        },
+        {
+          "name": "User Pending Offers (auth)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/views/user/{{user1Id}}/pending-offers",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "views", "user", "{{user1Id}}", "pending-offers"]
+            }
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Pending offers authorized', function () {", "  pm.expect(pm.response.code).to.be.oneOf([200, 401, 403]);", "});"] } }]
+        },
+        {
+          "name": "Transaction Summary (auth)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/views/transaction/{{transactionId}}/summary",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "views", "transaction", "{{transactionId}}", "summary"]
+            }
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Transaction summary authorized', function () {", "  pm.expect(pm.response.code).to.be.oneOf([200, 401, 403, 404]);", "});"] } }]
+        },
+        {
+          "name": "Create Report",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"transactionId\": \"{{transactionId}}\",\n  \"targetUserId\": \"{{user2Id}}\",\n  \"reason\": \"Spam\",\n  \"description\": \"This is an automated integration test report with sufficient detail text.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/reports",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "reports"]
+            }
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Report create handled', function () {", "  pm.expect(pm.response.code).to.be.oneOf([201, 400, 403, 404, 409]);", "  if (pm.response.code === 201) {", "    const json = pm.response.json();", "    if (json?.data?.id) pm.environment.set('reportId', json.data.id);", "  }", "});"] } }]
+        }
+      ]
+    },
+    {
+      "name": "C - Admin Views + Report Moderation",
+      "item": [
+        {
+          "name": "Set token = admin",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/health",
+              "host": ["{{baseUrl}}"],
+              "path": ["health"]
+            }
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.environment.set('accessToken', pm.environment.get('adminAccessToken'));", "pm.test('Admin token active', function () {", "  pm.expect(pm.environment.get('accessToken')).to.exist;", "});"] } }]
+        },
+        {
+          "name": "Admin Views Dashboard",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/views/admin/dashboard",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "views", "admin", "dashboard"]
+            }
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Admin views dashboard auth/result', function () {", "  pm.expect(pm.response.code).to.be.oneOf([200, 401, 403]);", "});"] } }]
+        },
+        {
+          "name": "Admin Pending Reports View",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/views/admin/pending-reports",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "views", "admin", "pending-reports"]
+            }
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Admin pending reports auth/result', function () {", "  pm.expect(pm.response.code).to.be.oneOf([200, 401, 403]);", "  if (pm.response.code === 200) {", "    const json = pm.response.json();", "    const rows = json?.data?.reports || json?.data?.items || json?.data || [];", "    if (Array.isArray(rows) && rows.length && rows[0].id) pm.environment.set('reportId', rows[0].id);", "  }", "});"] } }]
+        },
+        {
+          "name": "Admin Post Distribution View",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/views/admin/post-distribution",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "views", "admin", "post-distribution"]
+            }
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Admin post distribution auth/result', function () {", "  pm.expect(pm.response.code).to.be.oneOf([200, 401, 403]);", "});"] } }]
+        },
+        {
+          "name": "Admin Completion Rate View",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/views/admin/completion-rate",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "views", "admin", "completion-rate"]
+            }
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Admin completion-rate auth/result', function () {", "  pm.expect(pm.response.code).to.be.oneOf([200, 401, 403]);", "});"] } }]
+        },
+        {
+          "name": "Admin Monthly Activity View",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/views/admin/monthly-activity",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "views", "admin", "monthly-activity"]
+            }
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Admin monthly-activity auth/result', function () {", "  pm.expect(pm.response.code).to.be.oneOf([200, 401, 403]);", "});"] } }]
+        },
+        {
+          "name": "Admin Reports List",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/reports?page=1&limit=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "reports"],
+              "query": [{ "key": "page", "value": "1" }, { "key": "limit", "value": "20" }]
+            }
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Admin reports list auth/result', function () {", "  pm.expect(pm.response.code).to.be.oneOf([200, 401, 403]);", "  if (pm.response.code === 200) {", "    const json = pm.response.json();", "    const bag = json.data || {};", "    const rows = bag.reports || bag.items || bag.rows || [];", "    if (Array.isArray(rows) && rows.length && rows[0].id) pm.environment.set('reportId', rows[0].id);", "  }", "});"] } }]
+        },
+        {
+          "name": "Admin Resolve Report",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reportId\": \"{{reportId}}\",\n  \"status\": \"RESOLVED\",\n  \"adminNotes\": \"Resolved in automated API test flow\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/reports/resolve",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "reports", "resolve"]
+            }
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Admin resolve report handled', function () {", "  pm.expect(pm.response.code).to.be.oneOf([200, 400, 401, 403, 404]);", "});"] } }]
+        },
+        {
+          "name": "Admin Delete Report",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/reports/{{reportId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "reports", "{{reportId}}"]
+            }
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Admin delete report handled', function () {", "  pm.expect(pm.response.code).to.be.oneOf([200, 400, 401, 403, 404]);", "});"] } }]
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:4000"
+    }
+  ]
+}

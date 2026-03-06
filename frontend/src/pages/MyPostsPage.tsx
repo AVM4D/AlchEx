@@ -17,7 +17,7 @@ export default function MyPostsPage() {
       const res = await postsApi.getMyPosts({ limit: '50' });
       const d = res.data.data;
       setPosts(d?.posts || (Array.isArray(d) ? d : []));
-    } catch {}
+    } catch { }
     setLoading(false);
   };
 

@@ -2,26 +2,26 @@ import { create } from 'zustand';
 
 interface UIState {
   sidebarOpen: boolean;
-  sidebarCollapsed: boolean;
   modalOpen: string | null;
+  commandPaletteOpen: boolean;
   theme: 'dark';
 
-  toggleSidebar: () => void;
   setSidebarOpen: (open: boolean) => void;
-  toggleSidebarCollapse: () => void;
   openModal: (id: string) => void;
   closeModal: () => void;
+  toggleCommandPalette: () => void;
+  setCommandPaletteOpen: (open: boolean) => void;
 }
 
 export const useUIStore = create<UIState>((set) => ({
   sidebarOpen: false,
-  sidebarCollapsed: false,
   modalOpen: null,
+  commandPaletteOpen: false,
   theme: 'dark',
 
-  toggleSidebar: () => set((state) => ({ sidebarOpen: !state.sidebarOpen })),
   setSidebarOpen: (open) => set({ sidebarOpen: open }),
-  toggleSidebarCollapse: () => set((state) => ({ sidebarCollapsed: !state.sidebarCollapsed })),
   openModal: (id) => set({ modalOpen: id }),
   closeModal: () => set({ modalOpen: null }),
+  toggleCommandPalette: () => set((state) => ({ commandPaletteOpen: !state.commandPaletteOpen })),
+  setCommandPaletteOpen: (open) => set({ commandPaletteOpen: open }),
 }));

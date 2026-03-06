@@ -9,6 +9,7 @@ import { postsApi, transactionsApi } from '../services/dataService';
 import { useAuthStore } from '../store/authStore';
 import type { Post, Transaction } from '../types';
 import { formatRelativeTime } from '../lib/utils';
+import TextPressure from '../components/ui/TextPressure';
 
 const ease: [number, number, number, number] = [0.16, 1, 0.3, 1];
 
@@ -65,25 +66,44 @@ export default function DashboardPage() {
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
       {/* Welcome */}
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <motion.h1
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, ease }}
-            className="text-display text-2xl md:text-3xl text-white"
-          >
-            Welcome back, <span className="text-gradient">{user?.firstName || 'Alchemist'}</span>
-          </motion.h1>
-          <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.1, duration: 0.5 }}
-            className="text-[var(--text-2)] text-sm mt-1"
-          >
-            Here&apos;s your exchange overview
-          </motion.p>
-        </div>
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, ease }}
+        style={{ position: 'relative', height: '140px', padding: '10px 0' }}
+      >
+        <TextPressure
+          text={`Welcome back, ${user?.firstName || 'Alchemist'}`}
+          fontFamily="Syne"
+          fontUrl="https://fonts.gstatic.com/s/syne/v22/8vIS7w4qzmVxsWxjBZRjr0FKM_04uT6kR47NCV5Z.woff2"
+          flex={false}
+          alpha={false}
+          stroke={false}
+          width={false}
+          weight
+          italic={false}
+          textColor="#ffffff"
+          strokeColor="#5227FF"
+          minFontSize={36}
+          maxFontSize={72}
+          minWeight={400}
+          minWidth={80}
+          highlightText={user?.firstName || 'Alchemist'}
+          highlightColor="#a78bfa"
+          wordSpacing="0.25em"
+        />
+      </motion.div>
+
+      {/* Subheading + New Post */}
+      <div className="flex flex-wrap items-center justify-between gap-3 -mt-4">
+        <motion.p
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.1, duration: 0.5 }}
+          className="text-[var(--text-2)] text-sm"
+        >
+          Here&apos;s your exchange overview
+        </motion.p>
         <Link to="/posts/new">
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}

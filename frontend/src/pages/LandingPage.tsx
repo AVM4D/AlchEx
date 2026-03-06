@@ -421,9 +421,9 @@ export default function LandingPage() {
 
       {/* ═══ MARQUEE CTA ═══ */}
       < section className="py-8 border-y border-[var(--border)]" >
-        <MarqueeStrip speed={25} reverse>
+        <MarqueeStrip speed={60} reverse>
           {Array(8).fill(null).map((_, i) => (
-            <span key={i} className="text-display text-[var(--text)]/[0.015] tracking-tight flex items-center gap-8" style={{ fontSize: 'clamp(1.5rem, 4vw, 3rem)' }}>
+            <span key={i} className="text-display tracking-tight flex items-center gap-8" style={{ fontSize: 'clamp(1.5rem, 4vw, 3rem)', color: 'rgba(255,255,255,0.15)' }}>
               EQUIVALENT EXCHANGE
               <span className="w-2 h-2 rounded-full bg-[var(--accent)] opacity-10" />
             </span>
@@ -463,7 +463,7 @@ export default function LandingPage() {
         >
           <h2 className="text-display text-[var(--text)] mb-6" style={{ fontSize: 'clamp(1.75rem, 5vw, 4.5rem)' }}>
             Ready to{' '}
-            <span className="text-gradient-shine">exchange?</span>
+            <span className="text-white">exchange?</span>
           </h2>
           <p className="text-lg text-[var(--text-2)] mb-12 max-w-xl mx-auto leading-relaxed">
             Thousands of students. One community. Zero cost.

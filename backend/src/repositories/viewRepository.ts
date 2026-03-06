@@ -109,7 +109,7 @@ export class ViewRepository {
     return db.query`
       SELECT *
       FROM vw_UserExchangeHistory
-      WHERE oduserId = ${userId}
+      WHERE userId = ${userId}
       ORDER BY createdAt DESC
     `;
   }
