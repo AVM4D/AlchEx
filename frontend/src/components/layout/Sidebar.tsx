@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useMotionValue } from 'framer-motion';
 import {
   LayoutDashboard, ShoppingBag, Send, HandCoins, Receipt, MessageCircle,
   Trophy, User, Shield, LogOut, Bell, Search, Check, CheckCheck,
@@ -12,20 +12,21 @@ import { useUIStore } from '../../store/uiStore';
 import { useNotificationStore } from '../../store/notificationStore';
 import { formatRelativeTime } from '../../lib/utils';
 import { ThemeToggle } from '../ui/ThemeToggle';
+import { DockMagnifyItem } from '../ui/DockMagnify';
 
 const navItems = [
-  { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { path: '/marketplace', label: 'Marketplace', icon: ShoppingBag },
-  { path: '/my-posts', label: 'My Posts', icon: Send },
-  { path: '/my-offers', label: 'My Offers', icon: HandCoins },
-  { path: '/transactions', label: 'Transactions', icon: Receipt },
-  { path: '/chat', label: 'Chat', icon: MessageCircle },
-  { path: '/leaderboard', label: 'Leaderboard', icon: Trophy },
-  { path: '/profile', label: 'Profile', icon: User },
+  { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, tint: '139,92,246' },   // purple
+  { path: '/marketplace', label: 'Marketplace', icon: ShoppingBag, tint: '16,185,129' },   // emerald
+  { path: '/my-posts', label: 'My Posts', icon: Send, tint: '99,102,241' },                // indigo
+  { path: '/my-offers', label: 'My Offers', icon: HandCoins, tint: '245,158,11' },         // amber
+  { path: '/transactions', label: 'Transactions', icon: Receipt, tint: '6,182,212' },      // cyan
+  { path: '/chat', label: 'Chat', icon: MessageCircle, tint: '59,130,246' },               // blue
+  { path: '/leaderboard', label: 'Leaderboard', icon: Trophy, tint: '234,179,8' },         // yellow
+  { path: '/profile', label: 'Profile', icon: User, tint: '168,85,247' },                  // violet
 ];
 
 const adminItems = [
-  { path: '/admin', label: 'Admin Panel', icon: Shield },
+  { path: '/admin', label: 'Admin Panel', icon: Shield, tint: '239,68,68' },               // red
 ];
 
 const notifIcon = (type: string) => {
@@ -86,6 +87,8 @@ export const Sidebar: React.FC = () => {
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);
   const [showNotifPanel, setShowNotifPanel] = useState(false);
   const [showUserPanel, setShowUserPanel] = useState(false);
+  const mouseY = useMotionValue(Infinity);
+  const mouseX = useMotionValue(Infinity);
   const notifPanelRef = useRef<HTMLDivElement>(null);
   const userPanelRef = useRef<HTMLDivElement>(null);
 
@@ -151,35 +154,67 @@ export const Sidebar: React.FC = () => {
       </div>
 
       {/* Nav items */}
-      <nav className="flex-1 flex flex-col items-center gap-0.5 overflow-y-auto py-1">
+      <nav
+        onMouseMove={(e) => mouseY.set(e.pageY)}
+        onMouseLeave={() => mouseY.set(Infinity)}
+        className="flex-1 flex flex-col items-center gap-2.5 overflow-y-auto py-1"
+      >
         {allItems.map((item) => {
           const isActive = location.pathname === item.path || location.pathname.startsWith(item.path + '/');
           const Icon = item.icon;
 
           return (
-            <div key={item.path} className="relative">
-              <Link
-                to={item.path}
-                onMouseEnter={() => setHoveredItem(item.path)}
-                onMouseLeave={() => setHoveredItem(null)}
-                className={cn(
-                  'w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-200 relative',
-                  isActive
-                    ? 'text-white'
-                    : 'text-[var(--text-3)] hover:text-white hover:bg-white/[0.06]'
-                )}
-              >
-                {isActive && (
-                  <motion.div
-                    layoutId="dock-active"
-                    className="absolute inset-0 rounded-xl bg-[var(--accent)]/15 shadow-[0_0_15px_rgba(139,92,246,0.2)]"
-                    transition={{ type: 'spring', stiffness: 350, damping: 28 }}
-                  />
-                )}
-                <Icon size={17} className={cn('relative z-10', isActive && 'text-[var(--accent-2)]')} />
-              </Link>
-              <DockTooltip label={item.label} show={hoveredItem === item.path} />
-            </div>
+            <DockMagnifyItem key={item.path} mousePos={mouseY} direction="vertical" baseSize={44} magnification={76} distance={180}>
+              {(iconScale) => (
+                <>
+                  <Link
+                    to={item.path}
+                    onMouseEnter={() => setHoveredItem(item.path)}
+                    onMouseLeave={() => setHoveredItem(null)}
+                    className={cn(
+                      'w-11 h-11 rounded-xl flex items-center justify-center transition-all duration-200 relative overflow-hidden',
+                      isActive
+                        ? 'text-white'
+                        : 'text-[var(--text-3)] hover:text-white hover:bg-white/[0.06]'
+                    )}
+                  >
+                    {/* ── Active: coloured background + glow ── */}
+                    {isActive && (
+                      <motion.div
+                        layoutId="dock-active"
+                        className="absolute inset-0 rounded-xl"
+                        style={{
+                          background: `linear-gradient(135deg, rgba(${item.tint},0.25) 0%, rgba(${item.tint},0.08) 100%)`,
+                          boxShadow: `0 0 18px rgba(${item.tint},0.3), inset 0 0 12px rgba(${item.tint},0.1)`,
+                        }}
+                        transition={{ type: 'spring', stiffness: 350, damping: 28 }}
+                      />
+                    )}
+                    {/* ── Active: animated border outline ── */}
+                    {isActive && (
+                      <motion.span
+                        layoutId="dock-pip"
+                        className="absolute inset-0 rounded-xl pointer-events-none"
+                        style={{
+                          border: `2.5px solid rgb(${item.tint})`,
+                          boxShadow: `0 0 8px rgba(${item.tint},0.35)`,
+                        }}
+                        transition={{ type: 'spring', stiffness: 350, damping: 28 }}
+                      />
+                    )}
+                    {/* Only the icon scales on hover */}
+                    <motion.div style={iconScale} className="relative z-10 flex items-center justify-center">
+                      <Icon
+                        size={19}
+                        className="transition-colors duration-200"
+                        style={isActive ? { color: `rgb(${item.tint})` } : undefined}
+                      />
+                    </motion.div>
+                  </Link>
+                  <DockTooltip label={item.label} show={hoveredItem === item.path} />
+                </>
+              )}
+            </DockMagnifyItem>
           );
         })}
       </nav>
@@ -320,36 +355,65 @@ export const Sidebar: React.FC = () => {
       transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1], delay: 0.2 }}
       className="lg:hidden fixed bottom-3 left-1/2 -translate-x-1/2 z-50 hypr-mobile-dock"
     >
-      <div className="flex items-center gap-1 px-2 py-1.5">
+      <div
+        onMouseMove={(e) => mouseX.set(e.pageX)}
+        onMouseLeave={() => mouseX.set(Infinity)}
+        className="flex items-end gap-1 px-2 py-1.5"
+      >
         {mobileItems.map((item) => {
           const isActive = location.pathname === item.path || location.pathname.startsWith(item.path + '/');
           const Icon = item.icon;
 
           return (
-            <div key={item.path} className="relative">
-              <Link
-                to={item.path}
-                onClick={() => setSidebarOpen(false)}
-                onMouseEnter={() => setMobileHovered(item.path)}
-                onMouseLeave={() => setMobileHovered(null)}
-                className={cn(
-                  'w-11 h-11 rounded-xl flex items-center justify-center transition-all duration-200 relative',
-                  isActive
-                    ? 'text-white'
-                    : 'text-[var(--text-3)]'
-                )}
-              >
-                {isActive && (
-                  <motion.div
-                    layoutId="mobile-dock-active"
-                    className="absolute inset-0 rounded-xl bg-[var(--accent)]/15"
-                    transition={{ type: 'spring', stiffness: 350, damping: 28 }}
-                  />
-                )}
-                <Icon size={18} className={cn('relative z-10', isActive && 'text-[var(--accent-2)]')} />
-              </Link>
-              <DockTooltipBottom label={item.label} show={mobileHovered === item.path} />
-            </div>
+            <DockMagnifyItem key={item.path} mousePos={mouseX} direction="horizontal" baseSize={48} magnification={80} distance={180}>
+              {(iconScale) => (
+                <>
+                  <Link
+                    to={item.path}
+                    onClick={() => setSidebarOpen(false)}
+                    onMouseEnter={() => setMobileHovered(item.path)}
+                    onMouseLeave={() => setMobileHovered(null)}
+                    className={cn(
+                      'w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-200 relative overflow-hidden',
+                      isActive
+                        ? 'text-white'
+                        : 'text-[var(--text-3)]'
+                    )}
+                  >
+                    {isActive && (
+                      <motion.div
+                        layoutId="mobile-dock-active"
+                        className="absolute inset-0 rounded-xl"
+                        style={{
+                          background: `linear-gradient(135deg, rgba(${item.tint},0.25) 0%, rgba(${item.tint},0.08) 100%)`,
+                          boxShadow: `0 0 14px rgba(${item.tint},0.25), inset 0 0 10px rgba(${item.tint},0.08)`,
+                        }}
+                        transition={{ type: 'spring', stiffness: 350, damping: 28 }}
+                      />
+                    )}
+                    {isActive && (
+                      <motion.span
+                        layoutId="mobile-dock-pip"
+                        className="absolute inset-0 rounded-xl pointer-events-none"
+                        style={{
+                          border: `2.5px solid rgb(${item.tint})`,
+                          boxShadow: `0 0 8px rgba(${item.tint},0.3)`,
+                        }}
+                        transition={{ type: 'spring', stiffness: 350, damping: 28 }}
+                      />
+                    )}
+                    <motion.div style={iconScale} className="relative z-10 flex items-center justify-center">
+                      <Icon
+                        size={20}
+                        className="transition-colors duration-200"
+                        style={isActive ? { color: `rgb(${item.tint})` } : undefined}
+                      />
+                    </motion.div>
+                  </Link>
+                  <DockTooltipBottom label={item.label} show={mobileHovered === item.path} />
+                </>
+              )}
+            </DockMagnifyItem>
           );
         })}
 
@@ -402,10 +466,13 @@ export const Sidebar: React.FC = () => {
                     onClick={() => setSidebarOpen(false)}
                     className={cn(
                       'flex flex-col items-center gap-1.5 py-3 rounded-xl transition-colors',
-                      isActive ? 'bg-[var(--accent)]/10 text-[var(--accent-2)]' : 'text-[var(--text-2)] hover:text-white hover:bg-white/[0.04]'
+                      isActive ? 'text-white' : 'text-[var(--text-2)] hover:text-white hover:bg-white/[0.04]'
                     )}
+                    style={isActive ? {
+                      background: `rgba(${item.tint},0.12)`,
+                    } : undefined}
                   >
-                    <Icon size={18} />
+                    <Icon size={18} style={isActive ? { color: `rgb(${item.tint})` } : undefined} />
                     <span className="text-[10px] font-medium">{item.label}</span>
                   </Link>
                 );
