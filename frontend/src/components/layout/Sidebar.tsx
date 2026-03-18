@@ -158,6 +158,8 @@ export const Sidebar: React.FC = () => {
           onClick={() => toggleCommandPalette()}
           onMouseEnter={() => setHoveredItem('search')}
           onMouseLeave={() => setHoveredItem(null)}
+          title="Search"
+          aria-label="Search"
           className="w-10 h-10 rounded-xl flex items-center justify-center text-[var(--text-3)] hover:text-white hover:bg-white/[0.06] transition-all duration-200"
         >
           <Search size={17} />
@@ -183,6 +185,8 @@ export const Sidebar: React.FC = () => {
                     to={item.path}
                     onMouseEnter={() => setHoveredItem(item.path)}
                     onMouseLeave={() => setHoveredItem(null)}
+                    title={item.label}
+                    aria-label={item.label}
                     className={cn(
                       'w-11 h-11 rounded-xl flex items-center justify-center transition-all duration-200 relative overflow-hidden',
                       isActive
@@ -241,6 +245,8 @@ export const Sidebar: React.FC = () => {
             onClick={() => { setShowNotifPanel(!showNotifPanel); setShowUserPanel(false); }}
             onMouseEnter={() => setHoveredItem('notif')}
             onMouseLeave={() => setHoveredItem(null)}
+            title="Notifications"
+            aria-label="Notifications"
             className="w-10 h-10 rounded-xl flex items-center justify-center text-[var(--text-3)] hover:text-white hover:bg-white/[0.06] transition-all duration-200 relative"
           >
             <Bell size={17} />
@@ -315,7 +321,9 @@ export const Sidebar: React.FC = () => {
               onClick={() => { setShowUserPanel(!showUserPanel); setShowNotifPanel(false); }}
               onMouseEnter={() => setHoveredItem('user')}
               onMouseLeave={() => setHoveredItem(null)}
-              className="w-9 h-9 rounded-full bg-gradient-to-br from-[var(--accent)] to-purple-400 flex items-center justify-center text-white text-[11px] font-bold hover:shadow-[0_0_20px_rgba(139,92,246,0.35)] transition-shadow mt-1"
+              title={`${user.firstName} ${user.lastName}`}
+              aria-label={`${user.firstName} ${user.lastName}`}
+              className="w-9 h-9 rounded-full bg-gradient-to-br from-[var(--accent)] to-purple-400 flex items-center justify-center text-[var(--avatar-initials)] text-[11px] font-bold hover:shadow-[0_0_20px_rgba(139,92,246,0.35)] transition-shadow mt-1"
             >
               {user.firstName?.charAt(0)}{user.lastName?.charAt(0)}
             </button>
@@ -385,6 +393,8 @@ export const Sidebar: React.FC = () => {
                     onClick={() => setSidebarOpen(false)}
                     onMouseEnter={() => setMobileHovered(item.path)}
                     onMouseLeave={() => setMobileHovered(null)}
+                    title={item.label}
+                    aria-label={item.label}
                     className={cn(
                       'w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-200 relative overflow-hidden',
                       isActive
@@ -433,6 +443,8 @@ export const Sidebar: React.FC = () => {
         <div className="relative">
           <button
             onClick={() => setSidebarOpen(!sidebarOpen)}
+            title={sidebarOpen ? 'Close menu' : 'Open menu'}
+            aria-label={sidebarOpen ? 'Close menu' : 'Open menu'}
             className="w-11 h-11 rounded-xl flex items-center justify-center text-[var(--text-3)] hover:text-white transition-colors"
           >
             {sidebarOpen ? <X size={18} /> : (
@@ -476,6 +488,8 @@ export const Sidebar: React.FC = () => {
                     key={item.path}
                     to={item.path}
                     onClick={() => setSidebarOpen(false)}
+                    title={item.label}
+                    aria-label={item.label}
                     className={cn(
                       'flex flex-col items-center gap-1.5 py-3 rounded-xl transition-colors',
                       isActive ? 'text-white' : 'text-[var(--text-2)] hover:text-white hover:bg-white/[0.04]'
@@ -493,7 +507,7 @@ export const Sidebar: React.FC = () => {
             {user && (
               <div className="flex items-center justify-between p-3 border-t border-white/[0.06]">
                 <div className="flex items-center gap-2">
-                  <div className="w-7 h-7 rounded-full bg-gradient-to-br from-[var(--accent)] to-purple-400 flex items-center justify-center text-white text-[9px] font-bold">
+                  <div className="w-7 h-7 rounded-full bg-gradient-to-br from-[var(--accent)] to-purple-400 flex items-center justify-center text-[var(--avatar-initials)] text-[9px] font-bold">
                     {user.firstName?.charAt(0)}{user.lastName?.charAt(0)}
                   </div>
                   <span className="text-xs text-white font-medium">{user.firstName}</span>

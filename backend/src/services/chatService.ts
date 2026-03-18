@@ -7,8 +7,8 @@ export class ChatService {
     const transaction = await transactionRepository.findById(transactionId);
     if (!transaction) throw new NotFoundError('Transaction not found');
 
-    if (transaction.status !== 'IN_PROGRESS' && transaction.status !== 'SUCCESSFUL') {
-      throw new BadRequestError('Chat is only available for active or completed transactions');
+    if (transaction.status !== 'IN_PROGRESS') {
+      throw new BadRequestError('Chat is disabled for cancelled or completed transactions');
     }
 
     if (transaction.requesterId !== senderId && transaction.offererId !== senderId) {

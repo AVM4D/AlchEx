@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Send, ArrowLeft, MessageCircle, Search, Check, CheckCheck } from 'lucide-react';
+import { Send, ArrowLeft, MessageCircle, Search, Check, CheckCheck, Trash2 } from 'lucide-react';
 import { chatApi, transactionsApi } from '../services/dataService';
 import { getSocket, connectSocket } from '../services/socket';
 import { useAuthStore } from '../store/authStore';
@@ -19,8 +19,30 @@ export default function ChatPage() {
   const [msgLoading, setMsgLoading] = useState(false);
   const [sending, setSending] = useState(false);
   const [chatSearch, setChatSearch] = useState('');
+  const [hiddenChats, setHiddenChats] = useState<string[]>([]);
+  const [hiddenChatsLoaded, setHiddenChatsLoaded] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  const hiddenChatsStorageKey = `hiddenChats:${user?.id || 'guest'}`;
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(hiddenChatsStorageKey);
+      const parsed = raw ? JSON.parse(raw) : [];
+      setHiddenChats(Array.isArray(parsed) ? parsed : []);
+    } catch {
+      setHiddenChats([]);
+    } finally {
+      setHiddenChatsLoaded(true);
+    }
+  }, [hiddenChatsStorageKey]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(hiddenChatsStorageKey, JSON.stringify(hiddenChats));
+    } catch { }
+  }, [hiddenChatsStorageKey, hiddenChats]);
 
   // Fetch conversations (transactions)
   useEffect(() => {
@@ -28,15 +50,17 @@ export default function ChatPage() {
       try {
         const res = await transactionsApi.getMyTransactions({ limit: '50' });
         const d = res.data.data;
-        setTransactions(d?.transactions || (Array.isArray(d) ? d : []));
+        const txs = d?.transactions || (Array.isArray(d) ? d : []);
+        setTransactions((txs as Transaction[]).filter(tx => !hiddenChats.includes(tx.id)));
       } catch { }
       setLoading(false);
     })();
-  }, []);
+  }, [hiddenChats]);
 
   // Fetch messages for selected transaction
   useEffect(() => {
-    if (!transactionId) { setMessages([]); return; }
+    if (!hiddenChatsLoaded) return;
+    if (!transactionId || hiddenChats.includes(transactionId)) { setMessages([]); return; }
     (async () => {
       setMsgLoading(true);
       try {
@@ -46,14 +70,24 @@ export default function ChatPage() {
       } catch { }
       setMsgLoading(false);
     })();
-  }, [transactionId]);
+  }, [transactionId, hiddenChats, hiddenChatsLoaded]);
+
+  // If user opens a removed chat URL, redirect back to chat list
+  useEffect(() => {
+    if (!hiddenChatsLoaded) return;
+    if (transactionId && hiddenChats.includes(transactionId)) {
+      setMessages([]);
+      setNewMsg('');
+      navigate('/chat', { replace: true });
+    }
+  }, [transactionId, hiddenChats, hiddenChatsLoaded, navigate]);
 
   // Scroll to bottom
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages]);
 
   // Socket.IO for real-time messages
   useEffect(() => {
-    if (!transactionId) return;
+    if (!transactionId || hiddenChats.includes(transactionId)) return;
     connectSocket();
     const socket = getSocket();
     socket.emit('join:transaction', transactionId);
@@ -68,10 +102,29 @@ export default function ChatPage() {
     };
     socket.on('message:new', onMsg);
     return () => { socket.off('message:new', onMsg); socket.emit('leave:transaction', transactionId); };
-  }, [transactionId]);
+  }, [transactionId, hiddenChats]);
+
+  const selectedTx = transactions.find(t => t.id === transactionId);
+  const canSendMessages = selectedTx?.status === 'IN_PROGRESS';
+  const showEmptyState = !transactionId || (hiddenChatsLoaded && transactionId && !selectedTx);
+
+  const getDisabledMessage = (status?: string) => {
+    if (status === 'SUCCESSFUL') return 'Transaction Completed . Chat Disabled';
+    if (status === 'CANCELLED') return 'Transaction Cancelled . Chat Disabled';
+    return 'Chat disabled for this transaction';
+  };
+
+  const removeCurrentChat = useCallback(() => {
+    if (!transactionId) return;
+    setHiddenChats(prev => (prev.includes(transactionId) ? prev : [...prev, transactionId]));
+    setTransactions(prev => prev.filter(tx => tx.id !== transactionId));
+    setMessages([]);
+    setNewMsg('');
+    navigate('/chat');
+  }, [transactionId, navigate]);
 
   const sendMessage = useCallback(async () => {
-    if (!newMsg.trim() || !transactionId || sending) return;
+    if (!newMsg.trim() || !transactionId || sending || !canSendMessages) return;
     setSending(true);
     try {
       // Send via socket for real-time delivery to both parties
@@ -81,9 +134,7 @@ export default function ChatPage() {
       inputRef.current?.focus();
     } catch { }
     setSending(false);
-  }, [newMsg, transactionId, sending]);
-
-  const selectedTx = transactions.find(t => t.id === transactionId);
+  }, [newMsg, transactionId, sending, canSendMessages]);
 
   const getOtherUser = (tx: Transaction) =>
     tx.requesterId === user?.id ? tx.offerer : tx.requester;
@@ -101,7 +152,7 @@ export default function ChatPage() {
   return (
     <div className="flex h-[calc(100vh-3.5rem)] -mx-5 md:-mx-6 -mb-5 md:-mb-6">
       {/* Conversations sidebar */}
-      <div className={`w-full sm:w-72 md:w-80 border-r border-[var(--border)] bg-[var(--surface)] flex flex-col shrink-0 ${transactionId ? 'hidden md:flex' : 'flex'}`}>
+      <div className={`w-full sm:w-72 md:w-80 border-r border-[var(--border)] bg-[var(--surface)] flex flex-col shrink-0 ${showEmptyState ? 'flex' : 'hidden md:flex'}`}>
         <div className="p-4 border-b border-[var(--border)]">
           <h2 className="text-display text-lg text-[var(--text)]">Messages</h2>
           <div className="mt-3 relative">
@@ -137,7 +188,7 @@ export default function ChatPage() {
               return (
                 <button key={tx.id} onClick={() => navigate(`/chat/${tx.id}`)}
                   className={`w-full text-left p-4 flex gap-3 border-b border-[var(--border)] transition-colors ${active ? 'bg-[var(--accent)]/10 border-l-2 border-l-[var(--accent)]' : 'hover:bg-[var(--surface-2)]'}`}>
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[var(--accent)] to-[var(--accent-2)] flex items-center justify-center text-xs text-[var(--text)] font-bold shrink-0">
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[var(--accent)] to-[var(--accent-2)] flex items-center justify-center text-xs text-[var(--avatar-initials)] font-bold shrink-0">
                     {other.firstName.charAt(0)}{other.lastName.charAt(0)}
                   </div>
                   <div className="flex-1 min-w-0">
@@ -156,7 +207,7 @@ export default function ChatPage() {
 
       {/* Chat area */}
       <div className="flex-1 flex flex-col bg-[var(--bg)]">
-        {!transactionId ? (
+        {showEmptyState ? (
           <div className="flex-1 flex items-center justify-center">
             <div className="text-center">
               <div className="w-20 h-20 rounded-full bg-[var(--surface-2)] flex items-center justify-center mx-auto mb-4">
@@ -175,13 +226,23 @@ export default function ChatPage() {
               </button>
               {selectedTx && (
                 <>
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[var(--accent)] to-[var(--accent-2)] flex items-center justify-center text-xs text-[var(--text)] font-bold">
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[var(--accent)] to-[var(--accent-2)] flex items-center justify-center text-xs text-[var(--avatar-initials)] font-bold">
                     {getOtherUser(selectedTx).firstName.charAt(0)}
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-[var(--text)] truncate">{getOtherUser(selectedTx).firstName} {getOtherUser(selectedTx).lastName}</p>
                     <p className="text-[10px] text-[var(--text-3)] truncate">{selectedTx.post.title}</p>
                   </div>
+                  {!canSendMessages && (
+                    <button
+                      onClick={removeCurrentChat}
+                      className="px-2.5 py-1.5 rounded-lg text-[10px] border border-red-500/20 bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-colors flex items-center gap-1"
+                      title="Remove chat"
+                      aria-label="Remove chat"
+                    >
+                      <Trash2 size={11} /> Remove Chat
+                    </button>
+                  )}
                   <span className={`pill text-[10px] ${selectedTx.status === 'IN_PROGRESS' ? 'text-[var(--accent)] border-[var(--accent)]/20' : selectedTx.status === 'SUCCESSFUL' ? 'text-emerald-400 border-emerald-500/20' : 'text-red-400 border-red-500/20'}`}>
                     {selectedTx.status}
                   </span>
@@ -236,12 +297,18 @@ export default function ChatPage() {
 
             {/* Input area */}
             <div className="px-4 py-3 border-t border-[var(--border)] bg-[var(--surface)]/50 backdrop-blur-xl">
+              {!canSendMessages && selectedTx && (
+                <p className="mb-2 text-[11px] text-[var(--text-3)]">
+                  {getDisabledMessage(selectedTx.status)}
+                </p>
+              )}
               <div className="flex gap-2 items-center">
                 <input ref={inputRef} value={newMsg} onChange={(e) => setNewMsg(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && sendMessage()}
-                  placeholder="Type a message..."
-                  className="flex-1 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl px-4 py-2.5 text-sm text-[var(--text)] placeholder-[var(--text-3)] focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)] transition-all" />
-                <button onClick={sendMessage} disabled={!newMsg.trim() || sending}
+                  onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && canSendMessages && sendMessage()}
+                  placeholder={canSendMessages ? 'Type a message...' : 'Chat disabled for this transaction'}
+                  disabled={!canSendMessages}
+                  className="flex-1 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl px-4 py-2.5 text-sm text-[var(--text)] placeholder-[var(--text-3)] focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)] transition-all disabled:opacity-60 disabled:cursor-not-allowed" />
+                <button onClick={sendMessage} disabled={!newMsg.trim() || sending || !canSendMessages}
                   className="w-10 h-10 rounded-xl bg-[var(--accent)] text-[var(--bg)] flex items-center justify-center hover:bg-[var(--accent)]/90 disabled:opacity-30 transition-all">
                   <Send size={16} />
                 </button>

@@ -82,7 +82,7 @@ export default function DashboardPage() {
           width={false}
           weight
           italic={false}
-          textColor="#ffffff"
+          textColor="var(--text)"
           strokeColor="#5227FF"
           minFontSize={36}
           maxFontSize={72}

@@ -35,28 +35,50 @@ export default function FireflySwarm({
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
-    container.innerHTML = '';
 
-    for (let i = 0; i < fireflyCount; i++) {
-      const fly = document.createElement('div');
-      const size = 2 + Math.random() * 5;
-      const hue = 0; 
-      const lightness = 60 + Math.random() * 40;
-      fly.style.cssText = `
-        position: absolute;
-        width: ${size}px;
-        height: ${size}px;
-        border-radius: 50%;
-        background: hsl(${hue}, 0%, ${lightness}%);
-        opacity: 0;
-        pointer-events: none;
-        box-shadow: 0 0 ${size * 4}px hsl(${hue}, 0%, ${lightness}%),
-                    0 0 ${size * 8}px hsla(${hue}, 0%, ${lightness}%, 0.4);        
-        left: ${Math.random() * 100}%;
-        top: ${Math.random() * 100}%;
-      `;
-      container.appendChild(fly);
-    }
+    const buildFlies = () => {
+      container.innerHTML = '';
+      const isLightTheme = document.documentElement.getAttribute('data-theme') === 'light';
+
+      for (let i = 0; i < fireflyCount; i++) {
+        const fly = document.createElement('div');
+        const size = 2 + Math.random() * 5;
+        const hue = 0;
+        const lightness = isLightTheme
+          ? Math.random() * 16 // black/near-black in light mode
+          : 60 + Math.random() * 40; // bright in dark mode
+
+        fly.style.cssText = `
+          position: absolute;
+          width: ${size}px;
+          height: ${size}px;
+          border-radius: 50%;
+          background: hsl(${hue}, 0%, ${lightness}%);
+          opacity: 0;
+          pointer-events: none;
+          box-shadow: 0 0 ${size * 4}px hsl(${hue}, 0%, ${lightness}%),
+                      0 0 ${size * 8}px hsla(${hue}, 0%, ${lightness}%, ${isLightTheme ? 0.28 : 0.4});
+          left: ${Math.random() * 100}%;
+          top: ${Math.random() * 100}%;
+        `;
+        container.appendChild(fly);
+      }
+    };
+
+    buildFlies();
+
+    // Rebuild particle colors when theme changes
+    const observer = new MutationObserver(() => {
+      buildFlies();
+    });
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['data-theme'],
+    });
+
+    return () => {
+      observer.disconnect();
+    };
   }, [fireflyCount]);
 
   const trigger = useCallback(() => {

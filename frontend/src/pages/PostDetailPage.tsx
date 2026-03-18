@@ -135,7 +135,7 @@ export default function PostDetailPage() {
         {/* Meta */}
         <div className="flex flex-wrap items-center gap-3 sm:gap-4 pt-4 border-t border-[var(--border)]">
           <Link to={`/users/${post.user.id}`} className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-            <div className="w-7 h-7 rounded-full bg-gradient-to-br from-[var(--accent)] to-[var(--accent-2)] flex items-center justify-center text-[10px] text-[var(--text)] font-bold">
+            <div className="w-7 h-7 rounded-full bg-gradient-to-br from-[var(--accent)] to-[var(--accent-2)] flex items-center justify-center text-[10px] text-[var(--avatar-initials)] font-bold">
               {post.user.firstName.charAt(0)}
             </div>
             <span className="text-xs text-[var(--text-2)]">{post.user.firstName} {post.user.lastName}</span>
@@ -283,7 +283,7 @@ export default function PostDetailPage() {
                   className="bg-[var(--surface-2)] rounded-xl p-4 border border-[var(--border)]">
                   <div className="flex items-start justify-between gap-3 mb-2">
                     <div className="flex items-center gap-2">
-                      <div className="w-7 h-7 rounded-full bg-gradient-to-br from-[var(--accent)] to-[var(--accent-2)] flex items-center justify-center text-[9px] text-[var(--text)] font-bold">
+                      <div className="w-7 h-7 rounded-full bg-gradient-to-br from-[var(--accent)] to-[var(--accent-2)] flex items-center justify-center text-[9px] text-[var(--avatar-initials)] font-bold">
                         {offer.user.firstName.charAt(0)}
                       </div>
                       <div>

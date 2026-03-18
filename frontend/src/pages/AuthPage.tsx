@@ -175,7 +175,7 @@ export default function AuthPage({ initialMode = 'login' }: AuthPageProps) {
         <div className="absolute inset-0 z-[1]">
           <ParticleField
             particleCount={60}
-            color="255, 255, 255"
+            color="var(--text)"
             maxDistance={120}
             speed={0.15}
           />
@@ -412,7 +412,7 @@ export default function AuthPage({ initialMode = 'login' }: AuthPageProps) {
         <div className="absolute inset-0 z-[1]">
           <ParticleField
             particleCount={60}
-            color="255, 255, 255"
+            color="var(--text)"
             maxDistance={120}
             speed={0.15}
           />

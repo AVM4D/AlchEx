@@ -188,7 +188,7 @@ export const Header: React.FC = () => {
               onClick={() => setShowUserMenu(!showUserMenu)}
               className="flex items-center gap-2.5 pl-3 ml-1 border-l border-[var(--border)] cursor-pointer hover:opacity-80 transition-opacity"
             >
-              <div className="w-7 h-7 rounded-full bg-gradient-to-br from-[var(--accent)] to-purple-400 flex items-center justify-center text-white text-[10px] font-bold">
+              <div className="w-7 h-7 rounded-full bg-gradient-to-br from-[var(--accent)] to-purple-400 flex items-center justify-center text-[var(--avatar-initials)] text-[10px] font-bold">
                 {user.firstName?.charAt(0)}{user.lastName?.charAt(0)}
               </div>
               <div className="hidden md:flex items-center gap-1">

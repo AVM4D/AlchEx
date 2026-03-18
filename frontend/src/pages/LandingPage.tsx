@@ -9,7 +9,7 @@ import { TextScramble } from '../components/ui/TextScramble';
 import { MouseReveal } from '../components/ui/MouseReveal';
 import LiquidBlob from '../components/ui/LiquidBlob';
 import DarkVeil from '../components/ui/DarkVeil';
-import { LaserFlow } from '../components/ui/LaserFlow';
+import { RippleGrid } from '../components/ui/RippleGrid';
 import '../components/ui/StickyReveal.css';
 
 gsap.registerPlugin(ScrollTrigger);
@@ -398,7 +398,7 @@ export default function LandingPage() {
                         </span>
                       </div>
                     )}
-                    <div className={`mx-auto mb-3 rounded-full bg-gradient-to-br from-[var(--accent)] to-[var(--accent-2)] flex items-center justify-center font-bold text-[var(--text)] ${isFirst ? 'w-20 h-20 text-2xl shadow-[0_0_40px_var(--accent-glow)]' : 'w-14 h-14 text-lg'}`}>
+                    <div className={`mx-auto mb-3 rounded-full bg-gradient-to-br from-[var(--accent)] to-[var(--accent-2)] flex items-center justify-center font-bold text-[var(--avatar-initials)] ${isFirst ? 'w-20 h-20 text-2xl shadow-[0_0_40px_var(--accent-glow)]' : 'w-14 h-14 text-lg'}`}>
                       {user.name.charAt(0)}
                     </div>
                     <h3 className="font-display font-bold text-[var(--text)] text-lg">{user.name}</h3>
@@ -430,22 +430,13 @@ export default function LandingPage() {
 
       {/* ═══ FINAL CTA ═══ */}
       < section className="relative py-16 sm:py-24 md:py-32 px-4 sm:px-6" >
-        {/* LaserFlow background — extends beyond section to blend into neighbors */}
+        {/* RippleGrid background — replaces the previous light beam effect */}
         < div className="absolute z-0" style={{ top: '0%', bottom: '0%', left: '-20%', right: '-20%' }} >
-          <LaserFlow
-            color="var(--accent)"
-            horizontalBeamOffset={0}
-            verticalBeamOffset={-0.41}
-            verticalSizing={1.3}
-            horizontalSizing={0.35}
-            wispDensity={0.5}
-            fogIntensity={0.1}
-            fogScale={0.1}
-            wispSpeed={40}
-            wispIntensity={3}
-            flowSpeed={0.4}
-            decay={1}
-            falloffStart={1}
+          <RippleGrid
+            gridSize={62}
+            gridLineColor="rgba(255, 255, 255, 0.08)"
+            rippleColor="var(--accent-glow)"
+            rippleDuration={8.5}
             style={{ width: '100%', height: '100%' }}
           />
         </div >

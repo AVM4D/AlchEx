@@ -122,7 +122,7 @@ export default function TransactionsPage() {
                     <Link to={`/posts/${tx.postId}`} className="text-sm font-display font-bold text-[var(--text)] hover:text-[var(--accent-2)] transition-colors line-clamp-1">{tx.post.title}</Link>
                     <div className="flex flex-wrap items-center gap-3 mt-1.5">
                       <div className="flex items-center gap-1.5">
-                        <div className="w-5 h-5 rounded-full bg-gradient-to-br from-[var(--accent)] to-[var(--accent-2)] flex items-center justify-center text-[8px] font-bold text-[var(--text)]">
+                        <div className="w-5 h-5 rounded-full bg-gradient-to-br from-[var(--accent)] to-[var(--accent-2)] flex items-center justify-center text-[8px] font-bold text-[var(--avatar-initials)]">
                           {other.firstName.charAt(0)}
                         </div>
                         <span className="text-xs text-[var(--text-2)]">{other.firstName} {other.lastName}</span>

@@ -67,6 +67,10 @@ export default function MarketplacePage() {
     setSearchParams(p, { replace: true });
   }, [search, category, sortBy, page, setSearchParams]);
 
+  const currentPage = meta?.page ?? page;
+  const canGoPrev = meta ? meta.hasPrev : page > 1;
+  const canGoNext = meta ? meta.hasNext : !!meta && page < meta.totalPages;
+
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
       {/* Header */}
@@ -200,7 +204,7 @@ export default function MarketplacePage() {
 
                   <div className="flex items-center justify-between pt-3 border-t border-[var(--border)]">
                     <div className="flex items-center gap-2">
-                      <div className="w-5 h-5 rounded-full bg-gradient-to-br from-[var(--accent)] to-[var(--accent-2)] flex items-center justify-center text-[8px] text-[var(--text)] font-bold">
+                      <div className="w-5 h-5 rounded-full bg-gradient-to-br from-[var(--accent)] to-[var(--accent-2)] flex items-center justify-center text-[8px] text-[var(--avatar-initials)] font-bold">
                         {post.user?.firstName?.charAt(0)}
                       </div>
                       <span className="text-[10px] text-[var(--text-3)]">{post.user?.firstName}</span>
@@ -216,10 +220,24 @@ export default function MarketplacePage() {
 
       {/* Pagination */}
       {meta && meta.totalPages > 1 && (
-        <div className="flex items-center justify-center gap-2">
-          <button disabled={page <= 1} onClick={() => setPage(p => p - 1)} className="pill cursor-pointer disabled:opacity-30">Previous</button>
-          <span className="text-xs text-[var(--text-3)]">Page {page} of {meta.totalPages}</span>
-          <button disabled={page >= meta.totalPages} onClick={() => setPage(p => p + 1)} className="pill cursor-pointer disabled:opacity-30">Next</button>
+        <div className="relative z-10 flex items-center justify-center gap-2">
+          <button
+            type="button"
+            disabled={!canGoPrev}
+            onClick={() => setPage(p => Math.max(1, p - 1))}
+            className="pill cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
+          >
+            Previous
+          </button>
+          <span className="text-xs text-[var(--text-3)]">Page {currentPage} of {meta.totalPages}</span>
+          <button
+            type="button"
+            disabled={!canGoNext}
+            onClick={() => setPage(p => p + 1)}
+            className="pill cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
+          >
+            Next
+          </button>
         </div>
       )}
     </div>

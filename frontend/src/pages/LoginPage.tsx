@@ -127,7 +127,7 @@ export default function LoginPage() {
         <div className="login-orb-2 orb orb-blue w-[300px] h-[300px] bottom-1/4 right-1/4 z-0" style={{ animationDelay: '-8s' }} />
 
         <div className="absolute inset-0 z-[1]">
-          <ParticleField particleCount={60} color="255, 255, 255" maxDistance={120} speed={0.15} />
+          <ParticleField particleCount={60} color="var(--text)" maxDistance={120} speed={0.15} />
         </div>
 
         <div className="relative z-10 text-center px-12">

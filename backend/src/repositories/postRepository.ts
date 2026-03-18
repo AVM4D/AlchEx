@@ -2,6 +2,24 @@ import db from '../db/connection';
 
 // ─── Post Repository — All Raw SQL ─────────────────────────────────────────
 
+const SEARCH_COLUMNS = ['p.title', 'p.description', 'p.whatINeed', 'p.whatIOffer'] as const;
+
+function normalizeSqlTextExpr(column: string) {
+  return `LOWER(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(${column}, '-', ' '), '_', ' '), '/', ' '), '.', ' '), ',', ' '), ':', ' '), ';', ' '), '(', ' '), ')', ' '))`;
+}
+
+function normalizeSearchText(input: string) {
+  return input
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function escapeSqlLiteral(value: string) {
+  return value.replace(/'/g, "''");
+}
+
 export class PostRepository {
 
   // SELECT single post by ID with user info + offers + offer count
@@ -119,7 +137,44 @@ export class PostRepository {
     if (where?.status) conditions.push(`p.status = '${where.status}'`);
     if (where?.category) conditions.push(`p.category = '${where.category}'`);
     if (where?.userId) conditions.push(`p.userId = '${where.userId}'`);
-    if (where?.OR && Array.isArray(where.OR)) {
+    if (where?.search && typeof where.search === 'string') {
+      const normalizedSearch = normalizeSearchText(where.search);
+      const tokens = normalizedSearch.split(' ').filter(Boolean);
+
+      if (normalizedSearch) {
+        const normalizedColumns = SEARCH_COLUMNS.map((col) => normalizeSqlTextExpr(col));
+        const compactColumns = normalizedColumns.map((col) => `REPLACE(${col}, ' ', '')`);
+
+        const phrasePattern = escapeSqlLiteral(normalizedSearch);
+        const compactPattern = escapeSqlLiteral(normalizedSearch.replace(/\s+/g, ''));
+
+        const phraseClause = normalizedColumns
+          .map((col) => `${col} LIKE '%${phrasePattern}%'`)
+          .join(' OR ');
+
+        const compactClause = compactPattern
+          ? compactColumns.map((col) => `${col} LIKE '%${compactPattern}%'`).join(' OR ')
+          : '';
+
+        const tokenClauses = tokens.map((token) => {
+          const tokenPattern = escapeSqlLiteral(token);
+          const rawMatches = SEARCH_COLUMNS
+            .map((col) => `LOWER(ISNULL(${col}, '')) LIKE '%${tokenPattern}%'`)
+            .join(' OR ');
+          const normalizedMatches = normalizedColumns
+            .map((col) => `${col} LIKE '%${tokenPattern}%'`)
+            .join(' OR ');
+          return `((${rawMatches}) OR (${normalizedMatches}))`;
+        });
+
+        const tokenAndClause = tokenClauses.length > 0 ? `(${tokenClauses.join(' AND ')})` : '';
+        const branches = [`(${phraseClause})`];
+        if (compactClause) branches.push(`(${compactClause})`);
+        if (tokenAndClause) branches.push(tokenAndClause);
+
+        conditions.push(`(${branches.join(' OR ')})`);
+      }
+    } else if (where?.OR && Array.isArray(where.OR)) {
       const orParts: string[] = [];
       for (const cond of where.OR) {
         if (cond.title?.contains)       orParts.push(`p.title LIKE '%${cond.title.contains}%'`);

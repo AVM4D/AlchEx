@@ -104,7 +104,7 @@ export default function AdminPage() {
               <motion.div key={s.label} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
                 className="glass-card p-5">
                 <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${s.color} flex items-center justify-center mb-3`}>
-                  <s.icon size={18} className="text-[var(--text)]" />
+                  <s.icon size={18} className={s.label === 'Total Posts' ? 'admin-total-posts-icon' : 'text-[var(--text)]'} />
                 </div>
                 <div className="text-2xl font-display font-bold text-[var(--text)]">{s.value}</div>
                 <div className="text-[10px] text-[var(--text-3)] uppercase tracking-wider mt-1">{s.label}</div>
@@ -123,7 +123,7 @@ export default function AdminPage() {
             {users.map((u, i) => (
               <motion.div key={u.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.02 }}
                 className="glass-card p-4 flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[var(--accent)] to-[var(--accent-2)] flex items-center justify-center text-sm font-bold text-[var(--text)]">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[var(--accent)] to-[var(--accent-2)] flex items-center justify-center text-sm font-bold text-[var(--avatar-initials)]">
                   {u.firstName?.charAt(0)}{u.lastName?.charAt(0)}
                 </div>
                 <div className="flex-1 min-w-0">

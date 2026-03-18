@@ -61,12 +61,7 @@ export class PostService {
 
     if (query.category) where.category = query.category;
     if (query.search) {
-      where.OR = [
-        { title: { contains: query.search } },
-        { description: { contains: query.search } },
-        { whatINeed: { contains: query.search } },
-        { whatIOffer: { contains: query.search } },
-      ];
+      where.search = query.search;
     }
 
     const { posts, total } = await postRepository.findAll({

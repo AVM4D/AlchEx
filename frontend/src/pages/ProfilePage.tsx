@@ -77,7 +77,7 @@ export default function ProfilePage() {
         </div>
         <div className="px-6 pb-6">
           <div className="flex flex-col md:flex-row items-start md:items-end gap-4 -mt-12 sm:-mt-14 relative z-10">
-            <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl bg-gradient-to-br from-[var(--accent)] to-[var(--accent-2)] flex items-center justify-center text-2xl sm:text-3xl font-bold text-[var(--text)] font-display border-4 border-[var(--bg)] shadow-xl shrink-0">
+            <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl bg-gradient-to-br from-[var(--accent)] to-[var(--accent-2)] flex items-center justify-center text-2xl sm:text-3xl font-bold text-[var(--avatar-initials)] font-display border-4 border-[var(--bg)] shadow-xl shrink-0">
               {p.firstName.charAt(0)}{p.lastName.charAt(0)}
             </div>
             <div className="flex-1">
@@ -140,7 +140,7 @@ export default function ProfilePage() {
           <motion.div key={s.label} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
             className="glass-card p-4">
             <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${s.color} flex items-center justify-center mb-2`}>
-              <s.icon size={14} className="text-[var(--text)]" />
+              <s.icon size={14} className={s.label === 'Exchanges' ? 'profile-exchanges-icon' : 'text-[var(--text)]'} />
             </div>
             <div className="text-xl font-display font-bold text-[var(--text)]">{s.value}</div>
             <div className="text-[10px] text-[var(--text-3)] uppercase tracking-wider">{s.label}</div>
@@ -180,7 +180,7 @@ export default function ProfilePage() {
           <div className="space-y-4">
             {ratings.slice(0, 5).map(r => (
               <div key={r.id} className="flex gap-3 pb-4 border-b border-[var(--border)] last:border-0">
-                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[var(--accent)] to-[var(--accent-2)] flex items-center justify-center text-xs text-[var(--text)] font-bold shrink-0">
+                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[var(--accent)] to-[var(--accent-2)] flex items-center justify-center text-xs text-[var(--avatar-initials)] font-bold shrink-0">
                   {r.giver?.firstName?.charAt(0)}
                 </div>
                 <div>

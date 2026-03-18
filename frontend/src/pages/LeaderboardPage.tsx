@@ -82,7 +82,7 @@ export default function LeaderboardPage() {
                     {/* Avatar */}
                     <div className="relative mb-3">
                       {place === 1 && <Crown size={24} className="text-amber-400 absolute -top-7 left-1/2 -translate-x-1/2 drop-shadow-lg" />}
-                      <div className={`w-14 h-14 sm:w-16 sm:h-16 md:w-20 md:h-20 rounded-2xl bg-gradient-to-br ${color} flex items-center justify-center text-lg sm:text-xl md:text-2xl font-bold text-[var(--text)] font-display shadow-lg`}>
+                      <div className={`w-14 h-14 sm:w-16 sm:h-16 md:w-20 md:h-20 rounded-2xl bg-gradient-to-br ${color} flex items-center justify-center text-lg sm:text-xl md:text-2xl font-bold text-[var(--avatar-initials)] font-display shadow-lg`}>
                         {entry.firstName.charAt(0)}{entry.lastName.charAt(0)}
                       </div>
                     </div>
@@ -109,7 +109,7 @@ export default function LeaderboardPage() {
                   <div className="w-8 h-8 flex items-center justify-center">
                     <span className="text-sm font-mono font-bold text-[var(--text-3)]">#{rank}</span>
                   </div>
-                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[var(--accent)] to-[var(--accent-2)] flex items-center justify-center text-sm font-bold text-[var(--text)]">
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[var(--accent)] to-[var(--accent-2)] flex items-center justify-center text-sm font-bold text-[var(--avatar-initials)]">
                     {entry.firstName.charAt(0)}{entry.lastName.charAt(0)}
                   </div>
                   <div className="flex-1 min-w-0">
