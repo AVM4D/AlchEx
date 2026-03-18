@@ -10,6 +10,7 @@ import { MouseReveal } from '../components/ui/MouseReveal';
 import LiquidBlob from '../components/ui/LiquidBlob';
 import DarkVeil from '../components/ui/DarkVeil';
 import { RippleGrid } from '../components/ui/RippleGrid';
+import { ThemeToggle } from '../components/ui/ThemeToggle';
 import '../components/ui/StickyReveal.css';
 
 gsap.registerPlugin(ScrollTrigger);
@@ -117,6 +118,11 @@ export default function LandingPage() {
 
   return (
     <div className="relative bg-[var(--bg)] text-[var(--text)]" style={{ overflowX: 'clip' }}>
+
+      {/* ═══ THEME TOGGLE ═══ */}
+      <div className="fixed top-6 right-6 z-50">
+        <ThemeToggle />
+      </div>
 
       {/* ═══ HERO ═══ */}
       <motion.section
@@ -420,9 +426,9 @@ export default function LandingPage() {
       < section className="py-8 border-y border-[var(--border)]" >
         <MarqueeStrip speed={60} reverse>
           {Array(8).fill(null).map((_, i) => (
-            <span key={i} className="text-display tracking-tight flex items-center gap-8" style={{ fontSize: 'clamp(1.5rem, 4vw, 3rem)', color: 'rgba(255,255,255,0.15)' }}>
+            <span key={i} className="text-display tracking-tight flex items-center gap-8 text-[var(--text)]" style={{ fontSize: 'clamp(1.5rem, 4vw, 3rem)', opacity: 0.35 }}>
               EQUIVALENT EXCHANGE
-              <span className="w-2 h-2 rounded-full bg-[var(--accent)] opacity-10" />
+              <span className="w-2 h-2 rounded-full bg-[var(--text)]" style={{ opacity: 0.6 }} />
             </span>
           ))}
         </MarqueeStrip>
@@ -431,7 +437,7 @@ export default function LandingPage() {
       {/* ═══ FINAL CTA ═══ */}
       < section className="relative py-16 sm:py-24 md:py-32 px-4 sm:px-6" >
         {/* RippleGrid background — replaces the previous light beam effect */}
-        < div className="absolute z-0" style={{ top: '0%', bottom: '0%', left: '-20%', right: '-20%' }} >
+        < div className="absolute inset-0 z-0 overflow-hidden" >
           <RippleGrid
             gridSize={62}
             gridLineColor="rgba(255, 255, 255, 0.08)"
@@ -453,16 +459,16 @@ export default function LandingPage() {
             Ready to{' '}
             <span className="text-[var(--text)]">exchange?</span>
           </h2>
-          <p className="text-3xl font-quote text-[var(--accent-2)] tracking-wide mb-12 max-w-xl mx-auto leading-relaxed">
-            "Thousands of students. One community. Zero cost."
-          </p>
-          <Link to="/register" className="group relative inline-flex">
+          <Link to="/register" className="group relative inline-flex mb-10">
             <div className="absolute -inset-2 bg-gradient-to-r from-[var(--accent)] via-[var(--accent)] to-[var(--accent-2)] rounded-2xl blur-xl opacity-30 group-hover:opacity-60 transition-opacity duration-700" />
             <div className="relative flex items-center gap-3 px-10 py-5 bg-[var(--accent)] text-[var(--bg)] rounded-xl font-bold text-lg hover:bg-[var(--accent)] transition-all duration-300 shadow-[0_0_40px_var(--accent-glow)]">
               Begin Your Journey
               <Sparkles size={20} className="group-hover:rotate-12 transition-transform" />
             </div>
           </Link>
+          <p className="text-3xl font-quote text-[var(--accent-2)] tracking-wide max-w-xl mx-auto leading-relaxed">
+            "Thousands of students. One community. Zero cost."
+          </p>
         </motion.div>
       </section >
 

@@ -40,7 +40,7 @@
 .ripple-grid__ring {
   position: absolute;
   left: 50%;
-  top: 70%;
+  top: 50%;
   width: 4rem;
   aspect-ratio: 1;
   border-radius: 9999px;
@@ -73,7 +73,7 @@
     opacity: 0.2;
   }
   100% {
-    transform: translate(-50%, -50%) scale(9.5);
+    transform: translate(-50%, -50%) scale(7.5);
     opacity: 0;
   }
 }
