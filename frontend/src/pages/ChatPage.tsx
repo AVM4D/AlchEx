@@ -21,12 +21,14 @@ export default function ChatPage() {
   const [chatSearch, setChatSearch] = useState('');
   const [hiddenChats, setHiddenChats] = useState<string[]>([]);
   const [hiddenChatsLoaded, setHiddenChatsLoaded] = useState(false);
+  const [hiddenChatsLoadedKey, setHiddenChatsLoadedKey] = useState<string>('');
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const hiddenChatsStorageKey = `hiddenChats:${user?.id || 'guest'}`;
 
   useEffect(() => {
+    setHiddenChatsLoaded(false);
     try {
       const raw = localStorage.getItem(hiddenChatsStorageKey);
       const parsed = raw ? JSON.parse(raw) : [];
@@ -34,18 +36,21 @@ export default function ChatPage() {
     } catch {
       setHiddenChats([]);
     } finally {
+      setHiddenChatsLoadedKey(hiddenChatsStorageKey);
       setHiddenChatsLoaded(true);
     }
   }, [hiddenChatsStorageKey]);
 
   useEffect(() => {
+    if (!hiddenChatsLoaded || hiddenChatsLoadedKey !== hiddenChatsStorageKey) return;
     try {
       localStorage.setItem(hiddenChatsStorageKey, JSON.stringify(hiddenChats));
     } catch { }
-  }, [hiddenChatsStorageKey, hiddenChats]);
+  }, [hiddenChatsStorageKey, hiddenChats, hiddenChatsLoaded, hiddenChatsLoadedKey]);
 
   // Fetch conversations (transactions)
   useEffect(() => {
+    if (!hiddenChatsLoaded) return;
     (async () => {
       try {
         const res = await transactionsApi.getMyTransactions({ limit: '50' });
@@ -55,7 +60,7 @@ export default function ChatPage() {
       } catch { }
       setLoading(false);
     })();
-  }, [hiddenChats]);
+  }, [hiddenChats, hiddenChatsLoaded]);
 
   // Fetch messages for selected transaction
   useEffect(() => {
@@ -106,6 +111,8 @@ export default function ChatPage() {
 
   const selectedTx = transactions.find(t => t.id === transactionId);
   const canSendMessages = selectedTx?.status === 'IN_PROGRESS';
+  const canRemoveChat = selectedTx?.status === 'CANCELLED'
+    || (selectedTx?.status === 'SUCCESSFUL' && !!selectedTx.requesterDone && !!selectedTx.offererDone);
   const showEmptyState = !transactionId || (hiddenChatsLoaded && transactionId && !selectedTx);
 
   const getDisabledMessage = (status?: string) => {
@@ -233,7 +240,7 @@ export default function ChatPage() {
                     <p className="text-sm font-medium text-[var(--text)] truncate">{getOtherUser(selectedTx).firstName} {getOtherUser(selectedTx).lastName}</p>
                     <p className="text-[10px] text-[var(--text-3)] truncate">{selectedTx.post.title}</p>
                   </div>
-                  {!canSendMessages && (
+                  {canRemoveChat && (
                     <button
                       onClick={removeCurrentChat}
                       className="px-2.5 py-1.5 rounded-lg text-[10px] border border-red-500/20 bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-colors flex items-center gap-1"

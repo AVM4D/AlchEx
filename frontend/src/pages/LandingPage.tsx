@@ -96,6 +96,16 @@ export default function LandingPage() {
   const heroY = useTransform(scrollYProgress, [0, 0.08], [0, -60]);
 
   useEffect(() => {
+    document.documentElement.classList.add('landing-scrollbar-hidden');
+    document.body.classList.add('landing-scrollbar-hidden');
+
+    return () => {
+      document.documentElement.classList.remove('landing-scrollbar-hidden');
+      document.body.classList.remove('landing-scrollbar-hidden');
+    };
+  }, []);
+
+  useEffect(() => {
     const ctx = gsap.context(() => {
       const tl = gsap.timeline({ defaults: { ease: 'power3.out' } });
       tl.fromTo('.hero-logo', { opacity: 0, scale: 0.92 }, { opacity: 1, scale: 1, duration: 0.9 }, 0.2)

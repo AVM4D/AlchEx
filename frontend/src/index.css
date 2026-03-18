@@ -222,6 +222,19 @@
     border-radius: 4px;
   }
 
+  html.landing-scrollbar-hidden,
+  body.landing-scrollbar-hidden {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  html.landing-scrollbar-hidden::-webkit-scrollbar,
+  body.landing-scrollbar-hidden::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+    display: none;
+  }
+
   a {
     text-decoration: none;
     color: inherit;
