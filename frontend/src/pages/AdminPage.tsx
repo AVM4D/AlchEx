@@ -76,7 +76,7 @@ export default function AdminPage() {
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-2 overflow-x-auto pb-1">
+      <div className="flex gap-2 overflow-x-auto -mx-1 px-1 pt-1 pb-2">
         {TABS.map(t => (
           <button key={t} onClick={() => setTab(t)}
             className={`px-5 py-2.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all ${tab === t ? '-[var(--bg)] shadow-[0_0_15px_var(--accent-glow)]' : 'bg-[var(--surface-2)] text-[var(--text-2)] hover:text-[var(--text)]'}`}>

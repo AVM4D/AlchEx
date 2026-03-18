@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence, useMotionValue } from 'framer-motion';
 import {
   LayoutDashboard, ShoppingBag, Send, HandCoins, Receipt, MessageCircle,
@@ -11,6 +11,7 @@ import { useAuthStore } from '../../store/authStore';
 import { useUIStore } from '../../store/uiStore';
 import { useNotificationStore } from '../../store/notificationStore';
 import { formatRelativeTime } from '../../lib/utils';
+import { getNotificationRoute } from '../../lib/notificationRouting';
 import { ThemeToggle } from '../ui/ThemeToggle';
 import { DockMagnifyItem } from '../ui/DockMagnify';
 
@@ -31,12 +32,14 @@ const adminItems = [
 
 const notifIcon = (type: string) => {
   switch (type) {
-    case 'NEW_OFFER': return <Package size={14} className="text-[var(--accent)]" />;
+    case 'NEW_OFFER':
+    case 'OFFER_RECEIVED': return <Package size={14} className="text-[var(--accent)]" />;
     case 'OFFER_ACCEPTED': return <Check size={14} className="text-emerald-400" />;
     case 'OFFER_REJECTED': return <AlertCircle size={14} className="text-red-400" />;
     case 'NEW_MESSAGE': return <MessageCircle size={14} className="text-blue-400" />;
     case 'TRANSACTION_COMPLETE': return <Receipt size={14} className="text-emerald-400" />;
     case 'NEW_RATING': return <Star size={14} className="text-amber-400" />;
+    case 'REPORT_UPDATE': return <Shield size={14} className="text-orange-400" />;
     default: return <Bell size={14} className="text-[var(--text-3)]" />;
   }
 };
@@ -81,6 +84,7 @@ function DockTooltipBottom({ label, show }: { label: string; show: boolean }) {
 
 export const Sidebar: React.FC = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const { user, logout } = useAuthStore();
   const { setSidebarOpen, sidebarOpen, toggleCommandPalette } = useUIStore();
   const { notifications, unreadCount, fetchNotifications, markAsRead, markAllAsRead } = useNotificationStore();
@@ -117,10 +121,18 @@ export const Sidebar: React.FC = () => {
     return () => document.removeEventListener('mousedown', handler);
   }, [showNotifPanel, showUserPanel]);
 
-  const navigate = (path: string) => {
+  const closePanels = () => {
     setSidebarOpen(false);
     setShowNotifPanel(false);
     setShowUserPanel(false);
+  };
+
+  const handleNotificationClick = async (id: string, isRead: boolean, route: string) => {
+    if (!isRead) {
+      await markAsRead(id);
+    }
+    closePanels();
+    navigate(route);
   };
 
   /* ─── Desktop Dock ─── */
@@ -157,7 +169,7 @@ export const Sidebar: React.FC = () => {
       <nav
         onMouseMove={(e) => mouseY.set(e.pageY)}
         onMouseLeave={() => mouseY.set(Infinity)}
-        className="flex-1 flex flex-col items-center gap-2.5 overflow-y-auto py-1"
+        className="dock-nav-scroll flex-1 flex flex-col items-center gap-2.5 overflow-y-auto py-1"
       >
         {allItems.map((item) => {
           const isActive = location.pathname === item.path || location.pathname.startsWith(item.path + '/');
@@ -268,7 +280,7 @@ export const Sidebar: React.FC = () => {
                     notifications.slice(0, 15).map((n) => (
                       <button
                         key={n.id}
-                        onClick={() => { if (!n.isRead) markAsRead(n.id); setShowNotifPanel(false); }}
+                        onClick={() => handleNotificationClick(n.id, n.isRead, getNotificationRoute(n))}
                         className={cn(
                           'w-full text-left px-4 py-3 flex gap-3 border-b border-white/[0.04] hover:bg-white/[0.03] transition-colors',
                           !n.isRead && 'bg-[var(--accent)]/[0.04]'

@@ -5,12 +5,14 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useUIStore } from '../../store/uiStore';
 import { useAuthStore } from '../../store/authStore';
 import { useNotificationStore } from '../../store/notificationStore';
+import { getNotificationRoute } from '../../lib/notificationRouting';
 import { cn } from '../../lib/utils';
 import { formatRelativeTime } from '../../lib/utils';
 
 const notifIcon = (type: string) => {
   switch (type) {
-    case 'NEW_OFFER': return <Package size={14} className="text-[var(--accent)]" />;
+    case 'NEW_OFFER':
+    case 'OFFER_RECEIVED': return <Package size={14} className="text-[var(--accent)]" />;
     case 'OFFER_ACCEPTED': return <Check size={14} className="text-emerald-400" />;
     case 'OFFER_REJECTED': return <AlertCircle size={14} className="text-red-400" />;
     case 'NEW_MESSAGE': return <MessageCircle size={14} className="text-blue-400" />;
@@ -147,17 +149,10 @@ export const Header: React.FC = () => {
                     notifications.slice(0, 20).map((n) => (
                       <button
                         key={n.id}
-                        onClick={() => {
-                          if (!n.isRead) markAsRead(n.id);
+                        onClick={async () => {
+                          if (!n.isRead) await markAsRead(n.id);
                           setShowNotifications(false);
-                          // Navigate based on notification data
-                          if (n.data) {
-                            try {
-                              const d = JSON.parse(n.data);
-                              if (d.postId) navigate(`/posts/${d.postId}`);
-                              else if (d.transactionId) navigate(`/chat/${d.transactionId}`);
-                            } catch {}
-                          }
+                          navigate(getNotificationRoute(n));
                         }}
                         className={cn(
                           'w-full text-left px-4 py-3 flex gap-3 border-b border-[var(--border)] hover:bg-white/[0.03] transition-colors',

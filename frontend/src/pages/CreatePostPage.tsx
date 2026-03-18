@@ -181,7 +181,7 @@ export default function CreatePostPage() {
             </div>
             <button type="button" onClick={() => setForm(p => ({ ...p, notifyOnOffers: !p.notifyOnOffers }))}
               className={`relative w-11 h-6 rounded-full transition-colors ${form.notifyOnOffers ? 'bg-[var(--accent)]' : 'bg-[var(--border)]'}`}>
-              <div className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow-md transition-transform ${form.notifyOnOffers ? 'translate-x-5.5 left-[1.375rem]' : 'translate-x-0 left-0.5'}`} />
+              <div className={`absolute top-0.5 w-5 h-5 rounded-full shadow-md transition-transform ${form.notifyOnOffers ? 'bg-black translate-x-5.5 left-[1.375rem]' : 'bg-white translate-x-0 left-0.5'}`} />
             </button>
           </div>
         </div>

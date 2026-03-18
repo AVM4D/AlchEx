@@ -216,7 +216,7 @@ export default function ChatPage() {
                         className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
                         <div className={`max-w-[85%] sm:max-w-[75%] relative group ${isMe ? 'order-2' : ''}`}>
                           <div className={`px-3.5 py-2.5 rounded-2xl text-sm ${isMe
-                            ? 'bg-gradient-to-r from-[var(--accent)] to-primary-500 text-[var(--text)] rounded-br-md'
+                            ? 'bg-gradient-to-r from-[var(--accent)] to-primary-500 text-black rounded-br-md'
                             : 'bg-[var(--surface-2)] text-[var(--text-1)] rounded-bl-md border border-[var(--border)]'
                             }`}>
                             {msg.content}

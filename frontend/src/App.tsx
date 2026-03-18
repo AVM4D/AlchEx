@@ -61,6 +61,12 @@ function PublicOnlyRoute({ children }: { children: React.ReactNode }) {
 export default function App() {
   const { refreshAuth } = useAuthStore();
 
+  const withPageLoader = (node: React.ReactNode) => (
+    <Suspense fallback={<PageLoader />}>
+      {node}
+    </Suspense>
+  );
+
   // Initialize theme from localStorage (default dark)
   useEffect(() => {
     const saved = localStorage.getItem('alchex-theme') || 'dark';
@@ -71,6 +77,28 @@ export default function App() {
   useEffect(() => {
     refreshAuth().catch(() => { });
     // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Preload lazy route chunks to avoid abrupt first-time page switches
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      void import('./pages/LandingPage');
+      void import('./pages/AuthPage');
+      void import('./pages/DashboardPage');
+      void import('./pages/MarketplacePage');
+      void import('./pages/PostDetailPage');
+      void import('./pages/CreatePostPage');
+      void import('./pages/ChatPage');
+      void import('./pages/TransactionsPage');
+      void import('./pages/MyPostsPage');
+      void import('./pages/MyOffersPage');
+      void import('./pages/ProfilePage');
+      void import('./pages/LeaderboardPage');
+      void import('./pages/AdminPage');
+      void import('./pages/NotFoundPage');
+    }, 250);
+
+    return () => window.clearTimeout(timer);
   }, []);
 
   return (
@@ -87,63 +115,61 @@ export default function App() {
           },
         }}
       />
-      <Suspense fallback={<PageLoader />}>
-        <Routes>
-          {/* Public Routes */}
-          <Route path="/" element={<SmoothScroller><LandingPage /></SmoothScroller>} />
+      <Routes>
+        {/* Public Routes */}
+        <Route path="/" element={withPageLoader(<SmoothScroller><LandingPage /></SmoothScroller>)} />
+        <Route
+          path="/login"
+          element={
+            <PublicOnlyRoute>
+              {withPageLoader(<AuthPage initialMode="login" />)}
+            </PublicOnlyRoute>
+          }
+        />
+        <Route
+          path="/register"
+          element={
+            <PublicOnlyRoute>
+              {withPageLoader(<AuthPage initialMode="register" />)}
+            </PublicOnlyRoute>
+          }
+        />
+
+        {/* Protected Routes (with AppLayout) */}
+        <Route
+          element={
+            <ProtectedRoute>
+              <AppLayout />
+            </ProtectedRoute>
+          }
+        >
+          <Route path="/dashboard" element={<DashboardPage />} />
+          <Route path="/marketplace" element={<MarketplacePage />} />
+          <Route path="/posts/new" element={<CreatePostPage />} />
+          <Route path="/posts/:id" element={<PostDetailPage />} />
+          <Route path="/posts/:id/edit" element={<CreatePostPage />} />
+          <Route path="/my-posts" element={<MyPostsPage />} />
+          <Route path="/my-offers" element={<MyOffersPage />} />
+          <Route path="/transactions" element={<TransactionsPage />} />
+          <Route path="/transactions/:id" element={<TransactionsPage />} />
+          <Route path="/chat" element={<ChatPage />} />
+          <Route path="/chat/:transactionId" element={<ChatPage />} />
+          <Route path="/leaderboard" element={<LeaderboardPage />} />
+          <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/users/:userId" element={<ProfilePage />} />
           <Route
-            path="/login"
+            path="/admin"
             element={
-              <PublicOnlyRoute>
-                <AuthPage initialMode="login" />
-              </PublicOnlyRoute>
+              <AdminRoute>
+                <AdminPage />
+              </AdminRoute>
             }
           />
-          <Route
-            path="/register"
-            element={
-              <PublicOnlyRoute>
-                <AuthPage initialMode="register" />
-              </PublicOnlyRoute>
-            }
-          />
+        </Route>
 
-          {/* Protected Routes (with AppLayout) */}
-          <Route
-            element={
-              <ProtectedRoute>
-                <AppLayout />
-              </ProtectedRoute>
-            }
-          >
-            <Route path="/dashboard" element={<DashboardPage />} />
-            <Route path="/marketplace" element={<MarketplacePage />} />
-            <Route path="/posts/new" element={<CreatePostPage />} />
-            <Route path="/posts/:id" element={<PostDetailPage />} />
-            <Route path="/posts/:id/edit" element={<CreatePostPage />} />
-            <Route path="/my-posts" element={<MyPostsPage />} />
-            <Route path="/my-offers" element={<MyOffersPage />} />
-            <Route path="/transactions" element={<TransactionsPage />} />
-            <Route path="/transactions/:id" element={<TransactionsPage />} />
-            <Route path="/chat" element={<ChatPage />} />
-            <Route path="/chat/:transactionId" element={<ChatPage />} />
-            <Route path="/leaderboard" element={<LeaderboardPage />} />
-            <Route path="/profile" element={<ProfilePage />} />
-            <Route path="/users/:userId" element={<ProfilePage />} />
-            <Route
-              path="/admin"
-              element={
-                <AdminRoute>
-                  <AdminPage />
-                </AdminRoute>
-              }
-            />
-          </Route>
-
-          {/* 404 */}
-          <Route path="*" element={<NotFoundPage />} />
-        </Routes>
-      </Suspense>
+        {/* 404 */}
+        <Route path="*" element={withPageLoader(<NotFoundPage />)} />
+      </Routes>
     </>
   );
 }

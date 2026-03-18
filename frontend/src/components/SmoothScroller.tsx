@@ -24,6 +24,7 @@ export default function SmoothScroller({ children }: SmoothScrollerProps) {
         const lenis = new Lenis({
             lerp: 0.04,                 // Decreased for even silkier/smoother feeling
             smoothWheel: true,
+            gestureOrientation: 'vertical',
             wheelMultiplier: 1.0,       // Smoother, slightly less snappy wheel rotation
             touchMultiplier: 1.5,       // Natural touch feel
             infinite: false,

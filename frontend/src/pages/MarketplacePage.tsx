@@ -120,9 +120,9 @@ export default function MarketplacePage() {
         <AnimatePresence>
           {showFilters && (
             <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
-              <div className="pt-4 mt-4 border-t border-[var(--border)]">
+              <div className="pt-4 mt-4 pb-2 border-t border-[var(--border)]">
                 <p className="text-label mb-2">Category</p>
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-2 pl-1 -mt-0.5">
                   {CATEGORIES.map((c) => (
                     <button key={c} onClick={() => { setCategory(c); setPage(1); }}
                       className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${category === c ? '-[var(--bg)] shadow-[0_0_15px_var(--accent-glow)]' : 'bg-[var(--surface-2)] text-[var(--text-2)] hover:text-[var(--text)]'}`}>

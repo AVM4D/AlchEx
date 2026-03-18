@@ -1,8 +1,19 @@
-import React from 'react';
+import React, { Suspense } from 'react';
 import { Outlet } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Sidebar } from './Sidebar';
 import { CommandPalette } from '../ui/CommandPalette';
+
+function OutletLoader() {
+  return (
+    <div className="min-h-[220px] flex items-center justify-center">
+      <div className="flex items-center gap-2 text-[var(--text-3)] text-xs">
+        <span className="w-3 h-3 border-2 border-[var(--border)] border-t-[var(--accent)] rounded-full animate-spin" />
+        Loading page...
+      </div>
+    </div>
+  );
+}
 
 const AppLayout: React.FC = () => {
   return (
@@ -38,7 +49,9 @@ const AppLayout: React.FC = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.4, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
             >
-              <Outlet />
+              <Suspense fallback={<OutletLoader />}>
+                <Outlet />
+              </Suspense>
             </motion.div>
           </div>
         </motion.main>

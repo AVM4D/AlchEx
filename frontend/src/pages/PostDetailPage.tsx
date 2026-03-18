@@ -158,18 +158,6 @@ export default function PostDetailPage() {
           </div>
         )}
 
-        {/* Action buttons */}
-        {!isOwner && post.status === 'ACTIVE' && !myOffer && (
-          <div className="mt-5">
-            <button onClick={() => { setShowOffer(!showOffer); setEditingOffer(false); }} className="group relative">
-              <div className="absolute -inset-0.5 bg-gradient-to-r from-[var(--bg)] to-[var(--surface-3)] rounded-lg blur opacity-30 group-hover:opacity-60 transition-opacity" />
-              <div className="relative flex items-center gap-2 px-5 py-2.5 bg-[var(--accent)] text-[var(--bg)] rounded-lg text-sm font-medium">
-                <Send size={14} /> Make an Offer
-              </div>
-            </button>
-          </div>
-        )}
-
         {isOwner && (
           <div className="mt-5 flex gap-2">
             <Link to={`/posts/${post.id}/edit`} className="pill cursor-pointer text-[var(--accent)] border-[var(--accent)]/20">Edit Post</Link>
@@ -179,83 +167,108 @@ export default function PostDetailPage() {
 
       {/* ── User's own offer card (non-owner) ── */}
       {!isOwner && user && (
-        <div className="glass-card p-6">
-          <h3 className="text-label mb-4">Your Offer</h3>
-          {myOffer ? (
-            <div className="bg-[var(--surface-2)] rounded-xl p-4 border border-[var(--border)]">
-              <div className="flex items-start justify-between gap-3 mb-2">
-                <span className={`pill text-[10px] ${myOffer.status === 'PENDING' ? 'text-amber-400 border-amber-500/20 bg-amber-500/10' :
-                    myOffer.status === 'ACCEPTED' ? 'text-emerald-400 border-emerald-500/20 bg-emerald-500/10' :
-                      myOffer.status === 'REJECTED' ? 'text-red-400 border-red-500/20 bg-red-500/10' :
-                          'text-gray-400 bg-gray-500/10 border-gray-500/20'
-                  }`}>{myOffer.status}</span>
-                {myOffer.status === 'PENDING' && myOffer.expiresAt ? (
-                  <OfferCountdown expiresAt={myOffer.expiresAt} />
-                ) : (
-                  <span className="text-[10px] text-[var(--text-3)]">{formatRelativeTime(myOffer.createdAt)}</span>
-                )}
-              </div>
-              <p className="text-sm text-[var(--text)] mb-1">{myOffer.proposalDescription}</p>
-              {myOffer.counterExchange && <p className="text-xs text-[var(--text-3)]">Counter: {myOffer.counterExchange}</p>}
+        <motion.div layout className="glass-card p-6 overflow-hidden">
+          <h3 className="text-label mb-4">{editingOffer ? 'Edit Your Offer' : 'Your Offer'}</h3>
 
-              <div className="flex gap-2 mt-3">
-                {myOffer.status === 'PENDING' && (
-                  <button onClick={startEditOffer} className="flex items-center gap-1.5 px-4 py-1.5 bg-[var(--accent)]/10 text-[var(--accent)] rounded-lg text-xs font-medium hover:bg-[var(--accent)]/20 transition-colors">
-                    <Edit3 size={12} /> Edit Offer
+          <AnimatePresence mode="wait" initial={false}>
+            {(showOffer || editingOffer) ? (
+              <motion.div
+                key="offer-form"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -8 }}
+                transition={{ duration: 0.24, ease: [0.16, 1, 0.3, 1] }}
+                className="space-y-4"
+              >
+                <div>
+                  <label className="text-xs text-[var(--text-3)] mb-1 block">Proposal *</label>
+                  <textarea value={proposal} onChange={(e) => setProposal(e.target.value)} rows={3}
+                    placeholder="Describe what you're proposing..."
+                    className="w-full bg-[var(--surface-2)] border border-[var(--border)] rounded-lg px-4 py-3 text-sm text-[var(--text)] placeholder-[var(--text-3)] focus:border-[var(--accent)] transition-all resize-none" />
+                </div>
+                <div>
+                  <label className="text-xs text-[var(--text-3)] mb-1 block">Counter exchange (optional)</label>
+                  <input value={counter} onChange={(e) => setCounter(e.target.value)}
+                    placeholder="What would you like in return instead?"
+                    className="w-full bg-[var(--surface-2)] border border-[var(--border)] rounded-lg px-4 py-3 text-sm text-[var(--text)] placeholder-[var(--text-3)] focus:border-[var(--accent)] transition-all" />
+                </div>
+                <div className="flex gap-2">
+                  <button onClick={editingOffer ? updateOffer : submitOffer} disabled={submitting || !proposal.trim()}
+                    className="px-5 py-2.5 bg-[var(--accent)] text-[var(--bg)] rounded-lg text-sm font-medium hover:bg-[var(--accent)]/90 disabled:opacity-40 transition-all flex items-center gap-2">
+                    {submitting ? <Loader2 size={14} className="animate-spin" /> : editingOffer ? <CheckCircle2 size={14} /> : <Send size={14} />}
+                    {editingOffer ? 'Save Changes' : 'Submit'}
                   </button>
-                )}
-                {myOffer.status === 'ACCEPTED' && myOffer.transaction && (
-                  <Link to={`/chat/${myOffer.transaction.id}`} className="flex items-center gap-1.5 px-4 py-1.5 bg-emerald-500/10 text-emerald-400 rounded-lg text-xs font-medium hover:bg-emerald-500/20 transition-colors">
-                    <MessageCircle size={12} /> Chat
-                  </Link>
-                )}
-              </div>
-            </div>
-          ) : post.status === 'ACTIVE' ? (
-            <div className="text-center py-6">
-              <p className="text-sm text-[var(--text-3)] mb-3">You haven't made any offer yet.</p>
-              <button onClick={() => { setShowOffer(true); setEditingOffer(false); }}
-                className="px-5 py-2.5 bg-[var(--accent)] text-[var(--bg)] rounded-lg text-sm font-medium hover:bg-[var(--accent)]/90 transition-all inline-flex items-center gap-2">
-                <Send size={14} /> Make an Offer
-              </button>
-            </div>
-          ) : (
-            <p className="text-sm text-[var(--text-3)] text-center py-6">This post is no longer accepting offers.</p>
-          )}
-        </div>
-      )}
+                  <button onClick={() => { setShowOffer(false); setEditingOffer(false); setProposal(''); setCounter(''); }}
+                    className="px-4 py-2 bg-[var(--surface-2)] text-[var(--text-2)] rounded-lg text-sm hover:text-[var(--text)] transition-colors">Cancel</button>
+                </div>
+              </motion.div>
+            ) : myOffer ? (
+              <motion.div
+                key="offer-existing"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -8 }}
+                transition={{ duration: 0.24, ease: [0.16, 1, 0.3, 1] }}
+                className="bg-[var(--surface-2)] rounded-xl p-4 border border-[var(--border)]"
+              >
+                <div className="flex items-start justify-between gap-3 mb-2">
+                  <span className={`pill text-[10px] ${myOffer.status === 'PENDING' ? 'text-amber-400 border-amber-500/20 bg-amber-500/10' :
+                      myOffer.status === 'ACCEPTED' ? 'text-emerald-400 border-emerald-500/20 bg-emerald-500/10' :
+                        myOffer.status === 'REJECTED' ? 'text-red-400 border-red-500/20 bg-red-500/10' :
+                            'text-gray-400 bg-gray-500/10 border-gray-500/20'
+                    }`}>{myOffer.status}</span>
+                  {myOffer.status === 'PENDING' && myOffer.expiresAt ? (
+                    <OfferCountdown expiresAt={myOffer.expiresAt} />
+                  ) : (
+                    <span className="text-[10px] text-[var(--text-3)]">{formatRelativeTime(myOffer.createdAt)}</span>
+                  )}
+                </div>
+                <p className="text-sm text-[var(--text)] mb-1">{myOffer.proposalDescription}</p>
+                {myOffer.counterExchange && <p className="text-xs text-[var(--text-3)]">Counter: {myOffer.counterExchange}</p>}
 
-      {/* ── Create / Edit offer form ── */}
-      <AnimatePresence>
-        {(showOffer || editingOffer) && (
-          <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden">
-            <div className="glass-card p-6 space-y-4">
-              <h3 className="text-label">{editingOffer ? 'Edit Your Offer' : 'Your Offer'}</h3>
-              <div>
-                <label className="text-xs text-[var(--text-3)] mb-1 block">Proposal *</label>
-                <textarea value={proposal} onChange={(e) => setProposal(e.target.value)} rows={3}
-                  placeholder="Describe what you're proposing..."
-                  className="w-full bg-[var(--surface-2)] border border-[var(--border)] rounded-lg px-4 py-3 text-sm text-[var(--text)] placeholder-[var(--text-3)] focus:border-[var(--accent)] transition-all resize-none" />
-              </div>
-              <div>
-                <label className="text-xs text-[var(--text-3)] mb-1 block">Counter exchange (optional)</label>
-                <input value={counter} onChange={(e) => setCounter(e.target.value)}
-                  placeholder="What would you like in return instead?"
-                  className="w-full bg-[var(--surface-2)] border border-[var(--border)] rounded-lg px-4 py-3 text-sm text-[var(--text)] placeholder-[var(--text-3)] focus:border-[var(--accent)] transition-all" />
-              </div>
-              <div className="flex gap-2">
-                <button onClick={editingOffer ? updateOffer : submitOffer} disabled={submitting || !proposal.trim()}
-                  className="px-5 py-2.5 bg-[var(--accent)] text-[var(--bg)] rounded-lg text-sm font-medium hover:bg-[var(--accent)]/90 disabled:opacity-40 transition-all flex items-center gap-2">
-                  {submitting ? <Loader2 size={14} className="animate-spin" /> : editingOffer ? <CheckCircle2 size={14} /> : <Send size={14} />}
-                  {editingOffer ? 'Save Changes' : 'Submit'}
+                <div className="flex gap-2 mt-3">
+                  {myOffer.status === 'PENDING' && (
+                    <button onClick={startEditOffer} className="flex items-center gap-1.5 px-4 py-1.5 bg-[var(--accent)]/10 text-[var(--accent)] rounded-lg text-xs font-medium hover:bg-[var(--accent)]/20 transition-colors">
+                      <Edit3 size={12} /> Edit Offer
+                    </button>
+                  )}
+                  {myOffer.status === 'ACCEPTED' && myOffer.transaction && (
+                    <Link to={`/chat/${myOffer.transaction.id}`} className="flex items-center gap-1.5 px-4 py-1.5 bg-emerald-500/10 text-emerald-400 rounded-lg text-xs font-medium hover:bg-emerald-500/20 transition-colors">
+                      <MessageCircle size={12} /> Chat
+                    </Link>
+                  )}
+                </div>
+              </motion.div>
+            ) : post.status === 'ACTIVE' ? (
+              <motion.div
+                key="offer-empty"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -8 }}
+                transition={{ duration: 0.24, ease: [0.16, 1, 0.3, 1] }}
+                className="text-center py-6"
+              >
+                <p className="text-sm text-[var(--text-3)] mb-3">You haven't made any offer yet.</p>
+                <button onClick={() => { setShowOffer(true); setEditingOffer(false); }}
+                  className="px-5 py-2.5 bg-[var(--accent)] text-[var(--bg)] rounded-lg text-sm font-medium hover:bg-[var(--accent)]/90 transition-all inline-flex items-center gap-2">
+                  <Send size={14} /> Make an Offer
                 </button>
-                <button onClick={() => { setShowOffer(false); setEditingOffer(false); setProposal(''); setCounter(''); }}
-                  className="px-4 py-2 bg-[var(--surface-2)] text-[var(--text-2)] rounded-lg text-sm hover:text-[var(--text)] transition-colors">Cancel</button>
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+              </motion.div>
+            ) : (
+              <motion.p
+                key="offer-closed"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -8 }}
+                transition={{ duration: 0.24, ease: [0.16, 1, 0.3, 1] }}
+                className="text-sm text-[var(--text-3)] text-center py-6"
+              >
+                This post is no longer accepting offers.
+              </motion.p>
+            )}
+          </AnimatePresence>
+        </motion.div>
+      )}
 
       {/* ── All offers list (visible to post owner) ── */}
       {isOwner && (

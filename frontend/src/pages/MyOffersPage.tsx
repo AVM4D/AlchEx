@@ -51,7 +51,7 @@ export default function MyOffersPage() {
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1">
+      <div className="flex gap-2 overflow-x-auto -mx-1 px-1 pt-1 pb-2">
         {['All', 'PENDING', 'ACCEPTED', 'REJECTED', 'EXPIRED'].map(s => (
           <button key={s} onClick={() => setTab(s)}
             className={`px-4 py-2 rounded-lg text-xs font-medium whitespace-nowrap transition-all ${tab === s ? '-[var(--bg)] shadow-[0_0_15px_var(--accent-glow)]' : 'bg-[var(--surface-2)] text-[var(--text-2)] hover:text-[var(--text)]'}`}>
