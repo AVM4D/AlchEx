@@ -20,7 +20,7 @@ export const ThemeToggle: React.FC = () => {
     return (
         <button
             onClick={toggle}
-            className="p-2 rounded-lg text-[var(--text-3)] hover:text-[var(--text)] hover:bg-[var(--surface-2)] transition-colors"
+            className="glass p-2.5 rounded-xl text-[var(--text-2)] hover:text-[var(--text)] border border-[var(--border)] hover:border-[var(--border-hover)] shadow-[0_8px_30px_rgba(0,0,0,0.12)] transition-all duration-300"
             title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
         >
             <motion.div

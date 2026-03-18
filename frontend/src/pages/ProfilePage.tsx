@@ -80,8 +80,8 @@ export default function ProfilePage() {
             <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl bg-gradient-to-br from-[var(--accent)] to-[var(--accent-2)] flex items-center justify-center text-2xl sm:text-3xl font-bold text-[var(--avatar-initials)] font-display border-4 border-[var(--bg)] shadow-xl shrink-0">
               {p.firstName.charAt(0)}{p.lastName.charAt(0)}
             </div>
-            <div className="flex-1">
-              <h1 className="text-display text-2xl text-[var(--text)]">{fullName}</h1>
+            <div className="flex-1 -mt-1">
+              <h1 className="text-display text-2xl" style={{ color: 'var(--bg)' }}>{fullName}</h1>
               <div className="flex flex-wrap items-center gap-3 mt-1">
                 {p.university && <span className="text-xs text-[var(--text-2)] flex items-center gap-1"><MapPin size={11} />{p.university}</span>}
                 {'program' in p && p.program && <span className="pill text-[10px]"><BookOpen size={10} />{p.program}</span>}

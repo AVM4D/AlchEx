@@ -440,8 +440,8 @@ export default function LandingPage() {
         < div className="absolute inset-0 z-0 overflow-hidden" >
           <RippleGrid
             gridSize={62}
-            gridLineColor="rgba(255, 255, 255, 0.08)"
-            rippleColor="var(--accent-glow)"
+            gridLineColor="color-mix(in srgb, var(--text) 12%, transparent)"
+            rippleColor="var(--text)"
             rippleDuration={8.5}
             style={{ width: '100%', height: '100%' }}
           />
@@ -459,9 +459,9 @@ export default function LandingPage() {
             Ready to{' '}
             <span className="text-[var(--text)]">exchange?</span>
           </h2>
-          <Link to="/register" className="group relative inline-flex mb-10">
+          <Link to="/register" className="group relative inline-flex -mt-3 mb-10">
             <div className="absolute -inset-2 bg-gradient-to-r from-[var(--accent)] via-[var(--accent)] to-[var(--accent-2)] rounded-2xl blur-xl opacity-30 group-hover:opacity-60 transition-opacity duration-700" />
-            <div className="relative flex items-center gap-3 px-10 py-5 bg-[var(--accent)] text-[var(--bg)] rounded-xl font-bold text-lg hover:bg-[var(--accent)] transition-all duration-300 shadow-[0_0_40px_var(--accent-glow)]">
+            <div className="relative flex items-center gap-3 px-7 py-4 bg-[var(--accent)] text-[var(--bg)] rounded-xl font-bold text-base hover:bg-[var(--accent)] transition-all duration-300 shadow-[0_0_40px_var(--accent-glow)]">
               Begin Your Journey
               <Sparkles size={20} className="group-hover:rotate-12 transition-transform" />
             </div>
