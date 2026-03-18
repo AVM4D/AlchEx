@@ -94,11 +94,11 @@ export default function CreatePostPage() {
     <div className="max-w-2xl mx-auto space-y-6">
       {/* Header */}
       <div className="flex items-center gap-3">
-        <button onClick={() => navigate(-1)} className="w-8 h-8 rounded-lg bg-[var(--surface-2)] flex items-center justify-center text-[var(--text-2)] hover:text-white transition-colors">
+        <button onClick={() => navigate(-1)} className="w-8 h-8 rounded-lg bg-[var(--surface-2)] flex items-center justify-center text-[var(--text-2)] hover:text-[var(--text)] transition-colors">
           <ArrowLeft size={16} />
         </button>
         <div>
-          <h1 className="text-display text-2xl text-white">{isEdit ? 'Edit Post' : 'Create Post'}</h1>
+          <h1 className="text-display text-2xl text-[var(--text)]">{isEdit ? 'Edit Post' : 'Create Post'}</h1>
           <p className="text-xs text-[var(--text-3)]">{isEdit ? 'Update your exchange post' : 'Create a new exchange post'}</p>
         </div>
       </div>
@@ -110,7 +110,7 @@ export default function CreatePostPage() {
           <label className="text-label block mb-1.5">Title *</label>
           <input value={form.title} onChange={(e) => set('title', e.target.value)} maxLength={100}
             placeholder="What do you want to exchange?"
-            className="w-full bg-[var(--surface-2)] border border-[var(--border)] rounded-lg px-4 py-3 text-sm text-white placeholder-[var(--text-3)] focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)] transition-all" />
+            className="w-full bg-[var(--surface-2)] border border-[var(--border)] rounded-lg px-4 py-3 text-sm text-[var(--text)] placeholder-[var(--text-3)] focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)] transition-all" />
         </div>
 
         {/* Description */}
@@ -118,7 +118,7 @@ export default function CreatePostPage() {
           <label className="text-label block mb-1.5">Description *</label>
           <textarea value={form.description} onChange={(e) => set('description', e.target.value)} rows={4}
             placeholder="Describe your exchange in detail..."
-            className="w-full bg-[var(--surface-2)] border border-[var(--border)] rounded-lg px-4 py-3 text-sm text-white placeholder-[var(--text-3)] focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)] transition-all resize-none" />
+            className="w-full bg-[var(--surface-2)] border border-[var(--border)] rounded-lg px-4 py-3 text-sm text-[var(--text)] placeholder-[var(--text-3)] focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)] transition-all resize-none" />
         </div>
 
         {/* Two-column: What I Need / What I Offer */}
@@ -127,13 +127,13 @@ export default function CreatePostPage() {
             <label className="text-label block mb-1.5">What I Need *</label>
             <textarea value={form.whatINeed} onChange={(e) => set('whatINeed', e.target.value)} rows={3}
               placeholder="What are you looking for?"
-              className="w-full bg-[var(--surface-2)] border border-[var(--border)] rounded-lg px-4 py-3 text-sm text-white placeholder-[var(--text-3)] focus:border-[var(--accent)] transition-all resize-none" />
+              className="w-full bg-[var(--surface-2)] border border-[var(--border)] rounded-lg px-4 py-3 text-sm text-[var(--text)] placeholder-[var(--text-3)] focus:border-[var(--accent)] transition-all resize-none" />
           </div>
           <div>
             <label className="text-label block mb-1.5">What I Offer *</label>
             <textarea value={form.whatIOffer} onChange={(e) => set('whatIOffer', e.target.value)} rows={3}
               placeholder="What can you give in exchange?"
-              className="w-full bg-[var(--surface-2)] border border-[var(--border)] rounded-lg px-4 py-3 text-sm text-white placeholder-[var(--text-3)] focus:border-[var(--accent)] transition-all resize-none" />
+              className="w-full bg-[var(--surface-2)] border border-[var(--border)] rounded-lg px-4 py-3 text-sm text-[var(--text)] placeholder-[var(--text-3)] focus:border-[var(--accent)] transition-all resize-none" />
           </div>
         </div>
 
@@ -143,7 +143,7 @@ export default function CreatePostPage() {
           <div className="flex flex-wrap gap-2">
             {CATEGORIES.map(c => (
               <button key={c} type="button" onClick={() => set('category', c)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${form.category === c ? 'bg-[var(--accent)] text-white shadow-[0_0_12px_rgba(139,92,246,0.3)]' : 'bg-[var(--surface-2)] text-[var(--text-2)] hover:text-white border border-[var(--border)]'}`}>
+                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${form.category === c ? '-[var(--bg)] shadow-[0_0_12px_var(--accent-glow)]' : 'bg-[var(--surface-2)] text-[var(--text-2)] hover:text-[var(--text)] border border-[var(--border)]'}`}>
                 {c}
               </button>
             ))}
@@ -157,7 +157,7 @@ export default function CreatePostPage() {
             <Tag size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-3)]" />
             <input value={form.tags} onChange={(e) => set('tags', e.target.value)}
               placeholder="comma, separated, tags"
-              className="w-full pl-9 pr-4 py-3 bg-[var(--surface-2)] border border-[var(--border)] rounded-lg text-sm text-white placeholder-[var(--text-3)] focus:border-[var(--accent)] transition-all" />
+              className="w-full pl-9 pr-4 py-3 bg-[var(--surface-2)] border border-[var(--border)] rounded-lg text-sm text-[var(--text)] placeholder-[var(--text-3)] focus:border-[var(--accent)] transition-all" />
           </div>
         </div>
 
@@ -166,7 +166,7 @@ export default function CreatePostPage() {
           <label className="text-label block mb-1.5">Expires On</label>
           <input type="date" value={form.expiresAt} onChange={(e) => set('expiresAt', e.target.value)}
             min={new Date().toISOString().slice(0, 10)}
-            className="w-full bg-[var(--surface-2)] border border-[var(--border)] rounded-lg px-4 py-3 text-sm text-white focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)] transition-all [color-scheme:dark]" />
+            className="w-full bg-[var(--surface-2)] border border-[var(--border)] rounded-lg px-4 py-3 text-sm text-[var(--text)] focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)] transition-all [color-scheme:dark]" />
         </div>
 
         {/* Notification Preference */}
@@ -175,7 +175,7 @@ export default function CreatePostPage() {
             <div className="flex items-center gap-3">
               {form.notifyOnOffers ? <Bell size={16} className="text-[var(--accent)]" /> : <BellOff size={16} className="text-[var(--text-3)]" />}
               <div>
-                <p className="text-sm font-medium text-white">Notify me on new offers</p>
+                <p className="text-sm font-medium text-[var(--text)]">Notify me on new offers</p>
                 <p className="text-[10px] text-[var(--text-3)] mt-0.5">Get instant notifications when someone makes an offer on this post</p>
               </div>
             </div>
@@ -188,12 +188,12 @@ export default function CreatePostPage() {
 
         {/* Submit */}
         <div className="flex justify-end gap-3 pt-2">
-          <button type="button" onClick={() => navigate(-1)} className="px-5 py-2.5 bg-[var(--surface-2)] text-[var(--text-2)] rounded-lg text-sm hover:text-white transition-colors">
+          <button type="button" onClick={() => navigate(-1)} className="px-5 py-2.5 bg-[var(--surface-2)] text-[var(--text-2)] rounded-lg text-sm hover:text-[var(--text)] transition-colors">
             Cancel
           </button>
           <button type="submit" disabled={loading} className="group relative">
-            <div className="absolute -inset-0.5 bg-gradient-to-r from-[var(--accent)] to-purple-400 rounded-lg blur opacity-40 group-hover:opacity-70 transition-opacity" />
-            <div className="relative flex items-center gap-2 px-6 py-2.5 bg-[var(--accent)] text-white rounded-lg text-sm font-medium">
+            <div className="absolute -inset-0.5 bg-gradient-to-r from-[var(--bg)] to-[var(--surface-3)] rounded-lg blur opacity-40 group-hover:opacity-70 transition-opacity" />
+            <div className="relative flex items-center gap-2 px-6 py-2.5 bg-[var(--accent)] text-[var(--bg)] rounded-lg text-sm font-medium">
               {loading ? <Loader2 size={14} className="animate-spin" /> : <Plus size={14} />}
               {isEdit ? 'Update Post' : 'Create Post'}
             </div>

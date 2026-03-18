@@ -67,10 +67,10 @@ export default function AdminPage() {
       {/* Header */}
       <div className="flex items-center gap-3">
         <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-red-500 to-orange-500 flex items-center justify-center">
-          <Shield size={18} className="text-white" />
+          <Shield size={18} className="text-[var(--text)]" />
         </div>
         <div>
-          <h1 className="text-display text-2xl text-white">Admin Panel</h1>
+          <h1 className="text-display text-2xl text-[var(--text)]">Admin Panel</h1>
           <p className="text-xs text-[var(--text-3)]">Manage users, reports & platform</p>
         </div>
       </div>
@@ -79,7 +79,7 @@ export default function AdminPage() {
       <div className="flex gap-2 overflow-x-auto pb-1">
         {TABS.map(t => (
           <button key={t} onClick={() => setTab(t)}
-            className={`px-5 py-2.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all ${tab === t ? 'bg-[var(--accent)] text-white shadow-[0_0_15px_rgba(139,92,246,0.3)]' : 'bg-[var(--surface-2)] text-[var(--text-2)] hover:text-white'}`}>
+            className={`px-5 py-2.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all ${tab === t ? '-[var(--bg)] shadow-[0_0_15px_var(--accent-glow)]' : 'bg-[var(--surface-2)] text-[var(--text-2)] hover:text-[var(--text)]'}`}>
             {t}
           </button>
         ))}
@@ -95,7 +95,7 @@ export default function AdminPage() {
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
             {[
               { label: 'Total Users', value: stats.totalUsers, icon: Users, color: 'from-blue-500 to-cyan-500' },
-              { label: 'Total Posts', value: stats.totalPosts, icon: FileText, color: 'from-[var(--accent)] to-purple-400' },
+              { label: 'Total Posts', value: stats.totalPosts, icon: FileText, color: 'from-[var(--accent)] to-[var(--accent-2)]' },
               { label: 'Total Transactions', value: stats.totalTransactions, icon: BarChart3, color: 'from-emerald-500 to-green-500' },
               { label: 'Active Transactions', value: stats.activeTransactions, icon: Eye, color: 'from-amber-500 to-orange-500' },
               { label: 'Successful', value: stats.successfulTransactions, icon: CheckCircle, color: 'from-emerald-500 to-teal-500' },
@@ -104,9 +104,9 @@ export default function AdminPage() {
               <motion.div key={s.label} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
                 className="glass-card p-5">
                 <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${s.color} flex items-center justify-center mb-3`}>
-                  <s.icon size={18} className="text-white" />
+                  <s.icon size={18} className="text-[var(--text)]" />
                 </div>
-                <div className="text-2xl font-display font-bold text-white">{s.value}</div>
+                <div className="text-2xl font-display font-bold text-[var(--text)]">{s.value}</div>
                 <div className="text-[10px] text-[var(--text-3)] uppercase tracking-wider mt-1">{s.label}</div>
               </motion.div>
             ))}
@@ -123,12 +123,12 @@ export default function AdminPage() {
             {users.map((u, i) => (
               <motion.div key={u.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.02 }}
                 className="glass-card p-4 flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[var(--accent)] to-purple-400 flex items-center justify-center text-sm font-bold text-white">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[var(--accent)] to-[var(--accent-2)] flex items-center justify-center text-sm font-bold text-[var(--text)]">
                   {u.firstName?.charAt(0)}{u.lastName?.charAt(0)}
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium text-white">{u.firstName} {u.lastName}</span>
+                    <span className="text-sm font-medium text-[var(--text)]">{u.firstName} {u.lastName}</span>
                     <span className={`pill text-[10px] ${u.role === 'ADMIN' ? 'text-red-400 border-red-500/20' : 'text-[var(--text-3)]'}`}>{u.role}</span>
                     {u.isBanned && <span className="pill text-[10px] text-red-400 border-red-500/20 bg-red-500/10">BANNED</span>}
                   </div>
@@ -164,7 +164,7 @@ export default function AdminPage() {
         ) : reports.length === 0 ? (
           <div className="glass-card p-16 text-center">
             <AlertTriangle size={40} className="mx-auto mb-4 text-[var(--text-3)]" />
-            <h3 className="text-display text-lg text-white mb-2">No reports</h3>
+            <h3 className="text-display text-lg text-[var(--text)] mb-2">No reports</h3>
             <p className="text-sm text-[var(--text-3)]">All clear!</p>
           </div>
         ) : (
@@ -175,7 +175,7 @@ export default function AdminPage() {
                 <div className="flex items-start justify-between gap-4 mb-3">
                   <div>
                     <div className="flex items-center gap-2 mb-1">
-                      <span className="text-sm font-medium text-white">{r.reason}</span>
+                      <span className="text-sm font-medium text-[var(--text)]">{r.reason}</span>
                       <span className={`pill text-[10px] ${r.status === 'PENDING' ? 'text-amber-400 border-amber-500/20' : r.status === 'RESOLVED' ? 'text-emerald-400 border-emerald-500/20' : 'text-gray-400'}`}>{r.status}</span>
                     </div>
                     <p className="text-xs text-[var(--text-2)]">{r.description}</p>

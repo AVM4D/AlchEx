@@ -29,7 +29,7 @@ const AppLayout: React.FC = () => {
         >
           {/* Window background effects */}
           <div className="grid-lines" style={{ zIndex: 0, position: 'absolute', borderRadius: 'inherit' }} />
-          <div className="orb orb-purple w-[500px] h-[500px] top-[20%] left-[10%]" style={{ zIndex: 0 }} />
+          <div className="orb orb-primary w-[500px] h-[500px] top-[20%] left-[10%]" style={{ zIndex: 0 }} />
           <div className="orb orb-blue w-[400px] h-[400px] bottom-[15%] right-[10%]" style={{ zIndex: 0, animationDelay: '-8s' }} />
 
           <div className="hypr-window-inner">

@@ -22,9 +22,9 @@ export default function SmoothScroller({ children }: SmoothScrollerProps) {
 
     useEffect(() => {
         const lenis = new Lenis({
-            lerp: 0.08,                 // Interpolation factor — lower = silkier
+            lerp: 0.04,                 // Decreased for even silkier/smoother feeling
             smoothWheel: true,
-            wheelMultiplier: 1.2,       // Slightly snappier wheel response
+            wheelMultiplier: 1.0,       // Smoother, slightly less snappy wheel rotation
             touchMultiplier: 1.5,       // Natural touch feel
             infinite: false,
         });

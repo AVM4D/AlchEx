@@ -32,7 +32,7 @@ export const StarRating: React.FC<StarRatingProps> = ({
             size={size}
             className={cn(
               i < rating
-                ? 'text-primary fill-primary'
+                ? 'text-[var(--text)] fill-primary'
                 : 'text-gray-600'
             )}
           />

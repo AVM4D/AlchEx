@@ -28,7 +28,7 @@ export function formatRelativeTime(date: string) {
 export function getStatusColor(status: string) {
   switch (status) {
     case 'ACTIVE': return 'text-success';
-    case 'IN_PROGRESS': return 'text-primary';
+    case 'IN_PROGRESS': return 'text-[var(--text)]';
     case 'SUCCESSFUL': return 'text-success';
     case 'CANCELLED': return 'text-danger';
     case 'EXPIRED': return 'text-gray-500';
@@ -42,7 +42,7 @@ export function getStatusColor(status: string) {
 export function getStatusBg(status: string) {
   switch (status) {
     case 'ACTIVE': return 'bg-success/10 text-success border-success/20';
-    case 'IN_PROGRESS': return 'bg-primary/10 text-primary border-primary/20';
+    case 'IN_PROGRESS': return 'bg-primary/10 text-[var(--text)] border-primary/20';
     case 'SUCCESSFUL': return 'bg-success/10 text-success border-success/20';
     case 'CANCELLED': return 'bg-danger/10 text-danger border-danger/20';
     case 'EXPIRED': return 'bg-gray-500/10 text-gray-400 border-gray-500/20';

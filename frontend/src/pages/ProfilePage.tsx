@@ -72,16 +72,16 @@ export default function ProfilePage() {
       {/* Hero card */}
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="glass-card gradient-border overflow-visible">
         {/* Banner */}
-        <div className="h-28 sm:h-36 bg-gradient-to-r from-[var(--accent)] via-purple-600 to-blue-600 relative rounded-t-xl overflow-hidden">
+        <div className="h-28 sm:h-36 bg-gradient-to-r from-[var(--accent)] via-primary-600 to-blue-600 relative rounded-t-xl overflow-hidden">
           <div className="absolute inset-0 bg-[url('data:image/svg+xml,...')] opacity-10" />
         </div>
         <div className="px-6 pb-6">
           <div className="flex flex-col md:flex-row items-start md:items-end gap-4 -mt-12 sm:-mt-14 relative z-10">
-            <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl bg-gradient-to-br from-[var(--accent)] to-purple-400 flex items-center justify-center text-2xl sm:text-3xl font-bold text-white font-display border-4 border-[var(--bg)] shadow-xl shrink-0">
+            <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl bg-gradient-to-br from-[var(--accent)] to-[var(--accent-2)] flex items-center justify-center text-2xl sm:text-3xl font-bold text-[var(--text)] font-display border-4 border-[var(--bg)] shadow-xl shrink-0">
               {p.firstName.charAt(0)}{p.lastName.charAt(0)}
             </div>
             <div className="flex-1">
-              <h1 className="text-display text-2xl text-white">{fullName}</h1>
+              <h1 className="text-display text-2xl text-[var(--text)]">{fullName}</h1>
               <div className="flex flex-wrap items-center gap-3 mt-1">
                 {p.university && <span className="text-xs text-[var(--text-2)] flex items-center gap-1"><MapPin size={11} />{p.university}</span>}
                 {'program' in p && p.program && <span className="pill text-[10px]"><BookOpen size={10} />{p.program}</span>}
@@ -115,16 +115,16 @@ export default function ProfilePage() {
                 <label className="text-xs text-[var(--text-3)] mb-1 block">{f.label}</label>
                 {f.key === 'bio' ? (
                   <textarea value={(form as any)[f.key]} onChange={(e) => setForm(prev => ({ ...prev, [f.key]: e.target.value }))}
-                    rows={3} className="w-full bg-[var(--surface-2)] border border-[var(--border)] rounded-lg px-3 py-2 text-sm text-white focus:border-[var(--accent)]" />
+                    rows={3} className="w-full bg-[var(--surface-2)] border border-[var(--border)] rounded-lg px-3 py-2 text-sm text-[var(--text)] focus:border-[var(--accent)]" />
                 ) : (
                   <input value={(form as any)[f.key]} onChange={(e) => setForm(prev => ({ ...prev, [f.key]: e.target.value }))}
-                    className="w-full bg-[var(--surface-2)] border border-[var(--border)] rounded-lg px-3 py-2 text-sm text-white focus:border-[var(--accent)]" />
+                    className="w-full bg-[var(--surface-2)] border border-[var(--border)] rounded-lg px-3 py-2 text-sm text-[var(--text)] focus:border-[var(--accent)]" />
                 )}
               </div>
             ))}
           </div>
           <div className="flex justify-end">
-            <button onClick={saveProfile} className="px-5 py-2.5 bg-[var(--accent)] text-white rounded-lg text-sm font-medium hover:bg-[var(--accent)]/90 transition-colors">Save changes</button>
+            <button onClick={saveProfile} className="px-5 py-2.5 bg-[var(--accent)] text-[var(--bg)] rounded-lg text-sm font-medium hover:bg-[var(--accent)]/90 transition-colors">Save changes</button>
           </div>
         </motion.div>
       )}
@@ -133,16 +133,16 @@ export default function ProfilePage() {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[
           { label: 'Reputation', value: p.reputationScore, icon: Award, color: 'from-amber-500 to-orange-500' },
-          { label: 'Exchanges', value: p.totalExchanges, icon: ExternalLink, color: 'from-[var(--accent)] to-purple-400' },
+          { label: 'Exchanges', value: p.totalExchanges, icon: ExternalLink, color: 'from-[var(--accent)] to-[var(--accent-2)]' },
           { label: 'Avg Rating', value: stats?.averageRating?.toFixed(1) || '—', icon: Star, color: 'from-yellow-500 to-amber-500' },
           { label: 'Total Ratings', value: stats?.totalRatings || 0, icon: Star, color: 'from-blue-500 to-cyan-500' },
         ].map((s, i) => (
           <motion.div key={s.label} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
             className="glass-card p-4">
             <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${s.color} flex items-center justify-center mb-2`}>
-              <s.icon size={14} className="text-white" />
+              <s.icon size={14} className="text-[var(--text)]" />
             </div>
-            <div className="text-xl font-display font-bold text-white">{s.value}</div>
+            <div className="text-xl font-display font-bold text-[var(--text)]">{s.value}</div>
             <div className="text-[10px] text-[var(--text-3)] uppercase tracking-wider">{s.label}</div>
           </motion.div>
         ))}
@@ -180,12 +180,12 @@ export default function ProfilePage() {
           <div className="space-y-4">
             {ratings.slice(0, 5).map(r => (
               <div key={r.id} className="flex gap-3 pb-4 border-b border-[var(--border)] last:border-0">
-                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[var(--accent)] to-purple-400 flex items-center justify-center text-xs text-white font-bold shrink-0">
+                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[var(--accent)] to-[var(--accent-2)] flex items-center justify-center text-xs text-[var(--text)] font-bold shrink-0">
                   {r.giver?.firstName?.charAt(0)}
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium text-white">{r.giver?.firstName} {r.giver?.lastName}</span>
+                    <span className="text-sm font-medium text-[var(--text)]">{r.giver?.firstName} {r.giver?.lastName}</span>
                     <div className="flex">{Array(r.score).fill(0).map((_, i) => <Star key={i} size={10} className="text-amber-400" fill="currentColor" />)}</div>
                   </div>
                   {r.review && <p className="text-xs text-[var(--text-2)] mt-1">{r.review}</p>}

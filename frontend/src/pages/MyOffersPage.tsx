@@ -46,7 +46,7 @@ export default function MyOffersPage() {
   return (
     <div className="space-y-6 max-w-4xl mx-auto">
       <div>
-        <h1 className="text-display text-2xl md:text-3xl text-white">My Offers</h1>
+        <h1 className="text-display text-2xl md:text-3xl text-[var(--text)]">My Offers</h1>
         <p className="text-sm text-[var(--text-2)] mt-1">Track your submitted offers</p>
       </div>
 
@@ -54,7 +54,7 @@ export default function MyOffersPage() {
       <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1">
         {['All', 'PENDING', 'ACCEPTED', 'REJECTED', 'EXPIRED'].map(s => (
           <button key={s} onClick={() => setTab(s)}
-            className={`px-4 py-2 rounded-lg text-xs font-medium whitespace-nowrap transition-all ${tab === s ? 'bg-[var(--accent)] text-white shadow-[0_0_15px_rgba(139,92,246,0.3)]' : 'bg-[var(--surface-2)] text-[var(--text-2)] hover:text-white'}`}>
+            className={`px-4 py-2 rounded-lg text-xs font-medium whitespace-nowrap transition-all ${tab === s ? '-[var(--bg)] shadow-[0_0_15px_var(--accent-glow)]' : 'bg-[var(--surface-2)] text-[var(--text-2)] hover:text-[var(--text)]'}`}>
             {s === 'All' ? 'All' : s.charAt(0) + s.slice(1).toLowerCase()}
           </button>
         ))}
@@ -69,7 +69,7 @@ export default function MyOffersPage() {
       ) : offers.length === 0 ? (
         <div className="glass-card p-16 text-center">
           <Inbox size={40} className="mx-auto mb-4 text-[var(--text-3)]" />
-          <h3 className="text-display text-lg text-white mb-2">No offers</h3>
+          <h3 className="text-display text-lg text-[var(--text)] mb-2">No offers</h3>
           <p className="text-sm text-[var(--text-3)] mb-4">Browse the marketplace and make offers</p>
           <Link to="/marketplace" className="pill text-[var(--accent)] cursor-pointer">Browse marketplace →</Link>
         </div>
@@ -81,7 +81,7 @@ export default function MyOffersPage() {
               <div className="flex items-start justify-between gap-4 mb-3">
                 <div className="flex-1 min-w-0">
                   {offer.post && (
-                    <Link to={`/posts/${offer.post.id}`} className="text-sm font-display font-bold text-white hover:text-[var(--accent-2)] transition-colors line-clamp-1 flex items-center gap-2">
+                    <Link to={`/posts/${offer.post.id}`} className="text-sm font-display font-bold text-[var(--text)] hover:text-[var(--accent-2)] transition-colors line-clamp-1 flex items-center gap-2">
                       {offer.post.title} <ExternalLink size={11} className="text-[var(--text-3)] shrink-0" />
                     </Link>
                   )}

@@ -20,7 +20,7 @@ interface Particle {
 export const ParticleField: React.FC<ParticleFieldProps> = ({
   className = '',
   particleCount = 80,
-  color = '139, 92, 246',
+  color = 'var(--text, 255, 255, 255)', // defaulting to variable
   maxDistance = 120,
   speed = 0.3,
 }) => {
@@ -28,6 +28,31 @@ export const ParticleField: React.FC<ParticleFieldProps> = ({
   const particlesRef = useRef<Particle[]>([]);
   const mouseRef = useRef({ x: -1000, y: -1000 });
   const animRef = useRef<number>(0);
+  const rgbColorRef = useRef<string>('255, 255, 255');
+
+  useEffect(() => {
+    // Attempt to parse CSS variables
+    let c = color;
+    if (c.includes('var(')) {
+        const match = c.match(/var\(([^),]+)/);
+        if (match) {
+            const val = getComputedStyle(document.documentElement).getPropertyValue(match[1].trim()).trim();
+            if (val) c = val;
+        }
+    }
+    // If it's hex, convert to RGB string
+    if (c.startsWith('#')) {
+      const hex = c.replace('#', '');
+      if (hex.length === 6) {
+        rgbColorRef.current = `${parseInt(hex.substring(0, 2), 16)}, ${parseInt(hex.substring(2, 4), 16)}, ${parseInt(hex.substring(4, 6), 16)}`;
+      } else if (hex.length === 3) {
+        rgbColorRef.current = `${parseInt(hex[0]+hex[0], 16)}, ${parseInt(hex[1]+hex[1], 16)}, ${parseInt(hex[2]+hex[2], 16)}`;
+      }
+    } else {
+      // Hope it's an RGB string or fallback to generic
+      rgbColorRef.current = c || '255, 255, 255';
+    }
+  }, [color]);
 
   const init = useCallback(() => {
     const canvas = canvasRef.current;
@@ -117,7 +142,7 @@ export const ParticleField: React.FC<ParticleFieldProps> = ({
 
         ctx.beginPath();
         ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(${color}, ${p.opacity})`;
+        ctx.fillStyle = `rgba(${rgbColorRef.current}, ${p.opacity})`;
         ctx.fill();
       }
 
@@ -132,7 +157,7 @@ export const ParticleField: React.FC<ParticleFieldProps> = ({
             ctx.beginPath();
             ctx.moveTo(particles[i].x, particles[i].y);
             ctx.lineTo(particles[j].x, particles[j].y);
-            ctx.strokeStyle = `rgba(${color}, ${opacity})`;
+            ctx.strokeStyle = `rgba(${rgbColorRef.current}, ${opacity})`;
             ctx.lineWidth = 0.5;
             ctx.stroke();
           }

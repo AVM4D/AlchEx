@@ -21,7 +21,7 @@ const notifIcon = (type: string) => {
 };
 
 export const Header: React.FC = () => {
-  const { setSidebarOpen, sidebarCollapsed } = useUIStore();
+  const { setSidebarOpen } = useUIStore();
   const { user, logout } = useAuthStore();
   const { notifications, unreadCount, fetchNotifications, markAsRead, markAllAsRead } = useNotificationStore();
   const navigate = useNavigate();

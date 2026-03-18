@@ -121,7 +121,7 @@ export const CommandPalette: React.FC = () => {
                                     onChange={(e) => setQuery(e.target.value)}
                                     onKeyDown={handleKeyDown}
                                     placeholder="Search pages, actions..."
-                                    className="flex-1 bg-transparent border-none outline-none text-sm text-white placeholder-[var(--text-3)]"
+                                    className="flex-1 bg-transparent border-none outline-none text-sm text-[var(--text)] placeholder-[var(--text-3)]"
                                 />
                                 <kbd className="hidden sm:inline-flex items-center px-1.5 py-0.5 rounded text-[10px] bg-white/[0.06] text-[var(--text-3)] border border-white/[0.08] font-mono">
                                     ESC
@@ -143,8 +143,8 @@ export const CommandPalette: React.FC = () => {
                                                 onClick={() => handleSelect(page.path)}
                                                 onMouseEnter={() => setSelectedIndex(i)}
                                                 className={`w-full flex items-center gap-3 px-4 py-2.5 text-left transition-colors ${i === selectedIndex
-                                                    ? 'bg-[var(--accent)]/10 text-white'
-                                                    : 'text-[var(--text-2)] hover:text-white'
+                                                    ? '-[var(--bg)]'
+                                                    : 'text-[var(--text-2)] hover:text-[var(--text)]'
                                                     }`}
                                             >
                                                 <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${i === selectedIndex ? 'bg-[var(--accent)]/20 text-[var(--accent-2)]' : 'bg-white/[0.04] text-[var(--text-3)]'

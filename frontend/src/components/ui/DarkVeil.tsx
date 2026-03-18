@@ -18,6 +18,8 @@ uniform float uNoise;
 uniform float uScan;
 uniform float uScanFreq;
 uniform float uWarp;
+uniform vec3 uColorPrimary;
+uniform vec3 uColorSecondary;
 #define iTime uTime
 #define iResolution uResolution
 
@@ -67,6 +69,11 @@ void mainImage(out vec4 fragColor,in vec2 fragCoord){
 void main(){
     vec4 col;mainImage(col,gl_FragCoord.xy);
     col.rgb=hueShiftRGB(col.rgb,uHueShift);
+    
+    // Monochromatic conversion and mapping to theme colors
+    float gray = dot(col.rgb, vec3(0.299, 0.587, 0.114));
+    col.rgb = mix(uColorPrimary, uColorSecondary, gray);
+
     float scanline_val=sin(gl_FragCoord.y*uScanFreq)*0.5+0.5;
     col.rgb*=1.-(scanline_val*scanline_val)*uScan;
     col.rgb+=(rand(gl_FragCoord.xy+uTime)-0.5)*uNoise;
@@ -82,6 +89,33 @@ interface DarkVeilProps {
     scanlineFrequency?: number;
     warpAmount?: number;
     resolutionScale?: number;
+    primaryColor?: string;
+    secondaryColor?: string;
+}
+
+function hexToRgb(hex: string): [number, number, number] {
+    // If it's a CSS variable, resolve it first
+    if (hex.startsWith('var(')) {
+        const varName = hex.match(/var\(([^)]+)\)/)?.[1];
+        if (varName) {
+            const val = getComputedStyle(document.documentElement).getPropertyValue(varName).trim();
+            if (val) hex = val;
+        }
+    }
+    
+    // Convert hex to rgb
+    hex = hex.replace(/^#/, '');
+    if (hex.length === 3) {
+        hex = hex[0] + hex[0] + hex[1] + hex[1] + hex[2] + hex[2];
+    }
+    if (hex.length === 6) {
+        return [
+            parseInt(hex.substring(0, 2), 16) / 255,
+            parseInt(hex.substring(2, 4), 16) / 255,
+            parseInt(hex.substring(4, 6), 16) / 255
+        ];
+    }
+    return [0, 0, 0];
 }
 
 export default function DarkVeil({
@@ -92,6 +126,8 @@ export default function DarkVeil({
     scanlineFrequency = 0,
     warpAmount = 0,
     resolutionScale = 1,
+    primaryColor = '#000000',
+    secondaryColor = '#ffffff',
 }: DarkVeilProps) {
     const ref = useRef<HTMLCanvasElement>(null);
 
@@ -120,6 +156,8 @@ export default function DarkVeil({
                 uScan: { value: scanlineIntensity },
                 uScanFreq: { value: scanlineFrequency },
                 uWarp: { value: warpAmount },
+                uColorPrimary: { value: hexToRgb(primaryColor) },
+                uColorSecondary: { value: hexToRgb(secondaryColor) },
             },
         });
 
@@ -159,6 +197,8 @@ export default function DarkVeil({
             program.uniforms.uScan.value = scanlineIntensity;
             program.uniforms.uScanFreq.value = scanlineFrequency;
             program.uniforms.uWarp.value = warpAmount;
+            program.uniforms.uColorPrimary.value = hexToRgb(primaryColor);
+            program.uniforms.uColorSecondary.value = hexToRgb(secondaryColor);
             renderer.render({ scene: mesh });
         };
 
@@ -170,7 +210,7 @@ export default function DarkVeil({
             document.removeEventListener('visibilitychange', onVisibility);
             window.removeEventListener('resize', resize);
         };
-    }, [hueShift, noiseIntensity, scanlineIntensity, speed, scanlineFrequency, warpAmount, resolutionScale]);
+    }, [hueShift, noiseIntensity, scanlineIntensity, speed, scanlineFrequency, warpAmount, resolutionScale, primaryColor, secondaryColor]);
 
     return <canvas ref={ref} className="darkveil-canvas" />;
 }

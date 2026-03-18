@@ -167,7 +167,7 @@ export default function AuthPage({ initialMode = 'login' }: AuthPageProps) {
       {/* LEFT — branding */}
       <div className="hidden lg:flex flex-1 relative items-center justify-center overflow-hidden">
         <div className="grid-lines absolute inset-0" />
-        <div className="auth-orb-1 orb orb-purple w-[400px] h-[400px] top-1/4 left-1/4 z-0" />
+        <div className="auth-orb-1 orb orb-primary w-[400px] h-[400px] top-1/4 left-1/4 z-0" />
         <div
           className="auth-orb-2 orb orb-blue w-[300px] h-[300px] bottom-1/4 right-1/4 z-0"
           style={{ animationDelay: '-8s' }}
@@ -175,18 +175,14 @@ export default function AuthPage({ initialMode = 'login' }: AuthPageProps) {
         <div className="absolute inset-0 z-[1]">
           <ParticleField
             particleCount={60}
-            color="139, 92, 246"
+            color="255, 255, 255"
             maxDistance={120}
             speed={0.15}
           />
         </div>
         <div className="relative z-10 text-center px-12">
           <div className="auth-logo mb-6 flex justify-center">
-            <img
-              src="/logo.jpeg"
-              alt="AlchEx"
-              className="w-[clamp(16rem,40vw,28rem)] h-auto drop-shadow-[0_0_60px_rgba(139,92,246,0.4)] rounded-2xl saturate-0"
-            />
+            <span className="font-logo text-3xl font-bold tracking-wider text-[var(--text)]">ALCHEX</span>
           </div>
           <p className="auth-tagline text-[var(--text-3)] text-lg max-w-sm mx-auto">
             Your skills have value. Exchange them.
@@ -198,8 +194,8 @@ export default function AuthPage({ initialMode = 'login' }: AuthPageProps) {
       <div className="flex-1 flex items-center justify-center px-6 py-12 relative z-10">
         <div className="w-full max-w-md">
           <Link to="/" className="lg:hidden inline-flex items-center gap-3 mb-10">
-            <div className="w-10 h-10 rounded-xl overflow-hidden shadow-[0_0_20px_rgba(139,92,246,0.3)]">
-              <img src="/smalllogo.png" alt="AlchEx" className="w-full h-full object-cover" />
+            <div className="w-10 h-10 rounded-xl overflow-hidden shadow-[0_0_20px_var(--accent-glow)]">
+              <span className="font-logo text-4xl font-bold tracking-wider text-[var(--accent)]">ALCHEX</span>
             </div>
             <span className="text-xl font-display font-bold text-gradient">AlchEx</span>
           </Link>
@@ -208,7 +204,7 @@ export default function AuthPage({ initialMode = 'login' }: AuthPageProps) {
             <span className="text-label text-[var(--accent-2)] mb-3 block">
               <TextScramble text="/ Sign In" trigger="mount" delay={300} />
             </span>
-            <h1 className="text-display text-3xl md:text-4xl text-white mb-2">Welcome back</h1>
+            <h1 className="text-display text-3xl md:text-4xl text-[var(--text)] mb-2">Welcome back</h1>
             <p className="text-[var(--text-2)]">Continue your exchange journey</p>
           </div>
 
@@ -245,7 +241,7 @@ export default function AuthPage({ initialMode = 'login' }: AuthPageProps) {
                   />
                   <div className="w-5 h-5 rounded-md border-2 border-[var(--border)] bg-[var(--surface-2)] peer-checked:bg-[var(--accent)] peer-checked:border-[var(--accent)] transition-all duration-200" />
                   <svg
-                    className="absolute top-0.5 left-0.5 w-4 h-4 text-white opacity-0 peer-checked:opacity-100 transition-opacity duration-200"
+                    className="absolute top-0.5 left-0.5 w-4 h-4 text-[var(--text)] opacity-0 peer-checked:opacity-100 transition-opacity duration-200"
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
@@ -262,8 +258,8 @@ export default function AuthPage({ initialMode = 'login' }: AuthPageProps) {
 
             <div className="login-form-submit" data-stagger>
               <button type="submit" disabled={isLoading} className="group relative w-full mt-2">
-                <div className="absolute -inset-0.5 bg-gradient-to-r from-[var(--accent)] to-purple-400 rounded-xl blur opacity-40 group-hover:opacity-70 transition-opacity duration-500" />
-                <div className="relative flex items-center justify-center gap-2 w-full px-6 py-3.5 bg-[var(--accent)] text-white rounded-xl font-semibold hover:bg-purple-500 transition-all duration-300 disabled:opacity-50">
+                <div className="absolute -inset-0.5 bg-gradient-to-r from-[var(--bg)] to-[var(--surface-3)] rounded-xl blur opacity-40 group-hover:opacity-70 transition-opacity duration-500" />
+                <div className="relative flex items-center justify-center gap-2 w-full px-6 py-3.5 bg-[var(--accent)] text-[var(--bg)] rounded-xl font-semibold hover:bg-[var(--accent)] transition-all duration-300 disabled:opacity-50">
                   {isLoading ? (
                     <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24" fill="none">
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
@@ -306,8 +302,8 @@ export default function AuthPage({ initialMode = 'login' }: AuthPageProps) {
       <div className="flex-1 flex items-center justify-center px-6 py-12 relative z-10">
         <div className="w-full max-w-md">
           <Link to="/" className="lg:hidden inline-flex items-center gap-3 mb-10">
-            <div className="w-10 h-10 rounded-xl overflow-hidden shadow-[0_0_20px_rgba(139,92,246,0.3)]">
-              <img src="/smalllogo.png" alt="AlchEx" className="w-full h-full object-cover" />
+            <div className="w-10 h-10 rounded-xl overflow-hidden shadow-[0_0_20px_var(--accent-glow)]">
+              <span className="font-logo text-4xl font-bold tracking-wider text-[var(--accent)]">ALCHEX</span>
             </div>
             <span className="text-xl font-display font-bold text-gradient">AlchEx</span>
           </Link>
@@ -316,7 +312,7 @@ export default function AuthPage({ initialMode = 'login' }: AuthPageProps) {
             <span className="text-label text-[var(--accent-2)] mb-3 block">
               <TextScramble text="/ Create Account" trigger="mount" delay={300} />
             </span>
-            <h1 className="text-display text-3xl md:text-4xl text-white mb-2">Join AlchEx</h1>
+            <h1 className="text-display text-3xl md:text-4xl text-[var(--text)] mb-2">Join AlchEx</h1>
             <p className="text-[var(--text-2)]">Start exchanging with fellow students</p>
           </div>
 
@@ -372,8 +368,8 @@ export default function AuthPage({ initialMode = 'login' }: AuthPageProps) {
 
             <div className="register-form-submit" data-stagger>
               <button type="submit" disabled={isLoading} className="group relative w-full mt-2">
-                <div className="absolute -inset-0.5 bg-gradient-to-r from-[var(--accent)] to-purple-400 rounded-xl blur opacity-40 group-hover:opacity-70 transition-opacity duration-500" />
-                <div className="relative flex items-center justify-center gap-2 w-full px-6 py-3.5 bg-[var(--accent)] text-white rounded-xl font-semibold hover:bg-purple-500 transition-all duration-300 disabled:opacity-50">
+                <div className="absolute -inset-0.5 bg-gradient-to-r from-[var(--bg)] to-[var(--surface-3)] rounded-xl blur opacity-40 group-hover:opacity-70 transition-opacity duration-500" />
+                <div className="relative flex items-center justify-center gap-2 w-full px-6 py-3.5 bg-[var(--accent)] text-[var(--bg)] rounded-xl font-semibold hover:bg-[var(--accent)] transition-all duration-300 disabled:opacity-50">
                   {isLoading ? (
                     <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24" fill="none">
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
@@ -408,26 +404,22 @@ export default function AuthPage({ initialMode = 'login' }: AuthPageProps) {
       {/* RIGHT — branding */}
       <div className="hidden lg:flex flex-1 relative items-center justify-center overflow-hidden">
         <div className="grid-lines absolute inset-0" />
-        <div className="auth-orb-1 orb orb-purple w-[400px] h-[400px] bottom-1/4 left-1/4 z-0" />
+        <div className="auth-orb-1 orb orb-primary w-[400px] h-[400px] bottom-1/4 left-1/4 z-0" />
         <div
-          className="auth-orb-2 orb orb-pink w-[300px] h-[300px] top-1/4 right-1/4 z-0"
+          className="auth-orb-2 orb orb-secondary w-[300px] h-[300px] top-1/4 right-1/4 z-0"
           style={{ animationDelay: '-10s' }}
         />
         <div className="absolute inset-0 z-[1]">
           <ParticleField
             particleCount={60}
-            color="139, 92, 246"
+            color="255, 255, 255"
             maxDistance={120}
             speed={0.15}
           />
         </div>
         <div className="relative z-10 text-center px-12">
           <div className="auth-logo mb-6 flex justify-center">
-            <img
-              src="/logo.jpeg"
-              alt="AlchEx"
-              className="w-[clamp(16rem,40vw,28rem)] h-auto drop-shadow-[0_0_60px_rgba(139,92,246,0.4)] rounded-2xl saturate-0"
-            />
+            <span className="font-logo text-3xl font-bold tracking-wider text-[var(--text)]">ALCHEX</span>
           </div>
           <p className="auth-tagline text-[var(--text-3)] text-lg max-w-sm mx-auto">
             Your next exchange starts here.

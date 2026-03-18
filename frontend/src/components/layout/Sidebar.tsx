@@ -131,7 +131,7 @@ export const Sidebar: React.FC = () => {
       {/* Logo */}
       <Link to="/dashboard" className="mb-4 mt-1">
         <div className="w-9 h-9 rounded-xl overflow-hidden shadow-[0_0_20px_rgba(139,92,246,0.25)] hover:shadow-[0_0_30px_rgba(139,92,246,0.4)] transition-shadow">
-          <img src="/smalllogo.png" alt="AlchEx" className="w-full h-full object-cover" />
+          <span className="font-logo text-2xl font-bold tracking-wider text-[var(--accent)]">ALCHEX</span>
         </div>
       </Link>
 

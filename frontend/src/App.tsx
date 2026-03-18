@@ -26,7 +26,7 @@ function PageLoader() {
   return (
     <div className="min-h-screen bg-background flex items-center justify-center">
       <div className="flex flex-col items-center gap-4">
-        <Loader2 className="w-8 h-8 text-primary animate-spin" />
+        <Loader2 className="w-8 h-8 text-[var(--text)] animate-spin" />
         <p className="text-gray-400 text-sm">Loading...</p>
       </div>
     </div>
@@ -78,7 +78,7 @@ export default function App() {
       <Toaster
         position="top-right"
         toastOptions={{
-          className: '!bg-surface-light !text-white !border !border-white/10 !shadow-lg',
+          className: '!bg-surface-light !text-[var(--text)] !border !border-white/10 !shadow-lg',
           duration: 4000,
           style: {
             background: '#1F2937',
