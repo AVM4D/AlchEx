@@ -8,8 +8,8 @@
    Uses same font metrics so `lh` units are accurate. */
 .sticky-reveal__wrapper {
     --start: 50vh;
-    --hue: 271;
-    --accent: hsl(var(--hue) 80% 72%);
+    
+    --accent: var(--text);
     --dimmed: color-mix(in oklch, var(--text, #fff), #0000 80%);
     font-size: clamp(2.2rem, 6vw, 5rem);
     line-height: 1.2;
@@ -55,11 +55,12 @@
 
 /* Word list */
 .sticky-reveal__ul {
-    font-weight: 600;
+    font-weight: 400;
     padding-inline: 0;
     margin: 0;
     list-style-type: none;
-    font-family: var(--font-display, 'Syne', sans-serif);
+    font-family: var(--font-quote);
+    text-transform: none;
 }
 
 /* Each word — fixed-background gradient highlight */

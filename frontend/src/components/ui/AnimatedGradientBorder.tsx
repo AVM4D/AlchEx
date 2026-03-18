@@ -16,7 +16,7 @@ export const AnimatedGradientBorder: React.FC<AnimatedGradientBorderProps> = ({
     className,
     borderWidth = 1,
     borderRadius = 16,
-    gradientColors = ['rgba(139,92,246,0.6)', 'rgba(167,139,250,0.3)', 'transparent', 'rgba(139,92,246,0.1)', 'rgba(196,181,253,0.4)', 'transparent'],
+    gradientColors = ['rgba(255, 255, 255,0.6)', 'rgba(167,139,250,0.3)', 'transparent', 'var(--accent-sub)', 'rgba(196,181,253,0.4)', 'transparent'],
     speed = 3,
     glowOnHover = true,
 }) => {

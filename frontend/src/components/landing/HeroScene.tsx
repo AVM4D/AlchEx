@@ -1,12 +1,32 @@
-import React, { useRef, useMemo } from 'react';
+import React, { useRef, useMemo, useState, useEffect } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { Float, OrbitControls } from '@react-three/drei';
 import * as THREE from 'three';
+
+// Helper to resolve CSS variables for THREE.Color
+function resolveColor(cssVar: string, fallback: string = '#ffffff') {
+  if (typeof window !== 'undefined' && cssVar.startsWith('var(')) {
+    const varName = cssVar.match(/var\(([^)]+)\)/)?.[1];
+    if (varName) {
+      const val = getComputedStyle(document.documentElement).getPropertyValue(varName).trim();
+      return val || fallback;
+    }
+  }
+  return cssVar;
+}
 
 // Alchemy Circle
 function AlchemyCircle() {
   const ref = useRef<THREE.Group>(null);
   
+  const [accent, setAccent] = useState('#ffffff');
+  const [accent2, setAccent2] = useState('#ffffff');
+
+  useEffect(() => {
+    setAccent(resolveColor('var(--accent)'));
+    setAccent2(resolveColor('var(--accent-2)'));
+  }, []);
+
   useFrame((state) => {
     if (ref.current) {
       ref.current.rotation.z = state.clock.elapsedTime * 0.15;
@@ -19,19 +39,19 @@ function AlchemyCircle() {
       {/* Outer Ring */}
       <mesh>
         <torusGeometry args={[2.5, 0.03, 16, 100]} />
-        <meshStandardMaterial color="#8B5CF6" emissive="#8B5CF6" emissiveIntensity={2} transparent opacity={0.8} />
+        <meshStandardMaterial color={accent} emissive={accent} emissiveIntensity={2} transparent opacity={0.8} />
       </mesh>
 
       {/* Inner Ring */}
       <mesh>
         <torusGeometry args={[1.8, 0.02, 16, 100]} />
-        <meshStandardMaterial color="#A78BFA" emissive="#A78BFA" emissiveIntensity={1.5} transparent opacity={0.6} />
+        <meshStandardMaterial color={accent2} emissive={accent2} emissiveIntensity={1.5} transparent opacity={0.6} />
       </mesh>
 
       {/* Third Ring */}
       <mesh rotation={[Math.PI / 6, 0, 0]}>
         <torusGeometry args={[2.1, 0.02, 16, 100]} />
-        <meshStandardMaterial color="#7C3AED" emissive="#7C3AED" emissiveIntensity={1.5} transparent opacity={0.5} />
+        <meshStandardMaterial color={accent} emissive={accent} emissiveIntensity={1.5} transparent opacity={0.5} />
       </mesh>
 
       {/* Triangle */}
@@ -52,7 +72,7 @@ function AlchemyCircle() {
                 count={2}
               />
             </bufferGeometry>
-            <lineBasicMaterial color="#A78BFA" transparent opacity={0.6} />
+            <lineBasicMaterial color={accent2} transparent opacity={0.6} />
           </line>
         );
       })}
@@ -60,7 +80,7 @@ function AlchemyCircle() {
       {/* Center Hex Point */}
       <mesh>
         <sphereGeometry args={[0.08, 16, 16]} />
-        <meshStandardMaterial color="#A78BFA" emissive="#A78BFA" emissiveIntensity={3} />
+        <meshStandardMaterial color={accent2} emissive={accent2} emissiveIntensity={3} />
       </mesh>
 
       {/* Rune Symbols (small spheres at vertices) */}
@@ -69,7 +89,7 @@ function AlchemyCircle() {
         return (
           <mesh key={`rune-${i}`} position={[Math.cos(angle) * 2.5, Math.sin(angle) * 2.5, 0]}>
             <sphereGeometry args={[0.06, 8, 8]} />
-            <meshStandardMaterial color="#8B5CF6" emissive="#8B5CF6" emissiveIntensity={4} />
+            <meshStandardMaterial color={accent} emissive={accent} emissiveIntensity={4} />
           </mesh>
         );
       })}
@@ -80,6 +100,11 @@ function AlchemyCircle() {
 // Orbiting Particles
 function Particles({ count = 200 }) {
   const ref = useRef<THREE.Points>(null);
+  const [accent2, setAccent2] = useState('#ffffff');
+
+  useEffect(() => {
+    setAccent2(resolveColor('var(--accent-2)'));
+  }, []);
 
   const positions = useMemo(() => {
     const pos = new Float32Array(count * 3);
@@ -112,7 +137,7 @@ function Particles({ count = 200 }) {
       </bufferGeometry>
       <pointsMaterial
         size={0.03}
-        color="#A78BFA"
+        color={accent2}
         transparent
         opacity={0.6}
         sizeAttenuation
@@ -125,6 +150,11 @@ function Particles({ count = 200 }) {
 // Energy Orbs
 function EnergyOrbs() {
   const orbsRef = useRef<THREE.Group>(null);
+  
+  const [accent, setAccent] = useState('#ffffff');
+  useEffect(() => {
+    setAccent(resolveColor('var(--accent)'));
+  }, []);
 
   useFrame((state) => {
     if (orbsRef.current) {
@@ -141,8 +171,8 @@ function EnergyOrbs() {
             <mesh position={[Math.cos(angle) * 3.2, Math.sin(angle) * 0.5, Math.sin(angle) * 3.2]}>
               <sphereGeometry args={[0.12, 16, 16]} />
               <meshStandardMaterial
-                color="#8B5CF6"
-                emissive="#8B5CF6"
+                color={accent}
+                emissive={accent}
                 emissiveIntensity={5}
                 transparent
                 opacity={0.9}
@@ -156,6 +186,14 @@ function EnergyOrbs() {
 }
 
 export const HeroScene: React.FC = () => {
+  const [accent, setAccent] = useState('#ffffff');
+  const [accent2, setAccent2] = useState('#ffffff');
+
+  useEffect(() => {
+    setAccent(resolveColor('var(--accent)'));
+    setAccent2(resolveColor('var(--accent-2)'));
+  }, []);
+
   return (
     <div className="absolute inset-0 z-0">
       <Canvas
@@ -167,9 +205,9 @@ export const HeroScene: React.FC = () => {
         
         {/* Lighting */}
         <ambientLight intensity={0.2} />
-        <pointLight position={[0, 0, 3]} color="#8B5CF6" intensity={2} distance={10} />
-        <pointLight position={[3, 2, 0]} color="#7C3AED" intensity={1} distance={8} />
-        <pointLight position={[-3, -2, 0]} color="#A78BFA" intensity={1} distance={8} />
+        <pointLight position={[0, 0, 3]} color={accent} intensity={2} distance={10} />
+        <pointLight position={[3, 2, 0]} color={accent} intensity={1} distance={8} />
+        <pointLight position={[-3, -2, 0]} color={accent2} intensity={1} distance={8} />
 
         <Float speed={1.5} floatIntensity={0.3} rotationIntensity={0.1}>
           <AlchemyCircle />

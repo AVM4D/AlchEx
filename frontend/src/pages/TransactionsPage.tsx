@@ -75,7 +75,7 @@ export default function TransactionsPage() {
   return (
     <div className="space-y-6 max-w-5xl mx-auto">
       <div>
-        <h1 className="text-display text-2xl md:text-3xl text-white">Transactions</h1>
+        <h1 className="text-display text-2xl md:text-3xl text-[var(--text)]">Transactions</h1>
         <p className="text-sm text-[var(--text-2)] mt-1">Manage your exchanges & trades</p>
       </div>
 
@@ -83,7 +83,7 @@ export default function TransactionsPage() {
       <div className="flex gap-2 overflow-x-auto pb-1">
         {STATUS_TABS.map(s => (
           <button key={s} onClick={() => setTab(s)}
-            className={`px-4 py-2 rounded-lg text-xs font-medium whitespace-nowrap transition-all ${tab === s ? 'bg-[var(--accent)] text-white shadow-[0_0_15px_rgba(139,92,246,0.3)]' : 'bg-[var(--surface-2)] text-[var(--text-2)] hover:text-white'}`}>
+            className={`px-4 py-2 rounded-lg text-xs font-medium whitespace-nowrap transition-all ${tab === s ? '-[var(--bg)] shadow-[0_0_15px_var(--accent-glow)]' : 'bg-[var(--surface-2)] text-[var(--text-2)] hover:text-[var(--text)]'}`}>
             {s === 'All' ? 'All' : s.replace('_', ' ')}
           </button>
         ))}
@@ -103,7 +103,7 @@ export default function TransactionsPage() {
       ) : transactions.length === 0 ? (
         <div className="glass-card p-16 text-center">
           <ArrowRightLeft size={40} className="mx-auto mb-4 text-[var(--text-3)]" />
-          <h3 className="text-display text-lg text-white mb-2">No transactions</h3>
+          <h3 className="text-display text-lg text-[var(--text)] mb-2">No transactions</h3>
           <p className="text-sm text-[var(--text-3)] mb-4">Start trading on the marketplace!</p>
           <Link to="/marketplace" className="pill text-[var(--accent)] cursor-pointer">Browse marketplace →</Link>
         </div>
@@ -119,10 +119,10 @@ export default function TransactionsPage() {
                 className="glass-card gradient-border p-5">
                 <div className="flex items-start justify-between gap-4 mb-3">
                   <div className="flex-1 min-w-0">
-                    <Link to={`/posts/${tx.postId}`} className="text-sm font-display font-bold text-white hover:text-[var(--accent-2)] transition-colors line-clamp-1">{tx.post.title}</Link>
+                    <Link to={`/posts/${tx.postId}`} className="text-sm font-display font-bold text-[var(--text)] hover:text-[var(--accent-2)] transition-colors line-clamp-1">{tx.post.title}</Link>
                     <div className="flex flex-wrap items-center gap-3 mt-1.5">
                       <div className="flex items-center gap-1.5">
-                        <div className="w-5 h-5 rounded-full bg-gradient-to-br from-[var(--accent)] to-purple-400 flex items-center justify-center text-[8px] font-bold text-white">
+                        <div className="w-5 h-5 rounded-full bg-gradient-to-br from-[var(--accent)] to-[var(--accent-2)] flex items-center justify-center text-[8px] font-bold text-[var(--text)]">
                           {other.firstName.charAt(0)}
                         </div>
                         <span className="text-xs text-[var(--text-2)]">{other.firstName} {other.lastName}</span>
@@ -158,7 +158,7 @@ export default function TransactionsPage() {
                       <X size={12} /> Cancel
                     </button>
                   )}
-                  <Link to={`/chat/${tx.id}`} className="flex items-center gap-1.5 px-3 py-1.5 bg-[var(--surface-2)] text-[var(--text-2)] rounded-lg text-xs font-medium hover:text-white transition-colors">
+                  <Link to={`/chat/${tx.id}`} className="flex items-center gap-1.5 px-3 py-1.5 bg-[var(--surface-2)] text-[var(--text-2)] rounded-lg text-xs font-medium hover:text-[var(--text)] transition-colors">
                     <MessageCircle size={12} /> Chat
                   </Link>
                   {tx.status === 'SUCCESSFUL' && !alreadyRated && (
@@ -180,7 +180,7 @@ export default function TransactionsPage() {
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setRatingModal(null)}>
           <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
             onClick={(e) => e.stopPropagation()} className="glass-card p-5 sm:p-6 w-full max-w-[calc(100vw-2rem)] sm:max-w-sm">
-            <h3 className="text-display text-lg text-white mb-4">Rate this exchange</h3>
+            <h3 className="text-display text-lg text-[var(--text)] mb-4">Rate this exchange</h3>
             <div className="flex items-center gap-2 mb-4">
               {[1, 2, 3, 4, 5].map(s => (
                 <button key={s} onClick={() => setScore(s)}
@@ -190,10 +190,10 @@ export default function TransactionsPage() {
               ))}
             </div>
             <textarea value={review} onChange={(e) => setReview(e.target.value)} rows={3} placeholder="Write a review (optional)..."
-              className="w-full bg-[var(--surface-2)] border border-[var(--border)] rounded-lg px-3 py-2 text-sm text-white placeholder-[var(--text-3)] focus:border-[var(--accent)] mb-4" />
+              className="w-full bg-[var(--surface-2)] border border-[var(--border)] rounded-lg px-3 py-2 text-sm text-[var(--text)] placeholder-[var(--text-3)] focus:border-[var(--accent)] mb-4" />
             <div className="flex justify-end gap-2">
-              <button onClick={() => setRatingModal(null)} className="px-4 py-2 bg-[var(--surface-2)] text-[var(--text-2)] rounded-lg text-sm hover:text-white transition-colors">Cancel</button>
-              <button onClick={submitRating} className="px-4 py-2 bg-[var(--accent)] text-white rounded-lg text-sm font-medium hover:bg-[var(--accent)]/90 transition-colors">Submit</button>
+              <button onClick={() => setRatingModal(null)} className="px-4 py-2 bg-[var(--surface-2)] text-[var(--text-2)] rounded-lg text-sm hover:text-[var(--text)] transition-colors">Cancel</button>
+              <button onClick={submitRating} className="px-4 py-2 bg-[var(--accent)] text-[var(--bg)] rounded-lg text-sm font-medium hover:bg-[var(--accent)]/90 transition-colors">Submit</button>
             </div>
           </motion.div>
         </div>

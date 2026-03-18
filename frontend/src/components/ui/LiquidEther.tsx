@@ -56,6 +56,17 @@ export default function LiquidEther({
     useEffect(() => {
         if (!mountRef.current) return;
 
+        function resolveColor(color: string) {
+            if (color.startsWith('var(')) {
+                const match = color.match(/var\(([^)]+)\)/);
+                if (match) {
+                    const resolved = getComputedStyle(document.documentElement).getPropertyValue(match[1]).trim();
+                    if (resolved) return resolved;
+                }
+            }
+            return color;
+        }
+
         function makePaletteTexture(stops: string[]) {
             let arr: string[];
             if (Array.isArray(stops) && stops.length > 0) {
@@ -66,7 +77,7 @@ export default function LiquidEther({
             const w = arr.length;
             const data = new Uint8Array(w * 4);
             for (let i = 0; i < w; i++) {
-                const c = new THREE.Color(arr[i]);
+                const c = new THREE.Color(resolveColor(arr[i]));
                 data[i * 4 + 0] = Math.round(c.r * 255);
                 data[i * 4 + 1] = Math.round(c.g * 255);
                 data[i * 4 + 2] = Math.round(c.b * 255);

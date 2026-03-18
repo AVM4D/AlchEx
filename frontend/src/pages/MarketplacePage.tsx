@@ -72,14 +72,14 @@ export default function MarketplacePage() {
       {/* Header */}
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h1 className="text-display text-2xl md:text-3xl text-white">Marketplace</h1>
+          <h1 className="text-display text-2xl md:text-3xl text-[var(--text)]">Marketplace</h1>
           <p className="text-[var(--text-2)] text-sm mt-1">
             {meta ? `${meta.total} items available` : 'Browse exchange posts'}
           </p>
         </div>
         <Link to="/posts/new" className="group relative">
-          <div className="absolute -inset-0.5 bg-gradient-to-r from-[var(--accent)] to-purple-400 rounded-xl blur opacity-30 group-hover:opacity-60 transition-opacity" />
-          <div className="relative flex items-center gap-2 px-4 py-2.5 bg-[var(--accent)] text-white rounded-lg font-medium text-sm">
+          <div className="absolute -inset-0.5 bg-gradient-to-r from-[var(--bg)] to-[var(--surface-3)] rounded-xl blur opacity-30 group-hover:opacity-60 transition-opacity" />
+          <div className="relative flex items-center gap-2 px-4 py-2.5 bg-[var(--accent)] text-[var(--bg)] rounded-lg font-medium text-sm">
             <Plus size={16} /> New Post
           </div>
         </Link>
@@ -94,7 +94,7 @@ export default function MarketplacePage() {
               value={search}
               onChange={(e) => { setSearch(e.target.value); setPage(1); }}
               placeholder="Search posts..."
-              className="w-full pl-9 pr-4 py-2.5 bg-[var(--surface-2)] border border-[var(--border)] rounded-lg text-white placeholder-[var(--text-3)] focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)] transition-all text-sm"
+              className="w-full pl-9 pr-4 py-2.5 bg-[var(--surface-2)] border border-[var(--border)] rounded-lg text-[var(--text)] placeholder-[var(--text-3)] focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)] transition-all text-sm"
             />
           </div>
           <div className="flex gap-2 items-center">
@@ -107,10 +107,10 @@ export default function MarketplacePage() {
               <option value="oldest">Oldest First</option>
             </select>
             <div className="hidden md:flex border border-[var(--border)] rounded-lg overflow-hidden">
-              <button onClick={() => setViewMode('grid')} className={`p-2 transition-colors ${viewMode === 'grid' ? 'bg-[var(--accent)] text-white' : 'text-[var(--text-3)] hover:text-white'}`}>
+              <button onClick={() => setViewMode('grid')} className={`p-2 transition-colors ${viewMode === 'grid' ? '-[var(--bg)]' : 'text-[var(--text-3)] hover:text-[var(--text)]'}`}>
                 <Grid3X3 size={14} />
               </button>
-              <button onClick={() => setViewMode('list')} className={`p-2 transition-colors ${viewMode === 'list' ? 'bg-[var(--accent)] text-white' : 'text-[var(--text-3)] hover:text-white'}`}>
+              <button onClick={() => setViewMode('list')} className={`p-2 transition-colors ${viewMode === 'list' ? '-[var(--bg)]' : 'text-[var(--text-3)] hover:text-[var(--text)]'}`}>
                 <List size={14} />
               </button>
             </div>
@@ -125,7 +125,7 @@ export default function MarketplacePage() {
                 <div className="flex flex-wrap gap-2">
                   {CATEGORIES.map((c) => (
                     <button key={c} onClick={() => { setCategory(c); setPage(1); }}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${category === c ? 'bg-[var(--accent)] text-white shadow-[0_0_15px_rgba(139,92,246,0.3)]' : 'bg-[var(--surface-2)] text-[var(--text-2)] hover:text-white'}`}>
+                      className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${category === c ? '-[var(--bg)] shadow-[0_0_15px_var(--accent-glow)]' : 'bg-[var(--surface-2)] text-[var(--text-2)] hover:text-[var(--text)]'}`}>
                       {c}
                     </button>
                   ))}
@@ -151,7 +151,7 @@ export default function MarketplacePage() {
       ) : posts.length === 0 ? (
         <div className="glass-card p-16 text-center">
           <div className="text-5xl mb-4">🔍</div>
-          <h3 className="text-lg font-display font-bold text-white mb-2">No posts found</h3>
+          <h3 className="text-lg font-display font-bold text-[var(--text)] mb-2">No posts found</h3>
           <p className="text-[var(--text-3)] text-sm mb-4">Try adjusting your search or filters</p>
           <button onClick={() => { setSearch(''); setCategory('All'); }} className="pill cursor-pointer text-[var(--accent)]">
             <X size={12} /> Clear filters
@@ -164,7 +164,7 @@ export default function MarketplacePage() {
               <Link to={`/posts/${post.id}`}>
                 <div className="glass-card gradient-border p-5 group">
                   <div className="flex items-start justify-between gap-2 mb-3">
-                    <h3 className="font-display font-bold text-white text-sm line-clamp-1 group-hover:text-[var(--accent-2)] transition-colors">{post.title}</h3>
+                    <h3 className="font-display font-bold text-[var(--text)] text-sm line-clamp-1 group-hover:text-[var(--accent-2)] transition-colors">{post.title}</h3>
                     <span className={`pill text-[10px] shrink-0 ${post.status === 'ACTIVE' ? 'text-emerald-400 border-emerald-500/20 bg-emerald-500/10' : ''}`}>{post.status}</span>
                   </div>
                   <p className="text-xs text-[var(--text-2)] line-clamp-2 mb-3">{post.description}</p>
@@ -177,7 +177,6 @@ export default function MarketplacePage() {
                         <div className={`flex items-center gap-1.5 text-[10px] px-2.5 py-1.5 rounded-lg ${post.myOffer.status === 'PENDING' ? 'bg-amber-500/10 text-amber-400' :
                             post.myOffer.status === 'ACCEPTED' ? 'bg-emerald-500/10 text-emerald-400' :
                               post.myOffer.status === 'REJECTED' ? 'bg-red-500/10 text-red-400' :
-                                post.myOffer.status === 'EXPIRED' ? 'bg-red-500/10 text-red-400' :
                                   'bg-gray-500/10 text-gray-400'
                           }`}>
                           {post.myOffer.status === 'ACCEPTED' ? <CheckCircle2 size={10} /> :
@@ -201,7 +200,7 @@ export default function MarketplacePage() {
 
                   <div className="flex items-center justify-between pt-3 border-t border-[var(--border)]">
                     <div className="flex items-center gap-2">
-                      <div className="w-5 h-5 rounded-full bg-gradient-to-br from-[var(--accent)] to-purple-400 flex items-center justify-center text-[8px] text-white font-bold">
+                      <div className="w-5 h-5 rounded-full bg-gradient-to-br from-[var(--accent)] to-[var(--accent-2)] flex items-center justify-center text-[8px] text-[var(--text)] font-bold">
                         {post.user?.firstName?.charAt(0)}
                       </div>
                       <span className="text-[10px] text-[var(--text-3)]">{post.user?.firstName}</span>

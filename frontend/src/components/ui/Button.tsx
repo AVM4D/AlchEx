@@ -17,11 +17,11 @@ export const Button: React.FC<ButtonProps> = ({
   const baseStyles = 'relative inline-flex items-center justify-center font-medium rounded-xl transition-all duration-300 focus-ring disabled:opacity-50 disabled:cursor-not-allowed';
 
   const variants = {
-    primary: 'bg-gradient-to-r from-primary-dark to-primary text-white hover:shadow-glow active:scale-[0.98]',
-    secondary: 'bg-surface-light text-white hover:bg-surface-lighter border border-border-light',
-    ghost: 'text-gray-300 hover:text-white hover:bg-white/5',
+    primary: 'bg-gradient-to-r from-primary-dark to-primary text-[var(--text)] hover:shadow-glow active:scale-[0.98]',
+    secondary: 'bg-surface-light text-[var(--text)] hover:bg-surface-lighter border border-border-light',
+    ghost: 'text-gray-300 hover:text-[var(--text)] hover:bg-white/5',
     danger: 'bg-danger/10 text-danger hover:bg-danger/20 border border-danger/20',
-    outline: 'border border-primary/30 text-primary hover:bg-primary/10 hover:border-primary/50',
+    outline: 'border border-primary/30 text-[var(--text)] hover:bg-primary/10 hover:border-primary/50',
   };
 
   const sizes = {

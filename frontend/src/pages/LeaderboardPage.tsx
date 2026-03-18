@@ -39,7 +39,7 @@ export default function LeaderboardPage() {
       {/* Header */}
       <div className="text-center">
         <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}>
-          <h1 className="text-display text-3xl md:text-4xl text-white mb-2">Leaderboard</h1>
+          <h1 className="text-display text-3xl md:text-4xl text-[var(--text)] mb-2">Leaderboard</h1>
           <p className="text-sm text-[var(--text-2)]">Top alchemists ranked by reputation</p>
         </motion.div>
       </div>
@@ -48,7 +48,7 @@ export default function LeaderboardPage() {
       <div className="flex justify-center gap-2">
         {PERIODS.map(p => (
           <button key={p} onClick={() => setPeriod(p)}
-            className={`px-5 py-2 rounded-lg text-xs font-medium transition-all ${period === p ? 'bg-[var(--accent)] text-white shadow-[0_0_20px_rgba(139,92,246,0.3)]' : 'bg-[var(--surface-2)] text-[var(--text-2)] hover:text-white'}`}>
+            className={`px-5 py-2 rounded-lg text-xs font-medium transition-all ${period === p ? '-[var(--bg)] shadow-[0_0_20px_var(--accent-glow)]' : 'bg-[var(--surface-2)] text-[var(--text-2)] hover:text-[var(--text)]'}`}>
             {p}
           </button>
         ))}
@@ -64,7 +64,7 @@ export default function LeaderboardPage() {
       ) : entries.length === 0 ? (
         <div className="glass-card p-16 text-center">
           <Trophy size={48} className="mx-auto mb-4 text-[var(--text-3)]" />
-          <h3 className="text-display text-lg text-white mb-2">No data yet</h3>
+          <h3 className="text-display text-lg text-[var(--text)] mb-2">No data yet</h3>
           <p className="text-sm text-[var(--text-3)]">Complete exchanges to appear on the leaderboard</p>
         </div>
       ) : (
@@ -82,16 +82,16 @@ export default function LeaderboardPage() {
                     {/* Avatar */}
                     <div className="relative mb-3">
                       {place === 1 && <Crown size={24} className="text-amber-400 absolute -top-7 left-1/2 -translate-x-1/2 drop-shadow-lg" />}
-                      <div className={`w-14 h-14 sm:w-16 sm:h-16 md:w-20 md:h-20 rounded-2xl bg-gradient-to-br ${color} flex items-center justify-center text-lg sm:text-xl md:text-2xl font-bold text-white font-display shadow-lg`}>
+                      <div className={`w-14 h-14 sm:w-16 sm:h-16 md:w-20 md:h-20 rounded-2xl bg-gradient-to-br ${color} flex items-center justify-center text-lg sm:text-xl md:text-2xl font-bold text-[var(--text)] font-display shadow-lg`}>
                         {entry.firstName.charAt(0)}{entry.lastName.charAt(0)}
                       </div>
                     </div>
-                    <span className="text-sm font-display font-bold text-white mb-0.5">{entry.firstName}</span>
+                    <span className="text-sm font-display font-bold text-[var(--text)] mb-0.5">{entry.firstName}</span>
                     <span className="text-xs text-[var(--text-3)] mb-2">{entry.reputationScore} pts</span>
                     {/* Podium bar */}
                     <div className={`w-20 sm:w-24 md:w-32 ${height} rounded-t-xl bg-gradient-to-t ${color} relative overflow-hidden`}>
                       <div className="absolute inset-0 bg-white/5" />
-                      <div className="absolute bottom-3 left-1/2 -translate-x-1/2 text-lg font-display font-bold text-white/80">{label}</div>
+                      <div className="absolute bottom-3 left-1/2 -translate-x-1/2 text-lg font-display font-bold text-[var(--text)]/80">{label}</div>
                     </div>
                   </motion.div>
                 );
@@ -109,11 +109,11 @@ export default function LeaderboardPage() {
                   <div className="w-8 h-8 flex items-center justify-center">
                     <span className="text-sm font-mono font-bold text-[var(--text-3)]">#{rank}</span>
                   </div>
-                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[var(--accent)] to-purple-400 flex items-center justify-center text-sm font-bold text-white">
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[var(--accent)] to-[var(--accent-2)] flex items-center justify-center text-sm font-bold text-[var(--text)]">
                     {entry.firstName.charAt(0)}{entry.lastName.charAt(0)}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="text-sm font-medium text-white">{entry.firstName} {entry.lastName}</div>
+                    <div className="text-sm font-medium text-[var(--text)]">{entry.firstName} {entry.lastName}</div>
                     {entry.university && <div className="text-[10px] text-[var(--text-3)]">{entry.university}</div>}
                   </div>
                   <div className="flex items-center gap-4 shrink-0">
@@ -122,7 +122,7 @@ export default function LeaderboardPage() {
                       <div className="text-[9px] text-[var(--text-3)] uppercase">Rep</div>
                     </div>
                     <div className="text-right hidden md:block">
-                      <div className="text-sm font-mono text-white">{entry.totalExchanges}</div>
+                      <div className="text-sm font-mono text-[var(--text)]">{entry.totalExchanges}</div>
                       <div className="text-[9px] text-[var(--text-3)] uppercase">Trades</div>
                     </div>
                   </div>

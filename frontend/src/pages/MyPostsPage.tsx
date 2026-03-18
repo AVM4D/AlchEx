@@ -44,12 +44,12 @@ export default function MyPostsPage() {
     <div className="space-y-6 max-w-4xl mx-auto">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-display text-2xl md:text-3xl text-white">My Posts</h1>
+          <h1 className="text-display text-2xl md:text-3xl text-[var(--text)]">My Posts</h1>
           <p className="text-sm text-[var(--text-2)] mt-1">{posts.length} posts created</p>
         </div>
         <Link to="/posts/new" className="group relative">
-          <div className="absolute -inset-0.5 bg-gradient-to-r from-[var(--accent)] to-purple-400 rounded-xl blur opacity-30 group-hover:opacity-60 transition-opacity" />
-          <div className="relative flex items-center gap-2 px-4 py-2.5 bg-[var(--accent)] text-white rounded-lg font-medium text-sm">
+          <div className="absolute -inset-0.5 bg-gradient-to-r from-[var(--bg)] to-[var(--surface-3)] rounded-xl blur opacity-30 group-hover:opacity-60 transition-opacity" />
+          <div className="relative flex items-center gap-2 px-4 py-2.5 bg-[var(--accent)] text-[var(--bg)] rounded-lg font-medium text-sm">
             <Plus size={16} /> New Post
           </div>
         </Link>
@@ -64,7 +64,7 @@ export default function MyPostsPage() {
       ) : posts.length === 0 ? (
         <div className="glass-card p-16 text-center">
           <div className="text-5xl mb-4">📝</div>
-          <h3 className="text-display text-lg text-white mb-2">No posts yet</h3>
+          <h3 className="text-display text-lg text-[var(--text)] mb-2">No posts yet</h3>
           <p className="text-sm text-[var(--text-3)] mb-4">Create your first exchange post</p>
           <Link to="/posts/new" className="pill text-[var(--accent)] cursor-pointer"><Plus size={12} /> Create Post</Link>
         </div>
@@ -75,7 +75,7 @@ export default function MyPostsPage() {
               className="glass-card gradient-border p-5 group">
               <div className="flex items-start justify-between gap-4 mb-3">
                 <Link to={`/posts/${post.id}`} className="flex-1 min-w-0">
-                  <h3 className="font-display font-bold text-white text-sm group-hover:text-[var(--accent-2)] transition-colors line-clamp-1">{post.title}</h3>
+                  <h3 className="font-display font-bold text-[var(--text)] text-sm group-hover:text-[var(--accent-2)] transition-colors line-clamp-1">{post.title}</h3>
                   <p className="text-xs text-[var(--text-2)] line-clamp-2 mt-1">{post.description}</p>
                 </Link>
                 <span className={`pill text-[10px] shrink-0 ${statusStyle[post.status] || ''}`}>{post.status}</span>
@@ -88,7 +88,7 @@ export default function MyPostsPage() {
                   <span className="text-[10px] text-[var(--text-3)] flex items-center gap-1"><Clock size={10} /> {formatRelativeTime(post.createdAt)}</span>
                 </div>
                 <div className="flex items-center gap-1">
-                  <Link to={`/posts/${post.id}`} className="p-2 rounded-lg text-[var(--text-3)] hover:text-white hover:bg-[var(--surface-2)] transition-colors">
+                  <Link to={`/posts/${post.id}`} className="p-2 rounded-lg text-[var(--text-3)] hover:text-[var(--text)] hover:bg-[var(--surface-2)] transition-colors">
                     <Eye size={14} />
                   </Link>
                   {post.status === 'ACTIVE' && (

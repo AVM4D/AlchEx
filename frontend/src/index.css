@@ -1,4 +1,7 @@
-@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&family=Syne:wght@400;500;600;700;800&family=Cinzel+Decorative:wght@400;700;900&display=swap');
+﻿
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&family=Great+Vibes&family=Cinzel+Decorative:wght@400;700;900&display=swap');
+@font-face { font-family: 'Big Quicksand'; src: url('/big-quicksand.regular.ttf') format('truetype'); }
+
 
 @font-face {
   font-family: 'Innovar';
@@ -13,8 +16,8 @@
 @tailwind utilities;
 
 @layer utilities {
-  .text-purple {
-    color: var(--accent-2, #a855f7);
+  .text-accent {
+    color: var(--accent);
   }
 
   .ease-out-expo {
@@ -29,24 +32,31 @@
 
 @layer base {
   :root {
-    --bg: #050508;
-    --surface: #0a0a0f;
-    --surface-2: #111118;
-    --surface-3: #1a1a24;
+  --font-logo: 'Big Quicksand', sans-serif;
+    --primary: #000000;
+    --secondary: #ffffff;
+
+    --bg: var(--primary);
+    --surface: var(--primary);
+    --surface-2: #111111;
+    --surface-3: #1a1a1a;
     --border: rgba(255, 255, 255, 0.06);
     --border-hover: rgba(255, 255, 255, 0.12);
-    --text: #f0f0f5;
-    --text-2: #8888a0;
-    --text-3: #555568;
-    --accent: #8b5cf6;
-    --accent-2: #a78bfa;
-    --accent-3: #c4b5fd;
-    --accent-glow: rgba(139, 92, 246, 0.4);
-    --accent-sub: rgba(139, 92, 246, 0.08);
-    --green: #22c55e;
-    --yellow: #eab308;
-    --red: #ef4444;
-    --font-display: 'Syne', sans-serif;
+    --text: var(--secondary);
+    --text-2: rgba(255, 255, 255, 0.7);
+    --text-3: rgba(255, 255, 255, 0.5);
+    
+    --accent: var(--secondary);
+    --accent-2: rgba(255, 255, 255, 0.8);
+    --accent-3: rgba(255, 255, 255, 0.6);
+    --accent-glow: rgba(255, 255, 255, 0.4);
+    --accent-sub: rgba(255, 255, 255, 0.08);
+
+    --green: #ffffff;
+    --yellow: #ffffff;
+    --red: #ffffff;
+    --font-display: 'Space Grotesk', sans-serif;
+    --font-quote: 'Great Vibes', cursive;
     --font-body: 'Space Grotesk', sans-serif;
     --font-mono: 'JetBrains Mono', monospace;
     --ease: cubic-bezier(0.16, 1, 0.3, 1);
@@ -54,23 +64,28 @@
   }
 
   [data-theme='light'] {
-    --bg: #fafafa;
-    --surface: #ffffff;
-    --surface-2: #f3f3f5;
-    --surface-3: #e8e8ed;
+    --primary: #ffffff;
+    --secondary: #000000;
+
+    --bg: var(--primary);
+    --surface: var(--primary);
+    --surface-2: #f3f3f3;
+    --surface-3: #e8e8e8;
     --border: rgba(0, 0, 0, 0.08);
     --border-hover: rgba(0, 0, 0, 0.15);
-    --text: #1a1a2e;
-    --text-2: #555570;
-    --text-3: #8888a0;
-    --accent: #7c3aed;
-    --accent-2: #8b5cf6;
-    --accent-3: #a78bfa;
-    --accent-glow: rgba(124, 58, 237, 0.25);
-    --accent-sub: rgba(124, 58, 237, 0.06);
-    --green: #16a34a;
-    --yellow: #ca8a04;
-    --red: #dc2626;
+    --text: var(--secondary);
+    --text-2: rgba(0, 0, 0, 0.7);
+    --text-3: rgba(0, 0, 0, 0.5);
+
+    --accent: var(--secondary);
+    --accent-2: rgba(0, 0, 0, 0.8);
+    --accent-3: rgba(0, 0, 0, 0.6);
+    --accent-glow: rgba(0, 0, 0, 0.25);
+    --accent-sub: rgba(0, 0, 0, 0.06);
+
+    --green: #000000;
+    --yellow: #000000;
+    --red: #000000;
     color-scheme: light;
   }
 
@@ -96,8 +111,8 @@
   }
 
   ::selection {
-    background: rgba(139, 92, 246, 0.35);
-    color: #fff;
+    background: var(--accent-glow);
+    color: var(--bg);
   }
 
   ::-webkit-scrollbar {
@@ -109,7 +124,7 @@
   }
 
   ::-webkit-scrollbar-thumb {
-    background: rgba(139, 92, 246, 0.3);
+    background: var(--accent-3);
     border-radius: 4px;
   }
 
@@ -126,6 +141,7 @@
   h6 {
     font-family: var(--font-display);
     font-weight: 700;
+    text-transform: uppercase;
     letter-spacing: -0.02em;
     line-height: 1.1;
   }
@@ -158,7 +174,7 @@
 
   .glass-card:hover {
     border-color: rgba(255, 255, 255, 0.1);
-    box-shadow: 0 0 30px rgba(139, 92, 246, 0.08);
+    box-shadow: 0 0 30px var(--accent-sub);
     transform: translateY(-2px) translateZ(0);
   }
 
@@ -173,7 +189,7 @@
     inset: 0;
     border-radius: inherit;
     padding: 1px;
-    background: linear-gradient(135deg, rgba(139, 92, 246, 0.5), transparent 50%, rgba(167, 139, 250, 0.3));
+    background: linear-gradient(135deg, var(--accent), transparent 50%, var(--accent-2));
     -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
     -webkit-mask-composite: xor;
     mask-composite: exclude;
@@ -188,27 +204,27 @@
 
   /* ── Glow ── */
   .glow {
-    box-shadow: 0 0 30px rgba(139, 92, 246, 0.15), 0 0 60px rgba(139, 92, 246, 0.05);
+    box-shadow: 0 0 30px var(--accent-glow), 0 0 60px var(--accent-sub);
   }
 
   .glow-strong {
-    box-shadow: 0 0 40px rgba(139, 92, 246, 0.25), 0 0 80px rgba(139, 92, 246, 0.1), inset 0 0 20px rgba(139, 92, 246, 0.05);
+    box-shadow: 0 0 40px var(--accent-glow), 0 0 80px var(--accent-sub), inset 0 0 20px var(--accent-sub);
   }
 
   .glow-text {
-    text-shadow: 0 0 40px rgba(139, 92, 246, 0.5), 0 0 80px rgba(139, 92, 246, 0.25);
+    text-shadow: 0 0 40px var(--accent-glow), 0 0 80px var(--accent-glow);
   }
 
   /* ── Text ── */
   .text-gradient {
-    background: linear-gradient(135deg, #a78bfa, #8b5cf6, #7c3aed);
+    background: linear-gradient(135deg, var(--text-2), var(--text));
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
   }
 
   .text-gradient-shine {
-    background: linear-gradient(90deg, #a78bfa, #fff, #8b5cf6, #a78bfa);
+    background: linear-gradient(90deg, var(--text-2), var(--text), var(--text-2));
     background-size: 300% 100%;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -217,7 +233,8 @@
 
   .text-display {
     font-family: var(--font-display);
-    font-weight: 800;
+    font-weight: 700;
+    text-transform: uppercase;
     letter-spacing: -0.04em;
     line-height: 1.15;
   }
@@ -266,7 +283,7 @@
     position: absolute;
     inset: 0;
     pointer-events: none;
-    background-image: linear-gradient(rgba(139, 92, 246, 0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(139, 92, 246, 0.03) 1px, transparent 1px);
+    background-image: linear-gradient(var(--accent-sub) 1px, transparent 1px), linear-gradient(90deg, var(--accent-sub) 1px, transparent 1px);
     background-size: 80px 80px;
     mask-image: radial-gradient(ellipse at center, black 30%, transparent 80%);
   }
@@ -280,16 +297,16 @@
     animation: orb-float 20s ease-in-out infinite;
   }
 
-  .orb-purple {
-    background: radial-gradient(circle, rgba(139, 92, 246, 0.4), transparent 70%);
+  .orb-primary {
+    background: radial-gradient(circle, var(--accent-glow), transparent 70%);
   }
 
   .orb-blue {
-    background: radial-gradient(circle, rgba(59, 130, 246, 0.3), transparent 70%);
+    background: radial-gradient(circle, var(--accent-sub), transparent 70%);
   }
 
-  .orb-pink {
-    background: radial-gradient(circle, rgba(236, 72, 153, 0.2), transparent 70%);
+  .orb-secondary {
+    background: radial-gradient(circle, var(--accent-sub), transparent 70%);
   }
 
   /* ── Pill ── */
@@ -405,11 +422,11 @@
 
   0%,
   100% {
-    box-shadow: 0 0 20px rgba(139, 92, 246, 0.2)
+    box-shadow: 0 0 20px color-mix(in srgb, var(--accent) 20%, transparent)
   }
 
   50% {
-    box-shadow: 0 0 50px rgba(139, 92, 246, 0.4)
+    box-shadow: 0 0 50px var(--accent-glow)
   }
 }
 
@@ -546,7 +563,7 @@ body {
   position: fixed;
   inset: 0;
   overflow: hidden;
-  background: #1a0a2e;
+  background: var(--surface);
 }
 
 .hypr-atmosphere {
@@ -554,10 +571,10 @@ body {
   inset: 0;
   z-index: 0;
   background:
-    radial-gradient(ellipse 140% 100% at 50% 50%, rgba(139, 92, 246, 0.30) 0%, transparent 65%),
-    radial-gradient(ellipse 120% 80% at 20% 80%, rgba(124, 58, 237, 0.25) 0%, transparent 55%),
-    radial-gradient(ellipse 110% 70% at 85% 20%, rgba(167, 139, 250, 0.20) 0%, transparent 50%),
-    linear-gradient(180deg, #1e0c35 0%, #1a0a2e 50%, #150826 100%);
+    radial-gradient(ellipse 140% 100% at 50% 50%, color-mix(in srgb, var(--accent) 20%, transparent) 0%, transparent 65%),
+    radial-gradient(ellipse 120% 80% at 20% 80%, color-mix(in srgb, var(--accent) 20%, transparent) 0%, transparent 55%),
+    radial-gradient(ellipse 110% 70% at 85% 20%, color-mix(in srgb, var(--accent) 20%, transparent) 0%, transparent 50%),
+    linear-gradient(180deg, var(--surface-3) 0%, var(--surface) 50%, var(--bg) 100%);
 }
 
 @keyframes hypr-atmo-shift {
@@ -658,13 +675,13 @@ body {
 }
 
 .hypr-window-inner::-webkit-scrollbar-thumb {
-  background: rgba(139, 92, 246, 0.2);
+  background: color-mix(in srgb, var(--accent) 20%, transparent);
   border-radius: 4px;
 }
 
 /* ── Floating panels (notifications, user menu) ── */
 .hypr-float-panel {
-  background: rgba(14, 12, 22, 0.92);
+  background: color-mix(in srgb, var(--surface) 92%, transparent);
   backdrop-filter: blur(40px) saturate(150%);
   -webkit-backdrop-filter: blur(40px) saturate(150%);
   border: 1px solid rgba(255, 255, 255, 0.07);
@@ -685,7 +702,7 @@ body {
   overflow: hidden;
   box-shadow:
     0 24px 80px rgba(0, 0, 0, 0.6),
-    0 0 60px rgba(139, 92, 246, 0.08),
+    0 0 60px color-mix(in srgb, var(--accent) 20%, transparent),
     inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 
@@ -704,9 +721,9 @@ body {
 /* ── Light theme overrides for Hyprland layout ── */
 [data-theme='light'] .hypr-atmosphere {
   background:
-    radial-gradient(ellipse 120% 80% at 20% 80%, rgba(139, 92, 246, 0.06) 0%, transparent 60%),
-    radial-gradient(ellipse 100% 60% at 80% 20%, rgba(167, 139, 250, 0.05) 0%, transparent 50%),
-    linear-gradient(180deg, #f0eff4 0%, #e8e6ee 30%, #ededf2 60%, #f5f4f8 100%);
+    radial-gradient(ellipse 120% 80% at 20% 80%, color-mix(in srgb, var(--accent) 20%, transparent) 0%, transparent 60%),
+    radial-gradient(ellipse 100% 60% at 80% 20%, color-mix(in srgb, var(--accent) 20%, transparent) 0%, transparent 50%),
+    linear-gradient(180deg, var(--surface-3) 0%, var(--surface) 30%, var(--bg) 60%, var(--surface) 100%);
 }
 
 [data-theme='light'] .hypr-dock {
@@ -733,5 +750,5 @@ body {
 }
 
 [data-theme='light'] .hypr-bg {
-  background: #f0eff4;
+  background: var(--surface-3);
 }

@@ -29,10 +29,10 @@ interface TextOverlay {
 
 // Forward (0→0.5) AND reverse (0.5→1.0) — non-overlapping ranges
 const TEXT_OVERLAYS: TextOverlay[] = [
-    { text: 'Humankind <span class="text-purple">cannot gain anything</span>', range: [0.04, 0.24] },
-    { text: 'without first giving <span class="text-purple">something in return<span style="font-family:serif">.</span></span>', range: [0.26, 0.46] },
-    { text: 'To obtain<span style="font-family:serif">,</span> something of equal value <span class="text-purple">must be lost<span style="font-family:serif">.</span></span>', range: [0.48, 0.72] },
-    { text: "That is AlchEx<span style=\"font-family:serif\">'</span>s law of <span class=\"text-purple\">Equivalent Exchange<span style=\"font-family:serif\">.</span></span>", range: [0.74, 0.96] },
+    { text: 'Humankind <span class="text-[var(--text)]">cannot gain anything</span>', range: [0.04, 0.24] },
+    { text: 'without first giving <span class="text-[var(--text)]">something in return<span style="font-family:serif">.</span></span>', range: [0.26, 0.46] },
+    { text: 'To obtain<span style="font-family:serif">,</span> something of equal value <span class="text-[var(--text)]">must be lost<span style="font-family:serif">.</span></span>', range: [0.48, 0.72] },
+    { text: "That is AlchEx<span style=\"font-family:serif\">'</span>s law of <span class=\"text-[var(--text)]\">Equivalent Exchange<span style=\"font-family:serif\">.</span></span>", range: [0.74, 0.96] },
 ];
 
 // ───── Utility: generate frame URL ─────
@@ -488,9 +488,10 @@ export default function ScrollVideoSection() {
                         <TypewriterText
                             html={overlay.text}
                             reveal={overlayReveals[i]}
-                            className="text-white drop-shadow-[0_0_40px_rgba(139,92,246,0.3)] leading-tight font-light tracking-wide"
+                            className="text-[var(--text)] drop-shadow-[0_0_40px_var(--accent-glow)] leading-tight font-light tracking-wide normal-case"
                             fontStyle={{
                                 fontFamily: "'Innovar', 'Cinzel Decorative', serif",
+                                textTransform: 'none',
                                 fontSize: 'clamp(1.1rem, 3vw, 3.75rem)',
                             }}
                         />

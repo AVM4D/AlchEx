@@ -40,7 +40,7 @@ interface GlowingOrbProps {
 
 export const GlowingOrb: React.FC<GlowingOrbProps> = ({
   className = '',
-  color = 'rgba(139, 92, 246, 0.4)',
+  color = 'rgba(255, 255, 255, 0.4)',
   size = 300,
   blur = 100,
   animate = true,
@@ -133,8 +133,8 @@ export const GradientText: React.FC<GradientTextProps> = ({
   children,
   className = '',
   from = '#7C3AED',
-  via = '#A78BFA',
-  to = '#C4B5FD',
+  via = 'var(--accent-2)',
+  to = 'var(--accent-3)',
 }) => {
   return (
     <span

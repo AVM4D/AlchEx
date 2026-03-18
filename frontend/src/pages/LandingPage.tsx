@@ -7,7 +7,7 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { ParticleField } from '../components/ui/ParticleField';
 import { TextScramble } from '../components/ui/TextScramble';
 import { MouseReveal } from '../components/ui/MouseReveal';
-import LiquidEther from '../components/ui/LiquidEther';
+import LiquidBlob from '../components/ui/LiquidBlob';
 import DarkVeil from '../components/ui/DarkVeil';
 import { LaserFlow } from '../components/ui/LaserFlow';
 import '../components/ui/StickyReveal.css';
@@ -126,60 +126,47 @@ export default function LandingPage() {
         {/* DarkVeil base layer */}
         <div className="absolute inset-0 z-0" style={{ opacity: 0.5 }}>
           <DarkVeil
-            hueShift={330}
+            hueShift={0}
             noiseIntensity={0}
             scanlineIntensity={0}
             speed={0.4}
             scanlineFrequency={0}
             warpAmount={0}
+            primaryColor="var(--primary)"
+            secondaryColor="var(--surface-3)"
           />
         </div>
-
-        {/* LiquidEther interactive layer */}
-        <div className="absolute inset-0 z-[1]" style={{ opacity: 0.7 }}>
-          <LiquidEther
-            colors={['#5227FF', '#FF9FFC', '#B19EEF']}
-            mouseForce={20}
-            cursorSize={100}
-            isViscous
-            viscous={30}
-            iterationsViscous={16}
-            iterationsPoisson={16}
-            resolution={0.25}
-            isBounce={false}
-            autoDemo
-            autoSpeed={0.5}
-            autoIntensity={2.2}
-            takeoverDuration={0.25}
-            autoResumeDelay={3000}
-            autoRampDuration={0.6}
-          />
-        </div>
-
-
 
         <div className="absolute inset-0 z-[2]">
-          <ParticleField particleCount={40} color="139, 92, 246" maxDistance={120} speed={0.15} />
+          <ParticleField particleCount={40} color="var(--text)" maxDistance={120} speed={0.15} />
         </div>
+
+        {/* LiquidBlob — LiquidEther fluid sim with color inversion */}
+        <LiquidBlob
+          mouseForce={10}
+          cursorSize={150}
+          resolution={0.5}
+          dt={0.016}
+          BFECC
+          showCursorDot
+          cursorDotSize={12}
+          className="z-20"
+        />
 
         <div className="relative z-10 text-center max-w-6xl mx-auto">
           <div className="hero-logo mb-6 flex justify-center opacity-0">
-            <img
-              src="/logo.jpeg"
-              alt="AlchEx"
-              className="w-[clamp(22rem,65vw,52rem)] h-auto drop-shadow-[0_0_60px_rgba(139,92,246,0.4)] rounded-2xl saturate-0"
-            />
+            <span className="font-logo text-[15vw] lg:text-[20vw] leading-none font-bold tracking-wider text-[var(--text)]">ALCHEX</span>
           </div>
 
           <p className="hero-tagline text-lg md:text-xl text-[var(--text-2)] max-w-2xl mx-auto mb-10 leading-relaxed font-light opacity-0">
             Trade skills, share knowledge, grow together — all without spending a dime.{' '}
-            <span className="text-[var(--accent-2)]">Zero money. Pure exchange.</span>
+            <span className="font-quote text-2xl text-[var(--accent-2)] tracking-wide">"Zero money. Pure exchange."</span>
           </p>
 
           <div className="hero-cta flex items-center justify-center opacity-0">
             <Link to="/register" className="group relative">
-              <div className="absolute -inset-1 bg-gradient-to-r from-[var(--accent)] to-purple-400 rounded-2xl blur-lg opacity-40 group-hover:opacity-70 transition-opacity duration-500" />
-              <div className="relative flex items-center gap-3 px-8 py-4 bg-[var(--accent)] text-white rounded-xl font-semibold text-base hover:bg-purple-500 transition-all duration-300">
+              <div className="absolute -inset-1 bg-gradient-to-r from-[var(--bg)] to-[var(--surface-3)] rounded-2xl blur-lg opacity-40 group-hover:opacity-70 transition-opacity duration-500" />
+              <div className="relative flex items-center gap-3 px-8 py-4 bg-[var(--accent)] text-[var(--bg)] rounded-xl font-semibold text-base hover:bg-[var(--accent-2)] transition-all duration-300">
                 Get Started
                 <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
               </div>
@@ -262,7 +249,7 @@ export default function LandingPage() {
 
       {/* ═══ HOW IT WORKS (with Mouse Reveal) ═══ */}
       < section className="relative py-16 sm:py-24 md:py-32 px-4 sm:px-6" >
-        <div className="orb orb-purple w-[400px] h-[400px] top-0 right-0 z-0" style={{ animationDelay: '-5s' }} />
+        <div className="orb orb-primary w-[400px] h-[400px] top-0 right-0 z-0" style={{ animationDelay: '-5s' }} />
 
         <div className="max-w-6xl mx-auto relative z-10">
           <motion.div
@@ -303,13 +290,13 @@ export default function LandingPage() {
                 <span className="absolute -top-2 -right-1 text-[7rem] font-bold text-[var(--text)]/[0.015] group-hover:text-[var(--accent)]/[0.08] transition-colors duration-700 text-display leading-none pointer-events-none">
                   {item.step}
                 </span>
-                <div className="w-10 h-10 rounded-lg bg-[var(--accent-sub)] border border-[rgba(139,92,246,0.2)] flex items-center justify-center mb-4 group-hover:bg-[rgba(139,92,246,0.2)] group-hover:shadow-[0_0_20px_rgba(139,92,246,0.2)] transition-all duration-500">
+                <div className="w-10 h-10 rounded-lg bg-[var(--accent-sub)] border border-[var(--accent-sub)] flex items-center justify-center mb-4 group-hover:bg-[var(--accent-sub)] group-hover:shadow-[0_0_20px_var(--accent-sub)] transition-all duration-500">
                   <item.icon size={18} className="text-[var(--accent-2)]" />
                 </div>
                 <h3 className="font-display font-bold text-[var(--text)] text-lg mb-2">{item.title}</h3>
                 <p className="text-sm text-[var(--text-2)] leading-relaxed">{item.desc}</p>
                 {i < 3 && (
-                  <div className="hidden md:block absolute top-1/2 -right-3 w-6 h-px bg-gradient-to-r from-[rgba(139,92,246,0.4)] to-transparent" />
+                  <div className="hidden md:block absolute top-1/2 -right-3 w-6 h-px bg-gradient-to-r from-[var(--accent-glow)] to-transparent" />
                 )}
               </motion.div>
             ))}
@@ -354,7 +341,7 @@ export default function LandingPage() {
                 className={`glass-card p-6 group ${feature.span}`}
               >
                 <div className="flex items-start gap-4">
-                  <div className="w-10 h-10 rounded-lg bg-[var(--accent-sub)] border border-[rgba(139,92,246,0.1)] flex items-center justify-center shrink-0 group-hover:bg-[rgba(139,92,246,0.2)] transition-all duration-500">
+                  <div className="w-10 h-10 rounded-lg bg-[var(--accent-sub)] border border-[var(--accent-sub)] flex items-center justify-center shrink-0 group-hover:bg-[var(--accent-sub)] transition-all duration-500">
                     <feature.icon size={18} className="text-[var(--accent-2)]" />
                   </div>
                   <div>
@@ -370,7 +357,7 @@ export default function LandingPage() {
 
       {/* ═══ TOP ALCHEMISTS ═══ */}
       < section className="relative py-16 sm:py-24 md:py-32 px-4 sm:px-6 overflow-hidden" >
-        <div className="orb orb-purple w-[500px] h-[500px] top-1/4 left-1/2 -translate-x-1/2 z-0" />
+        <div className="orb orb-primary w-[500px] h-[500px] top-1/4 left-1/2 -translate-x-1/2 z-0" />
         <div className="max-w-4xl mx-auto relative z-10">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
@@ -403,7 +390,7 @@ export default function LandingPage() {
                   transition={{ delay: i * 0.15, duration: 0.6, ease }}
                   className={`flex-1 ${isFirst ? 'order-first sm:order-none' : ''}`}
                 >
-                  <div className={`glass-card p-6 text-center relative ${isFirst ? 'glow-strong border-[rgba(139,92,246,0.2)]' : ''}`}>
+                  <div className={`glass-card p-6 text-center relative ${isFirst ? 'glow-strong border-[var(--accent-sub)]' : ''}`}>
                     {isFirst && (
                       <div className="absolute -top-3 left-1/2 -translate-x-1/2">
                         <span className="pill text-[var(--accent)]">
@@ -411,7 +398,7 @@ export default function LandingPage() {
                         </span>
                       </div>
                     )}
-                    <div className={`mx-auto mb-3 rounded-full bg-gradient-to-br from-[var(--accent)] to-purple-400 flex items-center justify-center font-bold text-white ${isFirst ? 'w-20 h-20 text-2xl shadow-[0_0_40px_rgba(139,92,246,0.3)]' : 'w-14 h-14 text-lg'}`}>
+                    <div className={`mx-auto mb-3 rounded-full bg-gradient-to-br from-[var(--accent)] to-[var(--accent-2)] flex items-center justify-center font-bold text-[var(--text)] ${isFirst ? 'w-20 h-20 text-2xl shadow-[0_0_40px_var(--accent-glow)]' : 'w-14 h-14 text-lg'}`}>
                       {user.name.charAt(0)}
                     </div>
                     <h3 className="font-display font-bold text-[var(--text)] text-lg">{user.name}</h3>
@@ -420,7 +407,7 @@ export default function LandingPage() {
                       <span className="text-[var(--accent-2)] font-semibold">{user.score}</span>
                     </div>
                     <p className="text-label mt-2">{user.exchanges} exchanges</p>
-                    <div className={`mt-4 rounded-t-lg bg-gradient-to-t from-[rgba(139,92,246,0.1)] to-transparent ${isFirst ? 'h-16' : user.rank === 2 ? 'h-10' : 'h-6'}`} />
+                    <div className={`mt-4 rounded-t-lg bg-gradient-to-t from-[var(--accent-sub)] to-transparent ${isFirst ? 'h-16' : user.rank === 2 ? 'h-10' : 'h-6'}`} />
                   </div>
                 </motion.div>
               );
@@ -446,7 +433,7 @@ export default function LandingPage() {
         {/* LaserFlow background — extends beyond section to blend into neighbors */}
         < div className="absolute z-0" style={{ top: '0%', bottom: '0%', left: '-20%', right: '-20%' }} >
           <LaserFlow
-            color="#8b5cf6"
+            color="var(--accent)"
             horizontalBeamOffset={0}
             verticalBeamOffset={-0.41}
             verticalSizing={1.3}
@@ -462,7 +449,7 @@ export default function LandingPage() {
             style={{ width: '100%', height: '100%' }}
           />
         </div >
-        <div className="orb orb-purple w-[600px] h-[600px] top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-0" />
+        <div className="orb orb-primary w-[600px] h-[600px] top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-0" />
 
         <motion.div
           initial={{ opacity: 0, y: 40 }}
@@ -473,14 +460,14 @@ export default function LandingPage() {
         >
           <h2 className="text-display text-[var(--text)] mb-6" style={{ fontSize: 'clamp(1.75rem, 5vw, 4.5rem)' }}>
             Ready to{' '}
-            <span className="text-white">exchange?</span>
+            <span className="text-[var(--text)]">exchange?</span>
           </h2>
-          <p className="text-lg text-[var(--text-2)] mb-12 max-w-xl mx-auto leading-relaxed">
-            Thousands of students. One community. Zero cost.
+          <p className="text-3xl font-quote text-[var(--accent-2)] tracking-wide mb-12 max-w-xl mx-auto leading-relaxed">
+            "Thousands of students. One community. Zero cost."
           </p>
           <Link to="/register" className="group relative inline-flex">
-            <div className="absolute -inset-2 bg-gradient-to-r from-[var(--accent)] via-purple-500 to-pink-500 rounded-2xl blur-xl opacity-30 group-hover:opacity-60 transition-opacity duration-700" />
-            <div className="relative flex items-center gap-3 px-10 py-5 bg-[var(--accent)] text-white rounded-xl font-bold text-lg hover:bg-purple-500 transition-all duration-300 shadow-[0_0_40px_rgba(139,92,246,0.3)]">
+            <div className="absolute -inset-2 bg-gradient-to-r from-[var(--accent)] via-[var(--accent)] to-[var(--accent-2)] rounded-2xl blur-xl opacity-30 group-hover:opacity-60 transition-opacity duration-700" />
+            <div className="relative flex items-center gap-3 px-10 py-5 bg-[var(--accent)] text-[var(--bg)] rounded-xl font-bold text-lg hover:bg-[var(--accent)] transition-all duration-300 shadow-[0_0_40px_var(--accent-glow)]">
               Begin Your Journey
               <Sparkles size={20} className="group-hover:rotate-12 transition-transform" />
             </div>
@@ -494,10 +481,10 @@ export default function LandingPage() {
           <div className="flex flex-col md:flex-row items-start justify-between gap-12">
             <div>
               <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 rounded-xl overflow-hidden shadow-[0_0_20px_rgba(139,92,246,0.3)]">
-                  <img src="/smalllogo.png" alt="AlchEx" className="w-full h-full object-cover" />
+                <div className="w-10 h-10 rounded-xl overflow-hidden shadow-[0_0_20px_var(--accent-glow)]">
+                  <span className="font-logo text-2xl font-bold tracking-wider text-[var(--accent)]">ALCHEX</span>
                 </div>
-                <img src="/logo.jpeg" alt="AlchEx" className="h-8 w-auto saturate-0 brightness-200" />
+                <span className="font-logo text-3xl font-bold tracking-wider text-[var(--text)]">ALCHEX</span>
               </div>
               <p className="text-sm text-[var(--text-3)] max-w-xs">
                 Where every skill finds its match.

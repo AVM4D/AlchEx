@@ -40,18 +40,18 @@ export default function FireflySwarm({
     for (let i = 0; i < fireflyCount; i++) {
       const fly = document.createElement('div');
       const size = 2 + Math.random() * 5;
-      const hue = 260 + Math.random() * 40; // purple range
-      const lightness = 50 + Math.random() * 30;
+      const hue = 0; 
+      const lightness = 60 + Math.random() * 40;
       fly.style.cssText = `
         position: absolute;
         width: ${size}px;
         height: ${size}px;
         border-radius: 50%;
-        background: hsl(${hue}, 80%, ${lightness}%);
+        background: hsl(${hue}, 0%, ${lightness}%);
         opacity: 0;
         pointer-events: none;
-        box-shadow: 0 0 ${size * 4}px hsl(${hue}, 80%, ${lightness}%),
-                    0 0 ${size * 8}px hsl(${hue}, 60%, ${lightness}%)44;
+        box-shadow: 0 0 ${size * 4}px hsl(${hue}, 0%, ${lightness}%),
+                    0 0 ${size * 8}px hsla(${hue}, 0%, ${lightness}%, 0.4);        
         left: ${Math.random() * 100}%;
         top: ${Math.random() * 100}%;
       `;

@@ -57,7 +57,7 @@ export default function DashboardPage() {
   );
 
   const statItems = [
-    { label: 'Active Posts', value: stats.posts, icon: Package, color: 'from-purple-500/20 to-purple-600/5', iconColor: 'text-[var(--accent)]' },
+    { label: 'Active Posts', value: stats.posts, icon: Package, color: 'from-primary-500/20 to-primary-600/5', iconColor: 'text-[var(--accent)]' },
     { label: 'Transactions', value: stats.transactions, icon: ArrowRightLeft, color: 'from-emerald-500/20 to-emerald-600/5', iconColor: 'text-emerald-400' },
     { label: 'Avg Rating', value: stats.rating, icon: Star, color: 'from-amber-500/20 to-amber-600/5', iconColor: 'text-amber-400' },
     { label: 'Reputation', value: stats.reputation, icon: TrendingUp, color: 'from-blue-500/20 to-blue-600/5', iconColor: 'text-blue-400' },
@@ -89,7 +89,7 @@ export default function DashboardPage() {
           minWeight={400}
           minWidth={80}
           highlightText={user?.firstName || 'Alchemist'}
-          highlightColor="#a78bfa"
+          highlightColor="var(--accent-2)"
           wordSpacing="0.25em"
         />
       </motion.div>
@@ -111,8 +111,8 @@ export default function DashboardPage() {
             transition={{ delay: 0.2 }}
             className="group relative"
           >
-            <div className="absolute -inset-0.5 bg-gradient-to-r from-[var(--accent)] to-purple-400 rounded-xl blur opacity-30 group-hover:opacity-60 transition-opacity" />
-            <div className="relative flex items-center gap-2 px-4 py-2.5 bg-[var(--accent)] text-white rounded-lg font-medium text-sm">
+            <div className="absolute -inset-0.5 bg-gradient-to-r from-[var(--bg)] to-[var(--surface-3)] rounded-xl blur opacity-30 group-hover:opacity-60 transition-opacity" />
+            <div className="relative flex items-center gap-2 px-4 py-2.5 bg-[var(--accent)] text-[var(--bg)] rounded-lg font-medium text-sm">
               <Plus size={16} /> New Post
             </div>
           </motion.div>
@@ -131,10 +131,10 @@ export default function DashboardPage() {
           value={dashSearch}
           onChange={(e) => setDashSearch(e.target.value)}
           placeholder="Search your posts & transactions..."
-          className="w-full pl-9 pr-9 py-2.5 bg-[var(--surface-2)] border border-[var(--border)] rounded-lg text-white placeholder-[var(--text-3)] focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)] transition-all text-sm"
+          className="w-full pl-9 pr-9 py-2.5 bg-[var(--surface-2)] border border-[var(--border)] rounded-lg text-[var(--text)] placeholder-[var(--text-3)] focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)] transition-all text-sm"
         />
         {dashSearch && (
-          <button onClick={() => setDashSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-3)] hover:text-white">
+          <button onClick={() => setDashSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-3)] hover:text-[var(--text)]">
             <X size={14} />
           </button>
         )}
@@ -156,7 +156,7 @@ export default function DashboardPage() {
                 {loading ? (
                   <div className="skeleton w-16 h-8" />
                 ) : (
-                  <p className="text-2xl font-bold text-white text-display">{item.value}</p>
+                  <p className="text-2xl font-bold text-[var(--text)] text-display">{item.value}</p>
                 )}
               </div>
               <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${item.color} flex items-center justify-center ${item.iconColor}`}>
@@ -177,7 +177,7 @@ export default function DashboardPage() {
           className="glass-card overflow-hidden"
         >
           <div className="flex items-center justify-between p-5 border-b border-[var(--border)]">
-            <h2 className="font-display font-bold text-white flex items-center gap-2">
+            <h2 className="font-display font-bold text-[var(--text)] flex items-center gap-2">
               <Package size={16} className="text-[var(--accent)]" /> My Posts
             </h2>
             <Link to="/my-posts" className="text-label text-[var(--accent-2)] hover:text-[var(--accent)] transition-colors flex items-center gap-1">
@@ -208,7 +208,7 @@ export default function DashboardPage() {
                   className="flex items-center gap-3 p-4 hover:bg-white/[0.02] transition-colors"
                 >
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-white truncate">{post.title}</p>
+                    <p className="text-sm font-medium text-[var(--text)] truncate">{post.title}</p>
                     <p className="text-xs text-[var(--text-3)]">{formatRelativeTime(post.createdAt)}</p>
                   </div>
                   <span className={`pill text-[10px] ${post.status === 'ACTIVE' ? 'text-emerald-400 border-emerald-500/20 bg-emerald-500/10' : ''}`}>
@@ -228,7 +228,7 @@ export default function DashboardPage() {
           className="glass-card overflow-hidden"
         >
           <div className="flex items-center justify-between p-5 border-b border-[var(--border)]">
-            <h2 className="font-display font-bold text-white flex items-center gap-2">
+            <h2 className="font-display font-bold text-[var(--text)] flex items-center gap-2">
               <ArrowRightLeft size={16} className="text-emerald-400" /> Transactions
             </h2>
             <Link to="/transactions" className="text-label text-[var(--accent-2)] hover:text-[var(--accent)] transition-colors flex items-center gap-1">
@@ -259,7 +259,7 @@ export default function DashboardPage() {
                   className="flex items-center gap-3 p-4 hover:bg-white/[0.02] transition-colors"
                 >
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-white truncate">{tx.post?.title || 'Transaction'}</p>
+                    <p className="text-sm font-medium text-[var(--text)] truncate">{tx.post?.title || 'Transaction'}</p>
                     <p className="text-xs text-[var(--text-3)]">{formatRelativeTime(tx.createdAt)}</p>
                   </div>
                   <span className={`pill text-[10px] ${
@@ -283,10 +283,10 @@ export default function DashboardPage() {
         transition={{ delay: 0.5, duration: 0.5, ease }}
         className="glass-card p-5"
       >
-        <h2 className="font-display font-bold text-white mb-4 text-sm">Quick Actions</h2>
+        <h2 className="font-display font-bold text-[var(--text)] mb-4 text-sm">Quick Actions</h2>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           {[
-            { label: 'New Post', icon: Plus, to: '/posts/new', color: 'text-[var(--accent)]', bg: 'bg-[rgba(139,92,246,0.1)]' },
+            { label: 'New Post', icon: Plus, to: '/posts/new', color: 'text-[var(--accent)]', bg: 'bg-[var(--accent-sub)]' },
             { label: 'Marketplace', icon: Eye, to: '/marketplace', color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
             { label: 'Messages', icon: MessageSquare, to: '/chat', color: 'text-blue-400', bg: 'bg-blue-500/10' },
             { label: 'Leaderboard', icon: TrendingUp, to: '/leaderboard', color: 'text-amber-400', bg: 'bg-amber-500/10' },
@@ -299,7 +299,7 @@ export default function DashboardPage() {
               <div className={`w-10 h-10 rounded-lg ${action.bg} ${action.color} flex items-center justify-center group-hover:scale-110 transition-transform`}>
                 <action.icon size={18} />
               </div>
-              <span className="text-xs text-[var(--text-2)] group-hover:text-white transition-colors font-medium">{action.label}</span>
+              <span className="text-xs text-[var(--text-2)] group-hover:text-[var(--text)] transition-colors font-medium">{action.label}</span>
             </Link>
           ))}
         </div>
