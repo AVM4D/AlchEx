@@ -1,9 +1,9 @@
 // ─── Database Setup Script ──────────────────────────────────────────────────
-// Creates the database, tables, views, and optionally seeds dummy data.
+// Creates the database, tables, views, stored procedures, and optionally seeds.
 //
 // Usage:
-//   npm run setup          → creates DB + tables + views + seed
-//   npm run setup:schema   → creates DB + tables + views only (no seed)
+//   npm run setup          → creates DB + tables + views + SPs + seed
+//   npm run setup:schema   → creates DB + tables + views + SPs only (no seed)
 // ────────────────────────────────────────────────────────────────────────────
 
 import fs from 'fs';
@@ -99,40 +99,6 @@ async function runSqlFile(pool: MsSql.ConnectionPool, filePath: string, label: s
   console.log(`   ✅ ${label}`);
 }
 
-// ─── Extract only the VIEWS section from queries.sql ───────────────────────
-async function runViews(pool: MsSql.ConnectionPool) {
-  const fullPath = path.resolve(__dirname, '../../sql/queries.sql');
-  if (!fs.existsSync(fullPath)) {
-    console.log('   ⚠️  Views — queries.sql not found');
-    return;
-  }
-
-  const content = fs.readFileSync(fullPath, 'utf-8');
-  // Extract everything from SECTION 1 up to SECTION 2
-  const section1Match = content.match(
-    /-- ═+\s*\n-- SECTION 1:[\s\S]*?(?=-- ═+\s*\n-- SECTION 2:)/
-  );
-  if (!section1Match) {
-    console.log('   ⚠️  Views — could not find SECTION 1 in queries.sql');
-    return;
-  }
-
-  const viewsSql = section1Match[0];
-  const batches = viewsSql
-    .split(/^\s*GO\s*$/gim)
-    .map(b => b.trim())
-    .filter(b => b.length > 0 && b.includes('CREATE'));
-
-  for (const batch of batches) {
-    try {
-      await pool.request().query(batch);
-    } catch (err: any) {
-      console.warn(`   ⚠️  View warning: ${err.message?.substring(0, 80)}`);
-    }
-  }
-  console.log(`   ✅ Views (${batches.length} created)`);
-}
-
 // ─── Main ──────────────────────────────────────────────────────────────────
 async function main() {
   const url = process.env.DATABASE_URL || '';
@@ -145,7 +111,7 @@ async function main() {
   const skipSeed = process.argv.includes('--no-seed');
 
   console.log('╔══════════════════════════════════════════════╗');
-  console.log('║     AlchEx — Database Setup                  ║');
+  console.log('║     AlchEx — Database Setup (BCNF)           ║');
   console.log('╚══════════════════════════════════════════════╝\n');
 
   // ── Step 1: Connect to master & create database if needed ──
@@ -165,24 +131,29 @@ async function main() {
   }
 
   // ── Step 2: Connect to the actual database ──
-  console.log('\n2️⃣  Creating tables...');
+  console.log('\n2️⃣  Creating tables (BCNF normalized)...');
   const appCfg = parseConnectionUrl(url);
   const appPool = new sql.ConnectionPool(appCfg);
   await appPool.connect();
 
   try {
-    await runSqlFile(appPool, 'schema.sql', 'Tables created');
+    await runSqlFile(appPool, 'schema.sql', 'Tables created (BCNF)');
 
     // ── Step 3: Create views ──
     console.log('\n3️⃣  Creating views...');
-    await runViews(appPool);
+    await runSqlFile(appPool, 'views.sql', 'Views created');
+
+    // ── Step 4: Create stored procedures ──
+    console.log('\n4️⃣  Creating stored procedures...');
+    await runSqlFile(appPool, 'stored_procedures.sql', 'Stored procedures created');
+
   } finally {
     await appPool.close();
   }
 
-  // ── Step 4: Seed (unless --no-seed flag) ──
+  // ── Step 5: Seed (unless --no-seed flag) ──
   if (!skipSeed) {
-    console.log('\n4️⃣  Seeding dummy data...');
+    console.log('\n5️⃣  Seeding dummy data...');
     // Import and run seed dynamically (it uses db module which reads DATABASE_URL)
     const { default: db } = await import('./connection');
     const seedPath = path.resolve(__dirname, 'seed.ts');
@@ -199,7 +170,7 @@ async function main() {
     }
     await db.disconnect();
   } else {
-    console.log('\n4️⃣  Skipping seed (--no-seed flag)');
+    console.log('\n5️⃣  Skipping seed (--no-seed flag)');
   }
 
   console.log('\n✨ Setup complete! Run: npm run dev\n');

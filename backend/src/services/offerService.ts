@@ -52,32 +52,19 @@ export class OfferService {
     if (offer.post.status !== 'ACTIVE') throw new BadRequestError('Post is not active');
     if (offer.expiresAt && new Date(offer.expiresAt) < new Date()) throw new BadRequestError('This offer has expired');
 
-    // Accept offer + reject others + update post + create transaction (all raw SQL)
-    const now = new Date();
-    await db.execute`
-      UPDATE offers SET status = 'ACCEPTED', updatedAt = ${now} WHERE id = ${offerId}
-    `;
-    await db.execute`
-      UPDATE offers SET status = 'REJECTED', updatedAt = ${now}
-      WHERE postId = ${offer.postId} AND id != ${offerId} AND status = 'PENDING'
-    `;
-    await db.execute`
-      UPDATE posts SET status = 'IN_PROGRESS', updatedAt = ${now} WHERE id = ${offer.postId}
-    `;
-
-    const expiresAt = new Date();
-    expiresAt.setDate(expiresAt.getDate() + 14); // 14 days to complete
-    const txId = crypto.randomUUID();
-    await db.execute`
-      INSERT INTO transactions
-        (id, postId, offerId, requesterId, offererId, status, requesterDone, offererDone,
-         requesterCancel, offererCancel, expiresAt, isDeleted, createdAt, updatedAt)
-      VALUES
-        (${txId}, ${offer.postId}, ${offer.id}, ${userId}, ${offer.userId},
-         'IN_PROGRESS', 0, 0, 0, 0, ${expiresAt}, 0, ${now}, ${now})
-    `;
-    const txRows: any[] = await db.query`SELECT * FROM transactions WHERE id = ${txId}`;
-    const result = txRows[0];
+    // Call stored procedure — atomically accept, reject others, create transaction
+    let txId: string;
+    try {
+      const result = await db.callProcedure('sp_AcceptOffer', {
+        offerId,
+        requesterId: userId,
+      }, {
+        txId: { type: require('mssql').NVarChar(36) },
+      });
+      txId = result.output.txId;
+    } catch (err: any) {
+      throw new BadRequestError(err.message || 'Failed to accept offer');
+    }
 
     // Notify the offer creator
     await notificationRepository.create({
@@ -85,7 +72,7 @@ export class OfferService {
       type: 'OFFER_ACCEPTED',
       title: 'Offer Accepted!',
       message: `Your offer on "${offer.post.title}" was accepted. Chat is now unlocked.`,
-      data: JSON.stringify({ transactionId: result.id }),
+      data: JSON.stringify({ transactionId: txId }),
     });
 
     // Notify rejected offers
@@ -101,7 +88,7 @@ export class OfferService {
       }
     }
 
-    return result;
+    return transactionRepository.findById(txId);
   }
 
   async update(offerId: string, userId: string, data: { proposalDescription?: string; counterExchange?: string }) {

@@ -1,5 +1,4 @@
 import { transactionRepository } from '../repositories/transactionRepository';
-import { userRepository } from '../repositories/userRepository';
 import { notificationRepository } from '../repositories/notificationRepository';
 import { BadRequestError, ForbiddenError, NotFoundError } from '../utils/errors';
 import db from '../db/connection';
@@ -26,49 +25,41 @@ export class TransactionService {
     const isOfferer = transaction.offererId === userId;
     if (!isRequester && !isOfferer) throw new ForbiddenError('Not authorized');
 
-    const updateData: any = {};
-    if (isRequester) updateData.requesterDone = true;
-    if (isOfferer) updateData.offererDone = true;
-
-    const newRequesterDone = isRequester ? true : transaction.requesterDone;
-    const newOffererDone = isOfferer ? true : transaction.offererDone;
-
-    // Both marked complete
-    if (newRequesterDone && newOffererDone) {
-      updateData.status = 'SUCCESSFUL';
-      updateData.completedAt = new Date();
-
-      // Also update post status
-      await db.execute`
-        UPDATE posts SET status = 'SUCCESSFUL', updatedAt = GETDATE() WHERE id = ${transaction.postId}
-      `;
-
-      // Update reputation for both users
-      await userRepository.updateReputation(transaction.requesterId);
-      await userRepository.updateReputation(transaction.offererId);
-
-      // Notify both users
-      const otherUserId = isRequester ? transaction.offererId : transaction.requesterId;
-      await notificationRepository.create({
-        userId: otherUserId,
-        type: 'TRANSACTION_COMPLETE',
-        title: 'Exchange Complete!',
-        message: 'The exchange has been marked as successful. Please leave a rating.',
-        data: JSON.stringify({ transactionId }),
+    // Call stored procedure — handles both-done logic + reputation recalculation
+    try {
+      const result = await db.callProcedure('sp_CompleteTransaction', {
+        transactionId,
+        userId,
+      }, {
+        bothDone: { type: require('mssql').Bit },
       });
-    } else {
+
+      const bothDone = result.output.bothDone;
+
       // Notify the other party
       const otherUserId = isRequester ? transaction.offererId : transaction.requesterId;
-      await notificationRepository.create({
-        userId: otherUserId,
-        type: 'TRANSACTION_COMPLETE',
-        title: 'Partner Marked Complete',
-        message: 'Your exchange partner has marked their side as complete.',
-        data: JSON.stringify({ transactionId }),
-      });
+      if (bothDone) {
+        await notificationRepository.create({
+          userId: otherUserId,
+          type: 'TRANSACTION_COMPLETE',
+          title: 'Exchange Complete!',
+          message: 'The exchange has been marked as successful. Please leave a rating.',
+          data: JSON.stringify({ transactionId }),
+        });
+      } else {
+        await notificationRepository.create({
+          userId: otherUserId,
+          type: 'TRANSACTION_COMPLETE',
+          title: 'Partner Marked Complete',
+          message: 'Your exchange partner has marked their side as complete.',
+          data: JSON.stringify({ transactionId }),
+        });
+      }
+    } catch (err: any) {
+      throw new BadRequestError(err.message || 'Failed to complete transaction');
     }
 
-    return transactionRepository.update(transactionId, updateData);
+    return transactionRepository.findById(transactionId);
   }
 
   async cancel(transactionId: string, userId: string) {
@@ -82,21 +73,16 @@ export class TransactionService {
     const isOfferer = transaction.offererId === userId;
     if (!isRequester && !isOfferer) throw new ForbiddenError('Not authorized');
 
-    // Cancel transaction + update post status
-    const cancelledAt = new Date();
-    const reqCancel = isRequester ? 1 : 0;
-    const offCancel = isOfferer ? 1 : 0;
-    await db.execute`
-      UPDATE transactions
-      SET status = 'CANCELLED', cancelledAt = ${cancelledAt},
-          requesterCancel = CASE WHEN ${reqCancel} = 1 THEN 1 ELSE requesterCancel END,
-          offererCancel = CASE WHEN ${offCancel} = 1 THEN 1 ELSE offererCancel END,
-          updatedAt = GETDATE()
-      WHERE id = ${transactionId}
-    `;
-    await db.execute`
-      UPDATE posts SET status = 'CANCELLED', updatedAt = GETDATE() WHERE id = ${transaction.postId}
-    `;
+    // Call stored procedure — atomically cancels transaction + updates post
+    try {
+      await db.callProcedure('sp_CancelTransaction', {
+        transactionId,
+        userId,
+        isAdmin: false,
+      });
+    } catch (err: any) {
+      throw new BadRequestError(err.message || 'Failed to cancel transaction');
+    }
 
     const otherUserId = isRequester ? transaction.offererId : transaction.requesterId;
     await notificationRepository.create({
@@ -114,13 +100,15 @@ export class TransactionService {
     const transaction = await transactionRepository.findById(transactionId);
     if (!transaction) throw new NotFoundError('Transaction not found');
 
-    await db.execute`
-      UPDATE transactions SET status = 'CANCELLED', cancelledAt = GETDATE(), updatedAt = GETDATE()
-      WHERE id = ${transactionId}
-    `;
-    await db.execute`
-      UPDATE posts SET status = 'CANCELLED', updatedAt = GETDATE() WHERE id = ${transaction.postId}
-    `;
+    try {
+      await db.callProcedure('sp_CancelTransaction', {
+        transactionId,
+        userId: transaction.requesterId, // admin context
+        isAdmin: true,
+      });
+    } catch (err: any) {
+      throw new BadRequestError(err.message || 'Failed to force cancel');
+    }
 
     // Notify both users
     for (const uid of [transaction.requesterId, transaction.offererId]) {

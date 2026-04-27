@@ -28,14 +28,12 @@ export class AdminService {
     if (!user) throw new NotFoundError('User not found');
     if (user.role === 'ADMIN') throw new ForbiddenError('Cannot ban an admin');
 
-    await userRepository.update(userId, { isBanned: true, banReason: reason });
-
-    await notificationRepository.create({
-      userId,
-      type: 'SYSTEM',
-      title: 'Account Suspended',
-      message: `Your account has been suspended. Reason: ${reason}`,
-    });
+    // Call stored procedure — atomically bans user + sends notification
+    try {
+      await db.callProcedure('sp_BanUser', { userId, reason });
+    } catch (err: any) {
+      throw new BadRequestError(err.message || 'Failed to ban user');
+    }
 
     return { message: 'User banned successfully' };
   }
@@ -44,14 +42,12 @@ export class AdminService {
     const user = await userRepository.findById(userId);
     if (!user) throw new NotFoundError('User not found');
 
-    await userRepository.update(userId, { isBanned: false, banReason: null });
-
-    await notificationRepository.create({
-      userId,
-      type: 'SYSTEM',
-      title: 'Account Reinstated',
-      message: 'Your account has been reinstated.',
-    });
+    // Call stored procedure — atomically unbans user + sends notification
+    try {
+      await db.callProcedure('sp_UnbanUser', { userId });
+    } catch (err: any) {
+      throw new BadRequestError(err.message || 'Failed to unban user');
+    }
 
     return { message: 'User unbanned successfully' };
   }
@@ -69,19 +65,16 @@ export class AdminService {
     const report = await reportRepository.findById(reportId);
     if (!report) throw new NotFoundError('Report not found');
 
-    await reportRepository.update(reportId, {
-      status,
-      adminNotes,
-      resolvedAt: new Date(),
-    });
-
-    await notificationRepository.create({
-      userId: report.reporterId,
-      type: 'REPORT_UPDATE',
-      title: 'Report Updated',
-      message: `Your report has been ${status.toLowerCase()}.`,
-      data: JSON.stringify({ reportId }),
-    });
+    // Call stored procedure — resolves report + sends notification
+    try {
+      await db.callProcedure('sp_ResolveReport', {
+        reportId,
+        status,
+        adminNotes: adminNotes ?? null,
+      });
+    } catch (err: any) {
+      throw new BadRequestError(err.message || 'Failed to resolve report');
+    }
 
     return { message: `Report ${status.toLowerCase()} successfully` };
   }
@@ -103,26 +96,40 @@ export class AdminService {
     return { message: 'Report deleted successfully' };
   }
 
-  // ─── Dashboard Stats (Raw SQL) ───
+  // ─── Dashboard Stats (via Stored Procedure) ───
   async getDashboardStats() {
-    const result: any[] = await db.query`
-      SELECT
-        (SELECT COUNT(*) FROM users WHERE isDeleted = 0) AS totalUsers,
-        (SELECT COUNT(*) FROM posts WHERE isDeleted = 0) AS totalPosts,
-        (SELECT COUNT(*) FROM transactions WHERE isDeleted = 0) AS totalTransactions,
-        (SELECT COUNT(*) FROM transactions WHERE status = 'IN_PROGRESS') AS activeTransactions,
-        (SELECT COUNT(*) FROM transactions WHERE status = 'SUCCESSFUL') AS successfulTransactions,
-        (SELECT COUNT(*) FROM reports WHERE status = 'PENDING') AS pendingReports
-    `;
-    const r = result[0];
-    return {
-      totalUsers: Number(r.totalUsers),
-      totalPosts: Number(r.totalPosts),
-      totalTransactions: Number(r.totalTransactions),
-      activeTransactions: Number(r.activeTransactions),
-      successfulTransactions: Number(r.successfulTransactions),
-      pendingReports: Number(r.pendingReports),
-    };
+    try {
+      const result = await db.callProcedure('sp_GetDashboardStats');
+      const r = result.recordset[0];
+      return {
+        totalUsers: Number(r.totalUsers),
+        totalPosts: Number(r.totalPosts),
+        totalTransactions: Number(r.totalTransactions),
+        activeTransactions: Number(r.activeTransactions),
+        successfulTransactions: Number(r.successfulTransactions),
+        pendingReports: Number(r.pendingReports),
+      };
+    } catch {
+      // Fallback to inline SQL if SP not yet deployed
+      const result: any[] = await db.query`
+        SELECT
+          (SELECT COUNT(*) FROM users WHERE isDeleted = 0) AS totalUsers,
+          (SELECT COUNT(*) FROM posts WHERE isDeleted = 0) AS totalPosts,
+          (SELECT COUNT(*) FROM transactions WHERE isDeleted = 0) AS totalTransactions,
+          (SELECT COUNT(*) FROM transactions WHERE status = 'IN_PROGRESS') AS activeTransactions,
+          (SELECT COUNT(*) FROM transactions WHERE status = 'SUCCESSFUL') AS successfulTransactions,
+          (SELECT COUNT(*) FROM reports WHERE status = 'PENDING') AS pendingReports
+      `;
+      const r = result[0];
+      return {
+        totalUsers: Number(r.totalUsers),
+        totalPosts: Number(r.totalPosts),
+        totalTransactions: Number(r.totalTransactions),
+        activeTransactions: Number(r.activeTransactions),
+        successfulTransactions: Number(r.successfulTransactions),
+        pendingReports: Number(r.pendingReports),
+      };
+    }
   }
 }
 

@@ -1,1103 +1,325 @@
 -- ============================================================================
 -- AlchEx – Student Exchange Platform
--- DQL Queries & Views for All Project Functionalities
+-- DQL Queries & CRUD Operations (BCNF Schema)
 -- Database: SQL Server (via mssql native driver)
 -- ============================================================================
 
 
 -- ════════════════════════════════════════════════════════════════════════════
--- SECTION 1: SQL VIEWS
+-- SECTION 1: SQL VIEWS (moved to views.sql — executed by setup.ts)
 -- ════════════════════════════════════════════════════════════════════════════
-
-
--- ─────────────────────────────────────────────────────────
--- VIEW 1: Top Exchangers / Leaderboard
--- Shows top users ranked by reputation score with their stats
--- ─────────────────────────────────────────────────────────
-CREATE OR ALTER VIEW vw_Leaderboard AS
-SELECT
-    u.id              AS userId,
-    u.firstName,
-    u.lastName,
-    u.profilePicture,
-    u.reputationScore,
-    u.totalExchanges,
-    ISNULL(r.avgRating, 0)   AS averageRating,
-    ISNULL(r.totalRatings, 0) AS totalRatings,
-    RANK() OVER (ORDER BY u.reputationScore DESC) AS rank
-FROM users u
-LEFT JOIN (
-    SELECT receiverId,
-           AVG(CAST(score AS FLOAT)) AS avgRating,
-           COUNT(*)                  AS totalRatings
-    FROM ratings
-    WHERE isDeleted = 0
-    GROUP BY receiverId
-) r ON r.receiverId = u.id
-WHERE u.isDeleted = 0
-  AND u.isBanned  = 0
-  AND u.totalExchanges > 0;
-GO
-
-
--- ─────────────────────────────────────────────────────────
--- VIEW 2: Active Posts by Category (Marketplace Overview)
--- ─────────────────────────────────────────────────────────
-CREATE OR ALTER VIEW vw_ActivePostsByCategory AS
-SELECT
-    p.id          AS postId,
-    p.title,
-    p.description,
-    p.whatINeed,
-    p.whatIOffer,
-    p.category,
-    p.tags,
-    p.expiresAt,
-    p.createdAt,
-    u.id          AS userId,
-    u.firstName,
-    u.lastName,
-    u.profilePicture,
-    u.reputationScore,
-    ISNULL(oc.offerCount, 0) AS offerCount
-FROM posts p
-JOIN users u ON u.id = p.userId
-LEFT JOIN (
-    SELECT postId, COUNT(*) AS offerCount
-    FROM offers
-    WHERE isDeleted = 0
-    GROUP BY postId
-) oc ON oc.postId = p.id
-WHERE p.status    = 'ACTIVE'
-  AND p.isDeleted = 0
-  AND p.expiresAt > GETDATE();
-GO
-
-
--- ─────────────────────────────────────────────────────────
--- VIEW 3: User Rating Statistics
--- ─────────────────────────────────────────────────────────
-CREATE OR ALTER VIEW vw_UserRatingStats AS
-SELECT
-    u.id         AS userId,
-    u.firstName,
-    u.lastName,
-    ISNULL(AVG(CAST(r.score AS FLOAT)), 0) AS averageRating,
-    COUNT(r.id)                             AS totalRatings,
-    SUM(CASE WHEN r.score = 5 THEN 1 ELSE 0 END) AS fiveStarCount,
-    SUM(CASE WHEN r.score = 4 THEN 1 ELSE 0 END) AS fourStarCount,
-    SUM(CASE WHEN r.score = 3 THEN 1 ELSE 0 END) AS threeStarCount,
-    SUM(CASE WHEN r.score = 2 THEN 1 ELSE 0 END) AS twoStarCount,
-    SUM(CASE WHEN r.score = 1 THEN 1 ELSE 0 END) AS oneStarCount
-FROM users u
-LEFT JOIN ratings r ON r.receiverId = u.id AND r.isDeleted = 0
-WHERE u.isDeleted = 0
-GROUP BY u.id, u.firstName, u.lastName;
-GO
-
-
--- ─────────────────────────────────────────────────────────
--- VIEW 4: Transaction Summary with Participants
--- ─────────────────────────────────────────────────────────
-CREATE OR ALTER VIEW vw_TransactionSummary AS
-SELECT
-    t.id             AS transactionId,
-    t.status         AS transactionStatus,
-    t.requesterDone,
-    t.offererDone,
-    t.completedAt,
-    t.cancelledAt,
-    t.expiresAt,
-    t.createdAt,
-    p.id             AS postId,
-    p.title          AS postTitle,
-    p.category,
-    req.id           AS requesterId,
-    req.firstName    AS requesterFirstName,
-    req.lastName     AS requesterLastName,
-    off2.id          AS offererId,
-    off2.firstName   AS offererFirstName,
-    off2.lastName    AS offererLastName,
-    o.proposalDescription,
-    o.counterExchange
-FROM transactions t
-JOIN posts   p    ON p.id    = t.postId
-JOIN offers  o    ON o.id    = t.offerId
-JOIN users   req  ON req.id  = t.requesterId
-JOIN users   off2 ON off2.id = t.offererId
-WHERE t.isDeleted = 0;
-GO
-
-
--- ─────────────────────────────────────────────────────────
--- VIEW 5: Pending Reports (Admin Dashboard)
--- ─────────────────────────────────────────────────────────
-CREATE OR ALTER VIEW vw_PendingReports AS
-SELECT
-    r.id             AS reportId,
-    r.reason,
-    r.description    AS reportDescription,
-    r.evidence,
-    r.status         AS reportStatus,
-    r.createdAt,
-    reporter.id         AS reporterId,
-    reporter.firstName  AS reporterFirstName,
-    reporter.lastName   AS reporterLastName,
-    target.id           AS targetUserId,
-    target.firstName    AS targetFirstName,
-    target.lastName     AS targetLastName,
-    t.id                AS transactionId,
-    p.title             AS postTitle
-FROM reports r
-JOIN users  reporter ON reporter.id = r.reporterId
-JOIN users  target   ON target.id   = r.targetUserId
-JOIN transactions t  ON t.id        = r.transactionId
-LEFT JOIN posts p    ON p.id        = t.postId
-WHERE r.status    = 'PENDING'
-  AND r.isDeleted = 0;
-GO
-
-
--- ─────────────────────────────────────────────────────────
--- VIEW 6: Most Popular Categories
--- ─────────────────────────────────────────────────────────
-CREATE OR ALTER VIEW vw_PopularCategories AS
-SELECT
-    p.category,
-    COUNT(*)                                              AS totalPosts,
-    SUM(CASE WHEN p.status = 'ACTIVE' THEN 1 ELSE 0 END) AS activePosts,
-    SUM(CASE WHEN p.status = 'SUCCESSFUL' THEN 1 ELSE 0 END) AS successfulPosts,
-    ISNULL(SUM(oc.offerCount), 0)                         AS totalOffers
-FROM posts p
-LEFT JOIN (
-    SELECT postId, COUNT(*) AS offerCount
-    FROM offers
-    WHERE isDeleted = 0
-    GROUP BY postId
-) oc ON oc.postId = p.id
-WHERE p.isDeleted = 0
-GROUP BY p.category;
-GO
-
-
--- ─────────────────────────────────────────────────────────
--- VIEW 7: User Exchange History
--- ─────────────────────────────────────────────────────────
-CREATE OR ALTER VIEW vw_UserExchangeHistory AS
-SELECT
-    u.id       AS userId,
-    u.firstName,
-    u.lastName,
-    t.id       AS transactionId,
-    t.status   AS transactionStatus,
-    t.completedAt,
-    t.createdAt,
-    p.title    AS postTitle,
-    p.category,
-    CASE
-        WHEN t.requesterId = u.id THEN 'REQUESTER'
-        ELSE 'OFFERER'
-    END AS userRole,
-    partner.id        AS partnerId,
-    partner.firstName AS partnerFirstName,
-    partner.lastName  AS partnerLastName,
-    rat.score         AS ratingGiven,
-    ratR.score        AS ratingReceived
-FROM users u
-JOIN transactions t ON (t.requesterId = u.id OR t.offererId = u.id) AND t.isDeleted = 0
-JOIN posts p ON p.id = t.postId
-JOIN users partner ON partner.id = CASE
-    WHEN t.requesterId = u.id THEN t.offererId
-    ELSE t.requesterId
-END
-LEFT JOIN ratings rat  ON rat.transactionId = t.id AND rat.giverId    = u.id AND rat.isDeleted = 0
-LEFT JOIN ratings ratR ON ratR.transactionId = t.id AND ratR.receiverId = u.id AND ratR.isDeleted = 0
-WHERE u.isDeleted = 0;
-GO
-
-
--- ─────────────────────────────────────────────────────────
--- VIEW 8: Unread Messages per User
--- ─────────────────────────────────────────────────────────
-CREATE OR ALTER VIEW vw_UnreadMessagesPerUser AS
-SELECT
-    u.id         AS userId,
-    u.firstName,
-    u.lastName,
-    COUNT(m.id)  AS unreadCount
-FROM users u
-JOIN transactions t ON (t.requesterId = u.id OR t.offererId = u.id) AND t.isDeleted = 0
-JOIN messages m     ON m.transactionId = t.id
-                   AND m.senderId != u.id
-                   AND m.isRead = 0
-                   AND m.isDeleted = 0
-WHERE u.isDeleted = 0
-GROUP BY u.id, u.firstName, u.lastName;
-GO
-
-
--- ─────────────────────────────────────────────────────────
--- VIEW 9: Admin Dashboard Statistics
--- ─────────────────────────────────────────────────────────
-CREATE OR ALTER VIEW vw_AdminDashboard AS
-SELECT
-    (SELECT COUNT(*) FROM users WHERE isDeleted = 0)                              AS totalUsers,
-    (SELECT COUNT(*) FROM users WHERE isDeleted = 0 AND isBanned = 1)             AS bannedUsers,
-    (SELECT COUNT(*) FROM posts WHERE isDeleted = 0)                              AS totalPosts,
-    (SELECT COUNT(*) FROM posts WHERE status = 'ACTIVE' AND isDeleted = 0)        AS activePosts,
-    (SELECT COUNT(*) FROM transactions WHERE isDeleted = 0)                       AS totalTransactions,
-    (SELECT COUNT(*) FROM transactions WHERE status = 'IN_PROGRESS')              AS activeTransactions,
-    (SELECT COUNT(*) FROM transactions WHERE status = 'SUCCESSFUL')               AS successfulTransactions,
-    (SELECT COUNT(*) FROM transactions WHERE status = 'CANCELLED')                AS cancelledTransactions,
-    (SELECT COUNT(*) FROM reports WHERE status = 'PENDING' AND isDeleted = 0)     AS pendingReports,
-    (SELECT COUNT(*) FROM reports WHERE isDeleted = 0)                            AS totalReports,
-    (SELECT COUNT(*) FROM offers  WHERE isDeleted = 0)                            AS totalOffers,
-    (SELECT COUNT(*) FROM offers  WHERE status = 'PENDING' AND isDeleted = 0)     AS pendingOffers;
-GO
-
-
--- ─────────────────────────────────────────────────────────
--- VIEW 10: Post Status Distribution
--- ─────────────────────────────────────────────────────────
-CREATE OR ALTER VIEW vw_PostStatusDistribution AS
-SELECT
-    status,
-    COUNT(*) AS postCount,
-    CAST(COUNT(*) * 100.0 / NULLIF((SELECT COUNT(*) FROM posts WHERE isDeleted = 0), 0) AS DECIMAL(5,2)) AS percentage
-FROM posts
-WHERE isDeleted = 0
-GROUP BY status;
-GO
+-- See: backend/sql/views.sql
 
 
 -- ════════════════════════════════════════════════════════════════════════════
--- SECTION 2: DQL SELECT QUERIES (Functional Queries)
+-- SECTION 2: STORED PROCEDURES (moved to stored_procedures.sql)
+-- ════════════════════════════════════════════════════════════════════════════
+-- See: backend/sql/stored_procedures.sql
+-- 14 stored procedures for all major business workflows:
+--   sp_AcceptOffer, sp_CompleteTransaction, sp_CancelTransaction,
+--   sp_RecalculateReputation, sp_ExpirePosts, sp_ExpireOffers,
+--   sp_ExpireTransactions, sp_BanUser, sp_UnbanUser, sp_CreateReport,
+--   sp_ResolveReport, sp_DailyLeaderboardSnapshot, sp_GetDashboardStats,
+--   sp_CreateRating
+
+
+-- ════════════════════════════════════════════════════════════════════════════
+-- SECTION 3: DQL SELECT QUERIES (Functional Queries)
 -- ════════════════════════════════════════════════════════════════════════════
 
 
--- ─────────────────────────────────────────────────────────
 -- Q1: Top 5 Exchangers (Leaderboard)
--- ─────────────────────────────────────────────────────────
-SELECT TOP 5 *
-FROM vw_Leaderboard
-ORDER BY rank ASC;
+SELECT TOP 5 * FROM vw_Leaderboard ORDER BY [rank] ASC;
 
-
--- ─────────────────────────────────────────────────────────
 -- Q2: Top 10 Highest Rated Users
--- ─────────────────────────────────────────────────────────
-SELECT TOP 10
-    userId, firstName, lastName,
-    averageRating, totalRatings
-FROM vw_UserRatingStats
-WHERE totalRatings > 0
+SELECT TOP 10 userId, firstName, lastName, averageRating, totalRatings
+FROM vw_UserRatingStats WHERE totalRatings > 0
 ORDER BY averageRating DESC, totalRatings DESC;
 
-
--- ─────────────────────────────────────────────────────────
 -- Q3: Browse Marketplace – Active Posts (with pagination)
--- ─────────────────────────────────────────────────────────
-SELECT *
-FROM vw_ActivePostsByCategory
+SELECT * FROM vw_ActivePostsByCategory
 ORDER BY createdAt DESC
 OFFSET 0 ROWS FETCH NEXT 20 ROWS ONLY;
 
-
--- ─────────────────────────────────────────────────────────
 -- Q4: Search Posts by Keyword
--- ─────────────────────────────────────────────────────────
-SELECT *
-FROM vw_ActivePostsByCategory
-WHERE title       LIKE '%programming%'
-   OR description LIKE '%programming%'
-   OR whatINeed   LIKE '%programming%'
-   OR whatIOffer  LIKE '%programming%'
+SELECT * FROM vw_ActivePostsByCategory
+WHERE title LIKE '%programming%' OR description LIKE '%programming%'
+   OR whatINeed LIKE '%programming%' OR whatIOffer LIKE '%programming%'
 ORDER BY createdAt DESC;
 
-
--- ─────────────────────────────────────────────────────────
 -- Q5: Filter Posts by Category
--- ─────────────────────────────────────────────────────────
-SELECT *
-FROM vw_ActivePostsByCategory
-WHERE category = 'TUTORING'
+SELECT * FROM vw_ActivePostsByCategory
+WHERE category = 'Tutoring'
 ORDER BY createdAt DESC;
 
-
--- ─────────────────────────────────────────────────────────
 -- Q6: Get All Offers for a Specific Post
--- ─────────────────────────────────────────────────────────
-SELECT
-    o.id          AS offerId,
-    o.proposalDescription,
-    o.counterExchange,
-    o.status      AS offerStatus,
-    o.expiresAt,
-    o.createdAt,
-    u.id          AS offererId,
-    u.firstName,
-    u.lastName,
-    u.profilePicture,
-    u.reputationScore
-FROM offers o
-JOIN users u ON u.id = o.userId
-WHERE o.postId    = '<post_id>'
-  AND o.isDeleted = 0
-ORDER BY o.createdAt DESC;
-
-
--- ─────────────────────────────────────────────────────────
--- Q7: Posts Created by a Specific User
--- ─────────────────────────────────────────────────────────
-SELECT
-    p.id, p.title, p.description, p.category,
-    p.status, p.expiresAt, p.createdAt,
-    ISNULL(oc.offerCount, 0) AS offerCount
-FROM posts p
-LEFT JOIN (
-    SELECT postId, COUNT(*) AS offerCount
-    FROM offers WHERE isDeleted = 0
-    GROUP BY postId
-) oc ON oc.postId = p.id
-WHERE p.userId    = '<user_id>'
-  AND p.isDeleted = 0
-ORDER BY p.createdAt DESC;
-
-
--- ─────────────────────────────────────────────────────────
--- Q8: Offers Made by a Specific User
--- ─────────────────────────────────────────────────────────
-SELECT
-    o.id          AS offerId,
-    o.proposalDescription,
-    o.counterExchange,
-    o.status      AS offerStatus,
-    o.createdAt,
-    p.id          AS postId,
-    p.title       AS postTitle,
-    p.status      AS postStatus
-FROM offers o
-JOIN posts p ON p.id = o.postId
-WHERE o.userId    = '<user_id>'
-  AND o.isDeleted = 0
-ORDER BY o.createdAt DESC;
-
-
--- ─────────────────────────────────────────────────────────
--- Q9: Transaction History for a User
--- ─────────────────────────────────────────────────────────
-SELECT *
-FROM vw_UserExchangeHistory
-WHERE userId = '<user_id>'
-ORDER BY createdAt DESC;
-
-
--- ─────────────────────────────────────────────────────────
--- Q10: Chat Messages in a Transaction (paginated)
--- ─────────────────────────────────────────────────────────
-SELECT
-    m.id,
-    m.content,
-    m.messageType,
-    m.isRead,
-    m.createdAt,
-    u.id         AS senderId,
-    u.firstName  AS senderFirstName,
-    u.lastName   AS senderLastName,
-    u.profilePicture
-FROM messages m
-JOIN users u ON u.id = m.senderId
-WHERE m.transactionId = '<transaction_id>'
-  AND m.isDeleted     = 0
-ORDER BY m.createdAt ASC
-OFFSET 0 ROWS FETCH NEXT 50 ROWS ONLY;
-
-
--- ─────────────────────────────────────────────────────────
--- Q11: Ratings Received by a User
--- ─────────────────────────────────────────────────────────
-SELECT
-    r.id          AS ratingId,
-    r.score,
-    r.review,
-    r.createdAt,
-    g.id          AS giverId,
-    g.firstName   AS giverFirstName,
-    g.lastName    AS giverLastName,
-    g.profilePicture
-FROM ratings r
-JOIN users g ON g.id = r.giverId
-WHERE r.receiverId = '<user_id>'
-  AND r.isDeleted  = 0
-ORDER BY r.createdAt DESC;
-
-
--- ─────────────────────────────────────────────────────────
--- Q12: Rating Stats for a User (score distribution)
--- ─────────────────────────────────────────────────────────
-SELECT *
-FROM vw_UserRatingStats
-WHERE userId = '<user_id>';
-
-
--- ─────────────────────────────────────────────────────────
--- Q13: Most Popular Categories
--- ─────────────────────────────────────────────────────────
-SELECT *
-FROM vw_PopularCategories
-ORDER BY totalPosts DESC;
-
-
--- ─────────────────────────────────────────────────────────
--- Q14: User Profile with Exchange Stats
--- ─────────────────────────────────────────────────────────
-SELECT
-    u.id, u.firstName, u.lastName, u.email,
-    u.profilePicture, u.bio, u.batch, u.program,
-    u.section, u.university, u.campus,
-    u.reputationScore, u.totalExchanges,
-    u.createdAt,
-    ISNULL(rs.averageRating, 0) AS averageRating,
-    ISNULL(rs.totalRatings, 0)  AS totalRatings,
-    ISNULL(pc.postCount, 0)     AS totalPosts,
-    ISNULL(oc2.offerCount, 0)   AS totalOffers
-FROM users u
-LEFT JOIN vw_UserRatingStats rs ON rs.userId = u.id
-LEFT JOIN (
-    SELECT userId, COUNT(*) AS postCount
-    FROM posts WHERE isDeleted = 0
-    GROUP BY userId
-) pc ON pc.userId = u.id
-LEFT JOIN (
-    SELECT userId, COUNT(*) AS offerCount
-    FROM offers WHERE isDeleted = 0
-    GROUP BY userId
-) oc2 ON oc2.userId = u.id
-WHERE u.id = '<user_id>'
-  AND u.isDeleted = 0;
-
-
--- ─────────────────────────────────────────────────────────
--- Q15: Pending Offers per Post (for post owners)
--- ─────────────────────────────────────────────────────────
-SELECT
-    p.id       AS postId,
-    p.title,
-    COUNT(o.id) AS pendingOfferCount
-FROM posts p
-LEFT JOIN offers o ON o.postId = p.id AND o.status = 'PENDING' AND o.isDeleted = 0
-WHERE p.userId    = '<user_id>'
-  AND p.status    = 'ACTIVE'
-  AND p.isDeleted = 0
-GROUP BY p.id, p.title
-ORDER BY pendingOfferCount DESC;
-
-
--- ─────────────────────────────────────────────────────────
--- Q16: Transaction Completion Rate
--- ─────────────────────────────────────────────────────────
-SELECT
-    COUNT(*)                                                       AS totalTransactions,
-    SUM(CASE WHEN status = 'SUCCESSFUL' THEN 1 ELSE 0 END)        AS successful,
-    SUM(CASE WHEN status = 'CANCELLED'  THEN 1 ELSE 0 END)        AS cancelled,
-    SUM(CASE WHEN status = 'EXPIRED'    THEN 1 ELSE 0 END)        AS expired,
-    SUM(CASE WHEN status = 'IN_PROGRESS' THEN 1 ELSE 0 END)       AS inProgress,
-    CAST(
-        SUM(CASE WHEN status = 'SUCCESSFUL' THEN 1 ELSE 0 END) * 100.0
-        / NULLIF(COUNT(*), 0)
-    AS DECIMAL(5,2)) AS completionRatePercent
-FROM transactions
-WHERE isDeleted = 0;
-
-
--- ─────────────────────────────────────────────────────────
--- Q17: Recently Completed Exchanges
--- ─────────────────────────────────────────────────────────
-SELECT TOP 10
-    transactionId, transactionStatus,
-    postTitle, category,
-    requesterFirstName, requesterLastName,
-    offererFirstName, offererLastName,
-    completedAt
-FROM vw_TransactionSummary
-WHERE transactionStatus = 'SUCCESSFUL'
-ORDER BY completedAt DESC;
-
-
--- ─────────────────────────────────────────────────────────
--- Q18: Admin – All Users with Ban Status
--- ─────────────────────────────────────────────────────────
-SELECT
-    id, firstName, lastName, email, role,
-    isBanned, banReason, reputationScore,
-    totalExchanges, createdAt
-FROM users
-WHERE isDeleted = 0
-ORDER BY createdAt DESC;
-
-
--- ─────────────────────────────────────────────────────────
--- Q19: Admin – Pending Reports (via view)
--- ─────────────────────────────────────────────────────────
-SELECT *
-FROM vw_PendingReports
-ORDER BY createdAt DESC;
-
-
--- ─────────────────────────────────────────────────────────
--- Q20: Admin – Dashboard Statistics (via view)
--- ─────────────────────────────────────────────────────────
-SELECT * FROM vw_AdminDashboard;
-
-
--- ─────────────────────────────────────────────────────────
--- Q21: Post Status Distribution (via view)
--- ─────────────────────────────────────────────────────────
-SELECT * FROM vw_PostStatusDistribution;
-
-
--- ─────────────────────────────────────────────────────────
--- Q22: Notifications for a User (with unread count)
--- ─────────────────────────────────────────────────────────
-SELECT
-    n.id, n.type, n.title, n.message,
-    n.data, n.isRead, n.createdAt
-FROM notifications n
-WHERE n.userId = '<user_id>'
-ORDER BY n.createdAt DESC
-OFFSET 0 ROWS FETCH NEXT 20 ROWS ONLY;
-
--- Unread count
-SELECT COUNT(*) AS unreadCount
-FROM notifications
-WHERE userId = '<user_id>'
-  AND isRead = 0;
-
-
--- ─────────────────────────────────────────────────────────
--- Q23: Expiring Posts (posts about to expire in next 24h)
--- ─────────────────────────────────────────────────────────
-SELECT
-    p.id, p.title, p.category, p.expiresAt,
-    u.firstName, u.lastName,
-    DATEDIFF(HOUR, GETDATE(), p.expiresAt) AS hoursRemaining
-FROM posts p
-JOIN users u ON u.id = p.userId
-WHERE p.status    = 'ACTIVE'
-  AND p.isDeleted = 0
-  AND p.expiresAt BETWEEN GETDATE() AND DATEADD(HOUR, 24, GETDATE())
-ORDER BY p.expiresAt ASC;
-
-
--- ─────────────────────────────────────────────────────────
--- Q24: User's Active Conversations (transactions with messages)
--- ─────────────────────────────────────────────────────────
-SELECT
-    t.id              AS transactionId,
-    p.title           AS postTitle,
-    partner.id        AS partnerId,
-    partner.firstName AS partnerFirstName,
-    partner.lastName  AS partnerLastName,
-    partner.profilePicture,
-    lastMsg.content   AS lastMessage,
-    lastMsg.createdAt AS lastMessageAt,
-    ISNULL(unread.cnt, 0) AS unreadCount
-FROM transactions t
-JOIN posts p ON p.id = t.postId
-JOIN users partner ON partner.id = CASE
-    WHEN t.requesterId = '<user_id>' THEN t.offererId
-    ELSE t.requesterId
-END
-OUTER APPLY (
-    SELECT TOP 1 content, createdAt
-    FROM messages
-    WHERE transactionId = t.id AND isDeleted = 0
-    ORDER BY createdAt DESC
-) lastMsg
-LEFT JOIN (
-    SELECT transactionId, COUNT(*) AS cnt
-    FROM messages
-    WHERE senderId != '<user_id>' AND isRead = 0 AND isDeleted = 0
-    GROUP BY transactionId
-) unread ON unread.transactionId = t.id
-WHERE (t.requesterId = '<user_id>' OR t.offererId = '<user_id>')
-  AND t.isDeleted = 0
-  AND t.status = 'IN_PROGRESS'
-ORDER BY lastMsg.createdAt DESC;
-
-
--- ─────────────────────────────────────────────────────────
--- Q25: Monthly Exchange Activity (for charts/analytics)
--- ─────────────────────────────────────────────────────────
-SELECT
-    FORMAT(createdAt, 'yyyy-MM') AS month,
-    COUNT(*)                      AS totalTransactions,
-    SUM(CASE WHEN status = 'SUCCESSFUL' THEN 1 ELSE 0 END) AS successful,
-    SUM(CASE WHEN status = 'CANCELLED'  THEN 1 ELSE 0 END) AS cancelled
-FROM transactions
-WHERE isDeleted = 0
-GROUP BY FORMAT(createdAt, 'yyyy-MM')
-ORDER BY month DESC;
-
-
--- ════════════════════════════════════════════════════════════════════════════
--- SECTION 3: CRUD OPERATIONS (used by Node.js APIs via mssql driver)
--- These are the parameterized SQL queries executed by each repository.
--- ════════════════════════════════════════════════════════════════════════════
-
-
--- ───────── USERS CRUD ─────────
-
--- Create User (Register)
-INSERT INTO users (id, email, passwordHash, firstName, lastName, role, createdAt, updatedAt)
-VALUES (NEWID(), 'student@university.edu', '<hashed_password>', 'John', 'Doe', 'STUDENT', GETDATE(), GETDATE());
-
--- Read User by ID
-SELECT id, email, firstName, lastName, profilePicture, bio, batch, program,
-       section, university, campus, socialLinks, role, reputationScore,
-       totalExchanges, createdAt
-FROM users
-WHERE id = '<user_id>' AND isDeleted = 0;
-
--- Read User by Email (Login lookup)
-SELECT * FROM users WHERE email = 'student@university.edu';
-
--- Update User Profile
-UPDATE users
-SET firstName = 'John', lastName = 'Doe', bio = 'CS Student',
-    batch = '2024', program = 'BSCS', updatedAt = GETDATE()
-WHERE id = '<user_id>';
-
--- Soft Delete User
-UPDATE users
-SET isDeleted = 1, updatedAt = GETDATE()
-WHERE id = '<user_id>';
-
--- List All Users (Admin, paginated)
-SELECT id, email, firstName, lastName, role, isBanned, reputationScore, createdAt
-FROM users
-WHERE isDeleted = 0
-ORDER BY createdAt DESC
-OFFSET 0 ROWS FETCH NEXT 20 ROWS ONLY;
-
-
--- ───────── POSTS CRUD ─────────
-
--- Create Post
-INSERT INTO posts (id, userId, title, description, whatINeed, whatIOffer, category, tags, expiresAt, createdAt, updatedAt)
-VALUES (NEWID(), '<user_id>', 'Need Calculus Help', 'Looking for tutoring', 'Calculus tutoring',
-        'Programming help in return', 'TUTORING', '["math","calculus"]',
-        DATEADD(DAY, 7, GETDATE()), GETDATE(), GETDATE());
-
--- Read Post by ID
-SELECT p.*, u.firstName, u.lastName, u.profilePicture
-FROM posts p
-JOIN users u ON u.id = p.userId
-WHERE p.id = '<post_id>' AND p.isDeleted = 0;
-
--- Update Post
-UPDATE posts
-SET title = 'Updated Title', description = 'Updated desc', updatedAt = GETDATE()
-WHERE id = '<post_id>';
-
--- Soft Delete Post
-UPDATE posts
-SET isDeleted = 1, updatedAt = GETDATE()
-WHERE id = '<post_id>';
-
--- List Posts (Marketplace with filters)
-SELECT p.*, u.firstName, u.lastName
-FROM posts p
-JOIN users u ON u.id = p.userId
-WHERE p.status = 'ACTIVE' AND p.isDeleted = 0 AND p.expiresAt > GETDATE()
-ORDER BY p.createdAt DESC
-OFFSET 0 ROWS FETCH NEXT 20 ROWS ONLY;
-
-
--- ───────── OFFERS CRUD ─────────
-
--- Create Offer
-INSERT INTO offers (id, postId, userId, proposalDescription, counterExchange, expiresAt, createdAt, updatedAt)
-VALUES (NEWID(), '<post_id>', '<user_id>', 'I can help with calculus',
-        'Need help with web dev', DATEADD(HOUR, 48, GETDATE()), GETDATE(), GETDATE());
-
--- Read Offer by ID
-SELECT o.*, u.firstName, u.lastName, p.title AS postTitle
-FROM offers o
-JOIN users u ON u.id = o.userId
-JOIN posts p ON p.id = o.postId
-WHERE o.id = '<offer_id>' AND o.isDeleted = 0;
-
--- Update Offer
-UPDATE offers
-SET proposalDescription = 'Updated proposal', updatedAt = GETDATE()
-WHERE id = '<offer_id>';
-
--- Soft Delete Offer
-UPDATE offers
-SET isDeleted = 1, updatedAt = GETDATE()
-WHERE id = '<offer_id>';
-
--- List Offers for a Post
-SELECT o.*, u.firstName, u.lastName, u.reputationScore
+SELECT o.id AS offerId, o.proposalDescription, o.counterExchange,
+       o.status AS offerStatus, o.expiresAt, o.createdAt,
+       u.id AS offererId, u.firstName, u.lastName, u.profilePicture, u.reputationScore
 FROM offers o
 JOIN users u ON u.id = o.userId
 WHERE o.postId = '<post_id>' AND o.isDeleted = 0
 ORDER BY o.createdAt DESC;
 
+-- Q7: Posts Created by a Specific User
+SELECT p.id, p.title, p.description, c.name AS category,
+       p.status, p.expiresAt, p.createdAt,
+       ISNULL(oc.offerCount, 0) AS offerCount
+FROM posts p
+JOIN categories c ON c.id = p.categoryId
+LEFT JOIN (
+    SELECT postId, COUNT(*) AS offerCount FROM offers WHERE isDeleted = 0 GROUP BY postId
+) oc ON oc.postId = p.id
+WHERE p.userId = '<user_id>' AND p.isDeleted = 0
+ORDER BY p.createdAt DESC;
 
--- ───────── TRANSACTIONS CRUD ─────────
+-- Q8: Offers Made by a Specific User
+SELECT o.id AS offerId, o.proposalDescription, o.counterExchange,
+       o.status AS offerStatus, o.createdAt,
+       p.id AS postId, p.title AS postTitle, p.status AS postStatus
+FROM offers o
+JOIN posts p ON p.id = o.postId
+WHERE o.userId = '<user_id>' AND o.isDeleted = 0
+ORDER BY o.createdAt DESC;
 
--- Create Transaction (when offer is accepted)
-INSERT INTO transactions (id, postId, offerId, requesterId, offererId, expiresAt, createdAt, updatedAt)
-VALUES (NEWID(), '<post_id>', '<offer_id>', '<requester_id>', '<offerer_id>',
-        DATEADD(DAY, 14, GETDATE()), GETDATE(), GETDATE());
+-- Q9: Transaction History for a User
+SELECT * FROM vw_UserExchangeHistory
+WHERE userId = '<user_id>'
+ORDER BY createdAt DESC;
 
--- Read Transaction by ID
-SELECT t.*, p.title AS postTitle, o.proposalDescription,
-       req.firstName AS requesterFirstName, off2.firstName AS offererFirstName
-FROM transactions t
-JOIN posts p ON p.id = t.postId
-JOIN offers o ON o.id = t.offerId
-JOIN users req ON req.id = t.requesterId
-JOIN users off2 ON off2.id = t.offererId
-WHERE t.id = '<transaction_id>' AND t.isDeleted = 0;
-
--- Update Transaction (mark complete)
-UPDATE transactions
-SET requesterDone = 1, updatedAt = GETDATE()
-WHERE id = '<transaction_id>';
-
--- Soft Delete Transaction
-UPDATE transactions
-SET isDeleted = 1, updatedAt = GETDATE()
-WHERE id = '<transaction_id>';
-
--- List Transactions for a User
-SELECT t.*, p.title AS postTitle
-FROM transactions t
-JOIN posts p ON p.id = t.postId
-WHERE (t.requesterId = '<user_id>' OR t.offererId = '<user_id>')
-  AND t.isDeleted = 0
-ORDER BY t.createdAt DESC;
-
--- List All Transactions (Admin)
-SELECT t.*, p.title AS postTitle, req.firstName + ' ' + req.lastName AS requester,
-       off2.firstName + ' ' + off2.lastName AS offerer
-FROM transactions t
-JOIN posts p ON p.id = t.postId
-JOIN users req ON req.id = t.requesterId
-JOIN users off2 ON off2.id = t.offererId
-WHERE t.isDeleted = 0
-ORDER BY t.createdAt DESC
-OFFSET 0 ROWS FETCH NEXT 20 ROWS ONLY;
-
-
--- ───────── MESSAGES CRUD ─────────
-
--- Create Message
-INSERT INTO messages (id, transactionId, senderId, content, messageType, createdAt)
-VALUES (NEWID(), '<transaction_id>', '<sender_id>', 'Hello! Ready to start the exchange?', 'TEXT', GETDATE());
-
--- Read Messages in a Transaction
-SELECT m.*, u.firstName, u.lastName, u.profilePicture
+-- Q10: Chat Messages in a Transaction (paginated)
+SELECT m.id, m.content, m.messageType, m.isRead, m.createdAt,
+       u.id AS senderId, u.firstName AS senderFirstName,
+       u.lastName AS senderLastName, u.profilePicture
 FROM messages m
 JOIN users u ON u.id = m.senderId
 WHERE m.transactionId = '<transaction_id>' AND m.isDeleted = 0
-ORDER BY m.createdAt ASC;
+ORDER BY m.createdAt ASC
+OFFSET 0 ROWS FETCH NEXT 50 ROWS ONLY;
 
--- Update (Mark as Read)
-UPDATE messages
-SET isRead = 1
-WHERE transactionId = '<transaction_id>'
-  AND senderId != '<user_id>'
-  AND isRead = 0;
-
--- Soft Delete Message
-UPDATE messages
-SET isDeleted = 1
-WHERE id = '<message_id>';
-
-
--- ───────── RATINGS CRUD ─────────
-
--- Create Rating
-INSERT INTO ratings (id, transactionId, giverId, receiverId, score, review, createdAt)
-VALUES (NEWID(), '<transaction_id>', '<giver_id>', '<receiver_id>', 5, 'Great exchange partner!', GETDATE());
-
--- Read Rating by ID
-SELECT r.*, g.firstName AS giverName, rec.firstName AS receiverName
-FROM ratings r
-JOIN users g ON g.id = r.giverId
-JOIN users rec ON rec.id = r.receiverId
-WHERE r.id = '<rating_id>' AND r.isDeleted = 0;
-
--- Update Rating
-UPDATE ratings
-SET score = 4, review = 'Updated review'
-WHERE id = '<rating_id>';
-
--- Soft Delete Rating
-UPDATE ratings
-SET isDeleted = 1
-WHERE id = '<rating_id>';
-
--- List Ratings for a User
-SELECT r.*, g.firstName, g.lastName, g.profilePicture
+-- Q11: Ratings Received by a User
+SELECT r.id AS ratingId, r.score, r.review, r.createdAt,
+       g.id AS giverId, g.firstName AS giverFirstName,
+       g.lastName AS giverLastName, g.profilePicture
 FROM ratings r
 JOIN users g ON g.id = r.giverId
 WHERE r.receiverId = '<user_id>' AND r.isDeleted = 0
 ORDER BY r.createdAt DESC;
 
+-- Q12: Rating Stats for a User
+SELECT * FROM vw_UserRatingStats WHERE userId = '<user_id>';
 
--- ───────── REPORTS CRUD ─────────
+-- Q13: Most Popular Categories
+SELECT * FROM vw_PopularCategories ORDER BY totalPosts DESC;
 
--- Create Report
-INSERT INTO reports (id, transactionId, reporterId, targetUserId, reason, description, createdAt, updatedAt)
-VALUES (NEWID(), '<transaction_id>', '<reporter_id>', '<target_user_id>',
-        'INAPPROPRIATE_BEHAVIOR', 'User was unresponsive and rude', GETDATE(), GETDATE());
+-- Q14: User Profile with Exchange Stats
+SELECT u.id, u.firstName, u.lastName, u.email, u.profilePicture, u.bio,
+       u.batch, p.name AS program, u.section,
+       uni.name AS university, uni.campus,
+       u.reputationScore, u.totalExchanges, u.createdAt,
+       ISNULL(rs.averageRating, 0) AS averageRating,
+       ISNULL(rs.totalRatings, 0) AS totalRatings,
+       ISNULL(pc.postCount, 0) AS totalPosts,
+       ISNULL(oc2.offerCount, 0) AS totalOffers
+FROM users u
+LEFT JOIN programs p ON p.id = u.programId
+LEFT JOIN universities uni ON uni.id = u.universityId
+LEFT JOIN vw_UserRatingStats rs ON rs.userId = u.id
+LEFT JOIN (SELECT userId, COUNT(*) AS postCount FROM posts WHERE isDeleted = 0 GROUP BY userId) pc ON pc.userId = u.id
+LEFT JOIN (SELECT userId, COUNT(*) AS offerCount FROM offers WHERE isDeleted = 0 GROUP BY userId) oc2 ON oc2.userId = u.id
+WHERE u.id = '<user_id>' AND u.isDeleted = 0;
 
--- Read Report by ID
-SELECT r.*, reporter.firstName AS reporterName, target.firstName AS targetName
-FROM reports r
-JOIN users reporter ON reporter.id = r.reporterId
-JOIN users target ON target.id = r.targetUserId
-WHERE r.id = '<report_id>' AND r.isDeleted = 0;
+-- Q15: Pending Offers per Post (for post owners)
+SELECT p.id AS postId, p.title, COUNT(o.id) AS pendingOfferCount
+FROM posts p
+LEFT JOIN offers o ON o.postId = p.id AND o.status = 'PENDING' AND o.isDeleted = 0
+WHERE p.userId = '<user_id>' AND p.status = 'ACTIVE' AND p.isDeleted = 0
+GROUP BY p.id, p.title ORDER BY pendingOfferCount DESC;
 
--- Update Report (Admin resolve)
-UPDATE reports
-SET status = 'RESOLVED', adminNotes = 'Investigated and resolved', resolvedAt = GETDATE(), updatedAt = GETDATE()
-WHERE id = '<report_id>';
+-- Q16: Transaction Completion Rate
+SELECT COUNT(*) AS totalTransactions,
+       SUM(CASE WHEN status = 'SUCCESSFUL' THEN 1 ELSE 0 END) AS successful,
+       SUM(CASE WHEN status = 'CANCELLED' THEN 1 ELSE 0 END) AS cancelled,
+       SUM(CASE WHEN status = 'EXPIRED' THEN 1 ELSE 0 END) AS expired,
+       SUM(CASE WHEN status = 'IN_PROGRESS' THEN 1 ELSE 0 END) AS inProgress,
+       CAST(SUM(CASE WHEN status = 'SUCCESSFUL' THEN 1 ELSE 0 END) * 100.0
+            / NULLIF(COUNT(*), 0) AS DECIMAL(5,2)) AS completionRatePercent
+FROM transactions WHERE isDeleted = 0;
 
--- Soft Delete Report
-UPDATE reports
-SET isDeleted = 1, updatedAt = GETDATE()
-WHERE id = '<report_id>';
+-- Q17: Recently Completed Exchanges
+SELECT TOP 10 transactionId, transactionStatus, postTitle, category,
+       requesterFirstName, requesterLastName, offererFirstName, offererLastName, completedAt
+FROM vw_TransactionSummary
+WHERE transactionStatus = 'SUCCESSFUL'
+ORDER BY completedAt DESC;
 
--- List Reports (Admin)
-SELECT r.*, reporter.firstName + ' ' + reporter.lastName AS reporterName,
-       target.firstName + ' ' + target.lastName AS targetName
-FROM reports r
-JOIN users reporter ON reporter.id = r.reporterId
-JOIN users target ON target.id = r.targetUserId
-WHERE r.isDeleted = 0
-ORDER BY r.createdAt DESC;
+-- Q18: Admin – All Users with Ban Status
+SELECT u.id, u.firstName, u.lastName, u.email, u.role,
+       u.isBanned, u.banReason, u.reputationScore, u.totalExchanges, u.createdAt
+FROM users u WHERE u.isDeleted = 0 ORDER BY u.createdAt DESC;
+
+-- Q19: Admin – Pending Reports
+SELECT * FROM vw_PendingReports ORDER BY createdAt DESC;
+
+-- Q20: Admin – Dashboard Statistics (via stored procedure)
+EXEC sp_GetDashboardStats;
+
+-- Q21: Post Status Distribution
+SELECT * FROM vw_PostStatusDistribution;
+
+-- Q22: Notifications for a User
+SELECT id, type, title, message, referenceId, referenceType, isRead, createdAt
+FROM notifications WHERE userId = '<user_id>'
+ORDER BY createdAt DESC OFFSET 0 ROWS FETCH NEXT 20 ROWS ONLY;
+
+-- Unread count
+SELECT COUNT(*) AS unreadCount FROM notifications WHERE userId = '<user_id>' AND isRead = 0;
+
+-- Q23: Expiring Posts (next 24h)
+SELECT p.id, p.title, c.name AS category, p.expiresAt,
+       u.firstName, u.lastName,
+       DATEDIFF(HOUR, GETDATE(), p.expiresAt) AS hoursRemaining
+FROM posts p
+JOIN users u ON u.id = p.userId
+JOIN categories c ON c.id = p.categoryId
+WHERE p.status = 'ACTIVE' AND p.isDeleted = 0
+  AND p.expiresAt BETWEEN GETDATE() AND DATEADD(HOUR, 24, GETDATE())
+ORDER BY p.expiresAt ASC;
+
+-- Q24: Tags for a Post
+SELECT t.name FROM post_tags pt JOIN tags t ON t.id = pt.tagId WHERE pt.postId = '<post_id>';
+
+-- Q25: Monthly Exchange Activity
+SELECT FORMAT(createdAt, 'yyyy-MM') AS month,
+       COUNT(*) AS totalTransactions,
+       SUM(CASE WHEN status = 'SUCCESSFUL' THEN 1 ELSE 0 END) AS successful,
+       SUM(CASE WHEN status = 'CANCELLED' THEN 1 ELSE 0 END) AS cancelled
+FROM transactions WHERE isDeleted = 0
+GROUP BY FORMAT(createdAt, 'yyyy-MM') ORDER BY month DESC;
+
+
+-- ════════════════════════════════════════════════════════════════════════════
+-- SECTION 4: CRUD OPERATIONS (via repositories — parameterized SQL)
+-- ════════════════════════════════════════════════════════════════════════════
+
+-- ───────── USERS CRUD ─────────
+-- Create User (Register)
+INSERT INTO users (id, email, passwordHash, firstName, lastName, role, createdAt, updatedAt)
+VALUES (NEWID(), 'student@university.edu', '<hashed>', 'John', 'Doe', 'STUDENT', GETDATE(), GETDATE());
+
+-- Read User by ID (with joins)
+SELECT u.*, p.name AS program, uni.name AS university, uni.campus
+FROM users u
+LEFT JOIN programs p ON p.id = u.programId
+LEFT JOIN universities uni ON uni.id = u.universityId
+WHERE u.id = '<user_id>' AND u.isDeleted = 0;
+
+-- Update User Profile
+UPDATE users SET firstName='John', lastName='Doe', bio='CS Student', batch='2024', updatedAt=GETDATE()
+WHERE id = '<user_id>';
+
+-- Soft Delete
+UPDATE users SET isDeleted = 1, updatedAt = GETDATE() WHERE id = '<user_id>';
+
+
+-- ───────── POSTS CRUD ─────────
+-- Create Post (with category lookup)
+DECLARE @catId INT;
+SELECT @catId = id FROM categories WHERE name = 'Tutoring';
+INSERT INTO posts (id, userId, title, description, whatINeed, whatIOffer, categoryId, expiresAt, createdAt, updatedAt)
+VALUES (NEWID(), '<user_id>', 'Need Help', 'Looking for tutoring', 'Calculus tutoring',
+        'Programming help', @catId, DATEADD(DAY, 7, GETDATE()), GETDATE(), GETDATE());
+
+-- Read Post by ID
+SELECT p.*, c.name AS category, u.firstName, u.lastName FROM posts p
+JOIN categories c ON c.id = p.categoryId
+JOIN users u ON u.id = p.userId
+WHERE p.id = '<post_id>' AND p.isDeleted = 0;
+
+-- Update / Soft Delete
+UPDATE posts SET title='Updated', updatedAt=GETDATE() WHERE id='<post_id>';
+UPDATE posts SET isDeleted=1, updatedAt=GETDATE() WHERE id='<post_id>';
+
+
+-- ───────── OFFERS CRUD ─────────
+INSERT INTO offers (id, postId, userId, proposalDescription, status, createdAt, updatedAt)
+VALUES (NEWID(), '<post_id>', '<user_id>', 'I can help!', 'PENDING', GETDATE(), GETDATE());
+
+UPDATE offers SET proposalDescription='Updated', updatedAt=GETDATE() WHERE id='<offer_id>';
+UPDATE offers SET isDeleted=1, updatedAt=GETDATE() WHERE id='<offer_id>';
+
+
+-- ───────── TRANSACTIONS (via stored procedures) ─────────
+-- Accept Offer → creates transaction atomically
+DECLARE @txOut NVARCHAR(36);
+EXEC sp_AcceptOffer @offerId='<offer_id>', @requesterId='<user_id>', @txId=@txOut OUTPUT;
+
+-- Complete Transaction
+DECLARE @done BIT;
+EXEC sp_CompleteTransaction @transactionId='<tx_id>', @userId='<user_id>', @bothDone=@done OUTPUT;
+
+-- Cancel Transaction
+EXEC sp_CancelTransaction @transactionId='<tx_id>', @userId='<user_id>';
+
+-- Admin Force Cancel
+EXEC sp_CancelTransaction @transactionId='<tx_id>', @userId='<admin_id>', @isAdmin=1;
+
+
+-- ───────── MESSAGES CRUD ─────────
+INSERT INTO messages (id, transactionId, senderId, content, messageType, isRead, isDeleted, createdAt)
+VALUES (NEWID(), '<tx_id>', '<sender_id>', 'Hello!', 'TEXT', 0, 0, GETDATE());
+
+UPDATE messages SET isRead = 1
+WHERE transactionId = '<tx_id>' AND senderId != '<user_id>' AND isRead = 0;
+
+
+-- ───────── RATINGS (via stored procedure) ─────────
+EXEC sp_CreateRating @ratingId=NEWID(), @transactionId='<tx_id>',
+     @giverId='<giver_id>', @receiverId='<receiver_id>', @score=5, @review='Great!';
+
+
+-- ───────── REPORTS (via stored procedure) ─────────
+EXEC sp_CreateReport @reportId=NEWID(), @transactionId='<tx_id>',
+     @reporterId='<reporter_id>', @targetUserId='<target_id>',
+     @reason='Unresponsive', @description='No response after 3 days.';
+
+EXEC sp_ResolveReport @reportId='<report_id>', @status='RESOLVED', @adminNotes='Investigated.';
 
 
 -- ───────── NOTIFICATIONS CRUD ─────────
+INSERT INTO notifications (id, userId, type, title, message, isRead, createdAt)
+VALUES (NEWID(), '<user_id>', 'SYSTEM', 'Welcome!', 'Welcome to AlchEx', 0, GETDATE());
 
--- Create Notification
-INSERT INTO notifications (id, userId, type, title, message, createdAt)
-VALUES (NEWID(), '<user_id>', 'OFFER_RECEIVED', 'New Offer!', 'You received an offer on your post', GETDATE());
-
--- Read Notifications for User
-SELECT * FROM notifications
-WHERE userId = '<user_id>'
-ORDER BY createdAt DESC
-OFFSET 0 ROWS FETCH NEXT 20 ROWS ONLY;
-
--- Update (Mark as Read)
-UPDATE notifications
-SET isRead = 1
-WHERE id = '<notification_id>' AND userId = '<user_id>';
-
--- Mark All as Read
-UPDATE notifications
-SET isRead = 1
-WHERE userId = '<user_id>' AND isRead = 0;
-
--- Delete Notification
-DELETE FROM notifications
-WHERE id = '<notification_id>' AND userId = '<user_id>';
+UPDATE notifications SET isRead = 1 WHERE id = '<notif_id>' AND userId = '<user_id>';
+UPDATE notifications SET isRead = 1 WHERE userId = '<user_id>' AND isRead = 0;
+DELETE FROM notifications WHERE id = '<notif_id>' AND userId = '<user_id>';
 
 
 -- ════════════════════════════════════════════════════════════════════════════
--- SECTION 4: AUTOMATED / CRON JOB QUERIES
--- These run on scheduled intervals (node-cron) to maintain data integrity.
+-- SECTION 5: AUTOMATED / CRON JOB QUERIES (via stored procedures)
 -- ════════════════════════════════════════════════════════════════════════════
 
+-- Expire posts (every 15 min)
+DECLARE @cnt1 INT;
+EXEC sp_ExpirePosts @expiredCount = @cnt1 OUTPUT;
 
--- ─────────────────────────────────────────────────────────
--- C1: Expire Active Posts Past Their Expiry Date
--- Runs every 15 minutes via cron
--- ─────────────────────────────────────────────────────────
-UPDATE posts
-SET status = 'EXPIRED', updatedAt = GETDATE()
-WHERE status = 'ACTIVE'
-  AND expiresAt <= GETDATE()
-  AND isDeleted = 0;
+-- Expire offers (every 15 min)
+DECLARE @cnt2 INT;
+EXEC sp_ExpireOffers @expiredCount = @cnt2 OUTPUT;
 
+-- Expire transactions + related posts (every 30 min)
+DECLARE @cnt3 INT;
+EXEC sp_ExpireTransactions @expiredCount = @cnt3 OUTPUT;
 
--- ─────────────────────────────────────────────────────────
--- C2: Expire Stale Pending Offers Past Their Expiry Date
--- Runs every 15 minutes via cron
--- ─────────────────────────────────────────────────────────
-UPDATE offers
-SET status = 'EXPIRED', updatedAt = GETDATE()
-WHERE status = 'PENDING'
-  AND expiresAt <= GETDATE()
-  AND isDeleted = 0;
-
-
--- ─────────────────────────────────────────────────────────
--- C3: Expire In-Progress Transactions Past Their Expiry Date
--- Runs every 30 minutes via cron
--- ─────────────────────────────────────────────────────────
-UPDATE transactions
-SET status = 'EXPIRED', updatedAt = GETDATE()
-WHERE status = 'IN_PROGRESS'
-  AND expiresAt <= GETDATE()
-  AND isDeleted = 0;
-
-
--- ─────────────────────────────────────────────────────────
--- C4: Expire Posts Whose Transaction Has Expired (subquery)
--- Runs after C3 when expired transactions are found
--- ─────────────────────────────────────────────────────────
-UPDATE posts
-SET status = 'EXPIRED', updatedAt = GETDATE()
-WHERE status = 'IN_PROGRESS'
-  AND id IN (
-    SELECT p.id
-    FROM posts p
-    INNER JOIN transactions t ON t.postId = p.id
-    WHERE t.status = 'EXPIRED'
-  );
-
-
--- ─────────────────────────────────────────────────────────
--- C5: Daily Leaderboard Snapshot – Get Top 100 Users
--- ─────────────────────────────────────────────────────────
-SELECT TOP 100 id, reputationScore, totalExchanges
-FROM users
-WHERE isDeleted = 0 AND isBanned = 0 AND totalExchanges > 0
-ORDER BY reputationScore DESC;
-
-
--- ─────────────────────────────────────────────────────────
--- C6: Daily Leaderboard Snapshot – Get Average Ratings
--- ─────────────────────────────────────────────────────────
-SELECT receiverId, AVG(CAST(score AS FLOAT)) AS avgScore
-FROM ratings
-WHERE isDeleted = 0
-GROUP BY receiverId;
-
-
--- ─────────────────────────────────────────────────────────
--- C7: Daily Leaderboard Snapshot – Insert Snapshot Row
--- ─────────────────────────────────────────────────────────
-INSERT INTO leaderboard_snapshots
-    (id, userId, rank, reputationScore, totalExchanges, averageRating, period, snapshotDate, createdAt)
-VALUES
-    (NEWID(), '<user_id>', 1, 4.50, 10, 4.80, 'DAILY', GETDATE(), GETDATE());
+-- Daily leaderboard snapshot (midnight)
+EXEC sp_DailyLeaderboardSnapshot;
 
 
 -- ════════════════════════════════════════════════════════════════════════════
--- SECTION 5: BUSINESS WORKFLOW QUERIES
--- Multi-step operations triggered by user actions (accept offer, complete
--- transaction, cancel, recalculate reputation, etc.)
+-- SECTION 6: REPUTATION RECALCULATION (via stored procedure)
 -- ════════════════════════════════════════════════════════════════════════════
+EXEC sp_RecalculateReputation @userId = '<user_id>';
 
-
--- ─────────────────────────────────────────────────────────
--- W1: Accept Offer Workflow (4 steps)
--- Triggered when a post owner accepts an offer
--- ─────────────────────────────────────────────────────────
-
--- Step 1: Mark the chosen offer as ACCEPTED
-UPDATE offers
-SET status = 'ACCEPTED', updatedAt = GETDATE()
-WHERE id = '<offer_id>';
-
--- Step 2: Reject all other pending offers on the same post
-UPDATE offers
-SET status = 'REJECTED', updatedAt = GETDATE()
-WHERE postId = '<post_id>'
-  AND id != '<offer_id>'
-  AND status = 'PENDING';
-
--- Step 3: Set the post to IN_PROGRESS
-UPDATE posts
-SET status = 'IN_PROGRESS', updatedAt = GETDATE()
-WHERE id = '<post_id>';
-
--- Step 4: Create the transaction record
-INSERT INTO transactions
-    (id, postId, offerId, requesterId, offererId, status,
-     requesterDone, offererDone, requesterCancel, offererCancel,
-     expiresAt, isDeleted, createdAt, updatedAt)
-VALUES
-    (NEWID(), '<post_id>', '<offer_id>', '<requester_id>', '<offerer_id>',
-     'IN_PROGRESS', 0, 0, 0, 0,
-     DATEADD(DAY, 14, GETDATE()), 0, GETDATE(), GETDATE());
-
-
--- ─────────────────────────────────────────────────────────
--- W2: Mark Transaction Complete (both sides done)
--- Sets post to SUCCESSFUL when requesterDone AND offererDone
--- ─────────────────────────────────────────────────────────
-UPDATE posts
-SET status = 'SUCCESSFUL', updatedAt = GETDATE()
-WHERE id = '<post_id>';
-
-
--- ─────────────────────────────────────────────────────────
--- W3: Cancel Transaction (by participant)
--- Updates transaction with cancel flags + sets post CANCELLED
--- ─────────────────────────────────────────────────────────
-
--- Step 1: Cancel the transaction with participant flags
-UPDATE transactions
-SET status = 'CANCELLED',
-    cancelledAt = GETDATE(),
-    requesterCancel = CASE WHEN '<canceller>' = 'REQUESTER' THEN 1 ELSE requesterCancel END,
-    offererCancel   = CASE WHEN '<canceller>' = 'OFFERER'   THEN 1 ELSE offererCancel END,
-    updatedAt = GETDATE()
-WHERE id = '<transaction_id>';
-
--- Step 2: Set the post status to CANCELLED
-UPDATE posts
-SET status = 'CANCELLED', updatedAt = GETDATE()
-WHERE id = '<post_id>';
-
-
--- ─────────────────────────────────────────────────────────
--- W4: Admin Force-Cancel Transaction
--- ─────────────────────────────────────────────────────────
-
--- Step 1: Force cancel the transaction
-UPDATE transactions
-SET status = 'CANCELLED', cancelledAt = GETDATE(), updatedAt = GETDATE()
-WHERE id = '<transaction_id>';
-
--- Step 2: Set the post status to CANCELLED
-UPDATE posts
-SET status = 'CANCELLED', updatedAt = GETDATE()
-WHERE id = '<post_id>';
-
-
--- ─────────────────────────────────────────────────────────
--- W5: Recalculate User Reputation Score
--- Called after a transaction completes or a rating is given
--- ─────────────────────────────────────────────────────────
-
--- Step 1: Get average rating for the user
-SELECT ISNULL(AVG(CAST(score AS FLOAT)), 0) AS avgRating,
-       COUNT(score) AS ratingCount
-FROM ratings
-WHERE receiverId = '<user_id>' AND isDeleted = 0;
-
--- Step 2: Count successful exchanges
-SELECT COUNT(*) AS exchangeCount
-FROM transactions
-WHERE (requesterId = '<user_id>' OR offererId = '<user_id>')
-  AND status = 'SUCCESSFUL';
-
--- Step 3: Update the computed reputation score and total exchanges
--- Formula: reputationScore = avgRating * 0.6 + normalizedExchanges * 0.4
--- Where normalizedExchanges = MIN(exchangeCount / 50, 1) * 5
-UPDATE users
-SET reputationScore = '<computed_score>',
-    totalExchanges  = '<exchange_count>',
-    updatedAt = GETDATE()
-WHERE id = '<user_id>';
+-- ═══════════════════════════════════════════════════════════════════════════
+-- END OF QUERIES
+-- ═══════════════════════════════════════════════════════════════════════════

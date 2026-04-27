@@ -1,29 +1,54 @@
 import db from '../db/connection';
 
-// ─── Report Repository — All Raw SQL ───────────────────────────────────────
+// ─── Report Repository — All Raw SQL (BCNF Schema) ─────────────────────────
 
 export class ReportRepository {
 
-  // INSERT new report
+  // INSERT new report (uses stored procedure)
   async create(data: {
     transaction: { connect: { id: string } }; reporter: { connect: { id: string } };
     targetUser: { connect: { id: string } }; reason: string; description: string; evidence?: string;
   }) {
     const id = crypto.randomUUID();
-    const now = new Date();
-    await db.execute`
-      INSERT INTO reports
-        (id, transactionId, reporterId, targetUserId, reason, description, evidence,
-         status, isDeleted, createdAt, updatedAt)
-      VALUES
-        (${id}, ${data.transaction.connect.id}, ${data.reporter.connect.id},
-         ${data.targetUser.connect.id}, ${data.reason}, ${data.description},
-         ${data.evidence ?? null}, 'PENDING', 0, ${now}, ${now})
-    `;
+
+    try {
+      await db.callProcedure('sp_CreateReport', {
+        reportId: id,
+        transactionId: data.transaction.connect.id,
+        reporterId: data.reporter.connect.id,
+        targetUserId: data.targetUser.connect.id,
+        reason: data.reason,
+        description: data.description,
+      });
+    } catch (err: any) {
+      // Fallback to inline SQL
+      const now = new Date();
+      await db.execute`
+        INSERT INTO reports
+          (id, transactionId, reporterId, targetUserId, reason, description,
+           status, isDeleted, createdAt, updatedAt)
+        VALUES
+          (${id}, ${data.transaction.connect.id}, ${data.reporter.connect.id},
+           ${data.targetUser.connect.id}, ${data.reason}, ${data.description},
+           'PENDING', 0, ${now}, ${now})
+      `;
+    }
+
+    // Handle evidence files → report_evidence table
+    if (data.evidence) {
+      let files: string[];
+      try { files = JSON.parse(data.evidence); } catch { files = [data.evidence]; }
+      for (const filePath of files) {
+        await db.execute`
+          INSERT INTO report_evidence (reportId, filePath) VALUES (${id}, ${filePath})
+        `;
+      }
+    }
+
     return this.findById(id);
   }
 
-  // SELECT single report by ID with reporter, target, transaction info
+  // SELECT single report by ID with reporter, target, transaction info + evidence
   async findById(id: string) {
     const rows: any[] = await db.query`
       SELECT
@@ -43,10 +68,19 @@ export class ReportRepository {
     `;
     if (rows.length === 0) return null;
     const row = rows[0];
+
+    // Fetch evidence files
+    const evidenceRows: any[] = await db.query`
+      SELECT filePath, fileType FROM report_evidence WHERE reportId = ${id}
+    `;
+    const evidence = evidenceRows.length > 0
+      ? JSON.stringify(evidenceRows.map((e: any) => e.filePath))
+      : null;
+
     return {
       id: row.id, transactionId: row.transactionId, reporterId: row.reporterId,
       targetUserId: row.targetUserId, reason: row.reason, description: row.description,
-      evidence: row.evidence, status: row.status, adminNotes: row.adminNotes,
+      evidence, status: row.status, adminNotes: row.adminNotes,
       resolvedAt: row.resolvedAt, isDeleted: row.isDeleted, createdAt: row.createdAt, updatedAt: row.updatedAt,
       reporter: { id: row['reporter.id'], firstName: row['reporter.firstName'], lastName: row['reporter.lastName'], email: row['reporter.email'] },
       targetUser: { id: row['targetUser.id'], firstName: row['targetUser.firstName'], lastName: row['targetUser.lastName'], email: row['targetUser.email'] },

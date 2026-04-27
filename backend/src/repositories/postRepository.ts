@@ -1,6 +1,6 @@
 import db from '../db/connection';
 
-// ─── Post Repository — All Raw SQL ─────────────────────────────────────────
+// ─── Post Repository — All Raw SQL (BCNF Schema) ───────────────────────────
 
 const SEARCH_COLUMNS = ['p.title', 'p.description', 'p.whatINeed', 'p.whatIOffer'] as const;
 
@@ -22,21 +22,30 @@ function escapeSqlLiteral(value: string) {
 
 export class PostRepository {
 
-  // SELECT single post by ID with user info + offers + offer count
+  // SELECT single post by ID with user info + offers + offer count + category + tags
   async findById(id: string) {
-    // Main post + owner
     const rows: any[] = await db.query`
       SELECT
-        p.*, 
+        p.*,
+        c.name AS category,
         u.id AS [user.id], u.firstName AS [user.firstName], u.lastName AS [user.lastName],
-        u.profilePicture AS [user.profilePicture], u.university AS [user.university],
+        u.profilePicture AS [user.profilePicture],
+        uni.name AS [user.university],
         u.reputationScore AS [user.reputationScore]
       FROM posts p
       JOIN users u ON u.id = p.userId
+      JOIN categories c ON c.id = p.categoryId
+      LEFT JOIN universities uni ON uni.id = u.universityId
       WHERE p.id = ${id} AND p.isDeleted = 0
     `;
     if (rows.length === 0) return null;
     const row = rows[0];
+
+    // Tags for this post
+    const tagRows: any[] = await db.query`
+      SELECT t.name FROM post_tags pt JOIN tags t ON t.id = pt.tagId WHERE pt.postId = ${id}
+    `;
+    const tags = tagRows.length > 0 ? JSON.stringify(tagRows.map((t: any) => t.name)) : null;
 
     // Offers on this post
     const offers: any[] = await db.query`
@@ -59,7 +68,7 @@ export class PostRepository {
     return {
       id: row.id, userId: row.userId, title: row.title, description: row.description,
       whatINeed: row.whatINeed, whatIOffer: row.whatIOffer, category: row.category,
-      tags: row.tags, status: row.status, notifyOnOffers: row.notifyOnOffers,
+      tags, status: row.status, notifyOnOffers: row.notifyOnOffers,
       expiresAt: row.expiresAt, isDeleted: row.isDeleted, createdAt: row.createdAt, updatedAt: row.updatedAt,
       user: {
         id: row['user.id'], firstName: row['user.firstName'], lastName: row['user.lastName'],
@@ -79,6 +88,41 @@ export class PostRepository {
     };
   }
 
+  // Helper: ensure category exists, return its id
+  private async ensureCategoryId(categoryName: string): Promise<number> {
+    await db.execute`
+      IF NOT EXISTS (SELECT 1 FROM categories WHERE name = ${categoryName})
+      INSERT INTO categories (name) VALUES (${categoryName})
+    `;
+    const rows: any[] = await db.query`SELECT id FROM categories WHERE name = ${categoryName}`;
+    return rows[0].id;
+  }
+
+  // Helper: sync tags for a post
+  private async syncTags(postId: string, tagsJson: string | null) {
+    // Clear existing
+    await db.execute`DELETE FROM post_tags WHERE postId = ${postId}`;
+    if (!tagsJson) return;
+
+    let tagNames: string[];
+    try { tagNames = JSON.parse(tagsJson); } catch { return; }
+    if (!Array.isArray(tagNames)) return;
+
+    for (const name of tagNames) {
+      const trimmed = name.trim();
+      if (!trimmed) continue;
+      // Ensure tag exists
+      await db.execute`
+        IF NOT EXISTS (SELECT 1 FROM tags WHERE name = ${trimmed})
+        INSERT INTO tags (name) VALUES (${trimmed})
+      `;
+      const tagRows: any[] = await db.query`SELECT id FROM tags WHERE name = ${trimmed}`;
+      if (tagRows[0]) {
+        await db.execute`INSERT INTO post_tags (postId, tagId) VALUES (${postId}, ${tagRows[0].id})`;
+      }
+    }
+  }
+
   // INSERT new post
   async create(data: {
     user: { connect: { id: string } };
@@ -88,15 +132,21 @@ export class PostRepository {
     const id = crypto.randomUUID();
     const now = new Date();
     const notify = data.notifyOnOffers !== false ? 1 : 0;
+    const categoryId = await this.ensureCategoryId(data.category);
+
     await db.execute`
       INSERT INTO posts
-        (id, userId, title, description, whatINeed, whatIOffer, category, tags,
+        (id, userId, title, description, whatINeed, whatIOffer, categoryId,
          status, notifyOnOffers, expiresAt, isDeleted, createdAt, updatedAt)
       VALUES
         (${id}, ${data.user.connect.id}, ${data.title}, ${data.description},
-         ${data.whatINeed}, ${data.whatIOffer}, ${data.category}, ${data.tags ?? null},
+         ${data.whatINeed}, ${data.whatIOffer}, ${categoryId},
          'ACTIVE', ${notify}, ${data.expiresAt}, 0, ${now}, ${now})
     `;
+
+    // Insert tags into junction table
+    await this.syncTags(id, data.tags ?? null);
+
     return this.findById(id);
   }
 
@@ -104,8 +154,23 @@ export class PostRepository {
   async update(id: string, data: Record<string, any>) {
     const keys = Object.keys(data);
     if (keys.length === 0) return this.findById(id);
-    data.updatedAt = new Date();
 
+    // Handle category name → categoryId
+    if (data.category !== undefined) {
+      data.categoryId = await this.ensureCategoryId(data.category);
+      delete data.category;
+    }
+
+    // Handle tags → sync junction table
+    if (data.tags !== undefined) {
+      await this.syncTags(id, data.tags);
+      delete data.tags;
+    }
+
+    const remaining = Object.keys(data);
+    if (remaining.length === 0) return this.findById(id);
+
+    data.updatedAt = new Date();
     const setParts: string[] = [];
     const values: any[] = [];
     for (const [key, val] of Object.entries(data)) {
@@ -135,7 +200,7 @@ export class PostRepository {
 
     const conditions: string[] = ['p.isDeleted = 0'];
     if (where?.status) conditions.push(`p.status = '${where.status}'`);
-    if (where?.category) conditions.push(`p.category = '${where.category}'`);
+    if (where?.category) conditions.push(`c.name = '${where.category}'`);
     if (where?.userId) conditions.push(`p.userId = '${where.userId}'`);
     if (where?.search && typeof where.search === 'string') {
       const normalizedSearch = normalizeSearchText(where.search);
@@ -196,14 +261,17 @@ export class PostRepository {
     const posts = await db.queryUnsafe(`
       SELECT
         p.id, p.userId, p.title, p.description, p.whatINeed, p.whatIOffer,
-        p.category, p.tags, p.status, p.notifyOnOffers, p.expiresAt,
+        c.name AS category, p.status, p.notifyOnOffers, p.expiresAt,
         p.isDeleted, p.createdAt, p.updatedAt,
         u.id AS [user.id], u.firstName AS [user.firstName], u.lastName AS [user.lastName],
-        u.profilePicture AS [user.profilePicture], u.university AS [user.university],
+        u.profilePicture AS [user.profilePicture],
+        uni.name AS [user.university],
         u.reputationScore AS [user.reputationScore],
         ISNULL(oc.offerCount, 0) AS offerCount
       FROM posts p
       JOIN users u ON u.id = p.userId
+      JOIN categories c ON c.id = p.categoryId
+      LEFT JOIN universities uni ON uni.id = u.universityId
       LEFT JOIN (
         SELECT postId, COUNT(*) AS offerCount FROM offers WHERE isDeleted = 0 GROUP BY postId
       ) oc ON oc.postId = p.id
@@ -213,14 +281,17 @@ export class PostRepository {
     `);
 
     const countResult: any[] = await db.queryUnsafe(`
-      SELECT COUNT(*) AS total FROM posts p WHERE ${whereClause}
+      SELECT COUNT(*) AS total FROM posts p
+      JOIN categories c ON c.id = p.categoryId
+      WHERE ${whereClause}
     `);
     const total = Number(countResult[0]?.total ?? 0);
 
     const formatted = (posts as any[]).map((row: any) => ({
       id: row.id, userId: row.userId, title: row.title, description: row.description,
       whatINeed: row.whatINeed, whatIOffer: row.whatIOffer, category: row.category,
-      tags: row.tags, status: row.status, notifyOnOffers: row.notifyOnOffers,
+      tags: null, // Tags loaded on findById for perf
+      status: row.status, notifyOnOffers: row.notifyOnOffers,
       expiresAt: row.expiresAt, isDeleted: row.isDeleted, createdAt: row.createdAt, updatedAt: row.updatedAt,
       user: {
         id: row['user.id'], firstName: row['user.firstName'], lastName: row['user.lastName'],

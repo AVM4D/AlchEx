@@ -185,6 +185,52 @@ async function executeUnsafe(
   return result.rowsAffected[0] ?? 0;
 }
 
+/**
+ * Call a stored procedure with named parameters.
+ * Returns { recordset, output } where output contains OUTPUT param values.
+ */
+async function callProcedure(
+  name: string,
+  inputs: Record<string, any> = {},
+  outputs: Record<string, { type: any; }> = {}
+): Promise<{ recordset: any[]; output: Record<string, any>; rowsAffected: number }> {
+  const p = await getPool();
+  const request = p.request();
+
+  for (const [key, val] of Object.entries(inputs)) {
+    if (val === null || val === undefined) {
+      request.input(key, sql.NVarChar, null);
+    } else if (typeof val === 'string') {
+      request.input(key, sql.NVarChar, val);
+    } else if (typeof val === 'number') {
+      if (Number.isInteger(val)) request.input(key, sql.Int, val);
+      else request.input(key, sql.Float, val);
+    } else if (typeof val === 'boolean') {
+      request.input(key, sql.Bit, val ? 1 : 0);
+    } else if (val instanceof Date) {
+      request.input(key, sql.DateTime, val);
+    } else {
+      request.input(key, sql.NVarChar, JSON.stringify(val));
+    }
+  }
+
+  for (const [key, spec] of Object.entries(outputs)) {
+    request.output(key, spec.type);
+  }
+
+  const result = await request.execute(name);
+  const outputValues: Record<string, any> = {};
+  for (const key of Object.keys(outputs)) {
+    outputValues[key] = result.output[key];
+  }
+
+  return {
+    recordset: result.recordset ?? [],
+    output: outputValues,
+    rowsAffected: result.rowsAffected?.[0] ?? 0,
+  };
+}
+
 /** Gracefully close the connection pool */
 async function disconnect(): Promise<void> {
   if (pool) {
@@ -194,6 +240,6 @@ async function disconnect(): Promise<void> {
   }
 }
 
-const db = { query, execute, queryUnsafe, executeUnsafe, disconnect };
+const db = { query, execute, queryUnsafe, executeUnsafe, callProcedure, disconnect };
 export default db;
 

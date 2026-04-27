@@ -3,6 +3,7 @@ import { transactionRepository } from '../repositories/transactionRepository';
 import { userRepository } from '../repositories/userRepository';
 import { notificationRepository } from '../repositories/notificationRepository';
 import { BadRequestError, ForbiddenError, NotFoundError, ConflictError } from '../utils/errors';
+import db from '../db/connection';
 
 export class RatingService {
   async create(giverId: string, transactionId: string, score: number, review?: string) {
@@ -20,29 +21,23 @@ export class RatingService {
     if (existing) throw new ConflictError('You have already rated this exchange');
 
     const receiverId = isRequester ? transaction.offererId : transaction.requesterId;
+    const ratingId = crypto.randomUUID();
 
-    const rating = await ratingRepository.create({
-      transaction: { connect: { id: transactionId } },
-      giver: { connect: { id: giverId } },
-      receiver: { connect: { id: receiverId } },
-      score,
-      review,
-    });
-
-    // Update receiver reputation
-    await userRepository.updateReputation(receiverId);
-
-    if (rating) {
-      await notificationRepository.create({
-        userId: receiverId,
-        type: 'SYSTEM',
-        title: 'New Rating Received',
-        message: `You received a ${score}-star rating!`,
-        data: JSON.stringify({ transactionId, ratingId: rating.id }),
+    // Call stored procedure — creates rating + recalculates reputation + sends notification
+    try {
+      await db.callProcedure('sp_CreateRating', {
+        ratingId,
+        transactionId,
+        giverId,
+        receiverId,
+        score,
+        review: review ?? null,
       });
+    } catch (err: any) {
+      throw new BadRequestError(err.message || 'Failed to create rating');
     }
 
-    return rating;
+    return ratingRepository.findById(ratingId);
   }
 
   async getByUser(userId: string, page: number = 1, limit: number = 20) {
@@ -67,8 +62,10 @@ export class RatingService {
 
     const updated = await ratingRepository.update(ratingId, updateData);
 
-    // Recalculate receiver reputation after rating update
-    await userRepository.updateReputation(rating.receiverId);
+    // Recalculate receiver reputation after rating update (via SP)
+    try {
+      await db.callProcedure('sp_RecalculateReputation', { userId: rating.receiverId });
+    } catch { /* ignore */ }
 
     return updated;
   }
@@ -80,8 +77,10 @@ export class RatingService {
 
     await ratingRepository.softDelete(ratingId);
 
-    // Recalculate receiver reputation after rating deletion
-    await userRepository.updateReputation(rating.receiverId);
+    // Recalculate receiver reputation after rating deletion (via SP)
+    try {
+      await db.callProcedure('sp_RecalculateReputation', { userId: rating.receiverId });
+    } catch { /* ignore */ }
 
     return { message: 'Rating deleted successfully' };
   }

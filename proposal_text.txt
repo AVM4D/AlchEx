@@ -1,0 +1,88 @@
+National University of Computer and Emerging Sciences 
+  
+ 
+ 
+AlchEx: A Non-Monetary Student Exchange 
+Platform Based on Equivalent Exchange 
+ by  
+(24L-0664 Ahmad Mursaleen)  
+(24L-0559 Shajee Haroon)  
+(24L-0712 Abdur Rehman Shah)  
+ 
+Instructor  
+Ahmed Jaan 
+Lab TA  
+Shahzeb Mubashar 
+Semester  
+Spring 2026 
+ 
+ 
+ 
+Department of Computer Science  
+FAST-NU, Lahore, Pakistan 
+ 
+ 
+Objective:  
+The objective of AlchEx is to design and develop a cashless digital marketplace exclusively 
+for students, where goods and services are exchanged without the use of money. The 
+platform is inspired by the alchemical principle of Equivalent Exchange, which states that 
+humankind cannot gain anything without giving something in return. AlchEx aims to 
+encourage collaboration, skill-sharing, and mutual support among students by enabling fair 
+and transparent exchanges within a trusted academic environment  
+ 
+Scope:  
+AlchEx will function as an exchange ecosystem with the following core features::  
+1.​ User Authentication and Access Control:​
+Students will be able to register and log in using verified .edu email addresses only, 
+ensuring that the platform remains exclusive to students. There will be two types of 
+users in the system: Students and Admins. Secure authentication and account 
+management will be implemented for all users. 
+2.​ Student Marketplace (Requests and Offers):​
+Students will be able to create posts describing a request for a service or good, along 
+with what they are willing to offer in return. Examples include academic help, sharing 
+course resources, or small everyday items such as coffee or snacks. Other students can 
+respond to a post by accepting the listed offer or proposing an alternative exchange. 
+Each student can submit only one offer per post, while a student may create multiple 
+requests simultaneously. 
+3.​ Post Lifecycle and Status Management:​
+Each post will have a defined active time period, after which it will automatically expire 
+and be removed from the active listings. Every post will display a clear status such as 
+Active, Accepted/In Progress, Successful, or Expired. By default, only active posts will 
+appear on the main feed, while other statuses will be accessible through filters and user 
+history. 
+4.​ Acceptance, Communication, and Transaction Completion:​
+The original requester will have full control to accept or reject incoming offers. Once an 
+offer is accepted, a private chat will be enabled between the two students to coordinate 
+the exchange. After the exchange is completed, both users can mark the transaction as 
+successful. During the in-progress stage, either participant may choose to cancel the 
+transaction before completion, after which the post status will be updated accordingly. 
+5.​ Ratings, Reputation, and Leaderboard:​
+After a successful exchange, students will be able to rate each other based on their 
+experience. These ratings will contribute to a reputation score visible on user profiles. A 
+leaderboard will be included to highlight top contributors based on successful 
+transactions and ratings, with filters such as Today, Last Week, and Last Month. 
+6.​ User Profiles and Filtering:​
+Each student will have a profile displaying a profile picture and basic academic 
+information, including name, email, batch, program, section, university, and campus. 
+Students may also add a short personal description and optional social media links. The 
+platform will provide filters and sorting options based on university, campus, batch, 
+program, and section to help users find relevant exchanges easily. 
+7.​ Admin Panel and Moderation:​
+Admins will have a dedicated dashboard with moderation capabilities. They will be able 
+to monitor posts, manage users, resolve disputes, remove inappropriate listings, and 
+ban users if necessary. Admins will also have the authority to contact users directly for 
+warnings or clarification in case of policy violations. 
+8.​ Reporting and Dispute Handling:​
+Students will be able to report a transaction if a mishap occurs, such as failure to deliver 
+the promised service or good. Reported cases will be visible to admins, who can review 
+the dispute and take appropriate action. 
+9.​ AI-Assisted Moderation (Optional):​
+If time permits, AI-based tools may be integrated to assist with content moderation by 
+detecting spam, inappropriate content, or suspicious behavior, helping admins maintain 
+a safe and fair environment. 
+Conclusion:​
+AlchEx proposes a unique, non-monetary exchange system tailored specifically for students, 
+promoting fairness, collaboration, and community engagement. By combining structured 
+moderation, transparent transactions, and the philosophy of equivalent exchange, the platform 
+aims to create a trustworthy and engaging student-driven marketplace within the academic 
+ecosystem. 
