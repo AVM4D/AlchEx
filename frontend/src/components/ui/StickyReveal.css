@@ -13,9 +13,9 @@
     --dimmed: color-mix(in oklch, var(--text, #fff), #0000 80%);
     font-size: clamp(2.2rem, 6vw, 5rem);
     line-height: 1.2;
-    /* padding-bottom gives exactly enough room for the sticky to end
-     after the last word scrolls through the focal point */
-    padding-bottom: 15vh;
+    /* Height = enough scroll distance for each word to pass through the
+       focal point one at a time, forming a continuous chain. */
+    height: calc(var(--count) * 1lh + 100vh);
 }
 
 /* Header — sticky chassis.

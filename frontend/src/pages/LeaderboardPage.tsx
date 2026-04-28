@@ -40,7 +40,7 @@ export default function LeaderboardPage() {
       <div className="text-center">
         <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}>
           <h1 className="text-display text-3xl md:text-4xl text-[var(--text)] mb-2">Leaderboard</h1>
-          <p className="text-sm text-[var(--text-2)]">Top alchemists ranked by reputation</p>
+          <p className="text-sm text-[var(--text-2)]">Top users ranked by reputation</p>
         </motion.div>
       </div>
 

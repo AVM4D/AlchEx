@@ -3,6 +3,7 @@ import { Outlet } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Sidebar } from './Sidebar';
 import { CommandPalette } from '../ui/CommandPalette';
+import { useUIStore } from '../../store/uiStore';
 
 function OutletLoader() {
   return (
@@ -16,6 +17,8 @@ function OutletLoader() {
 }
 
 const AppLayout: React.FC = () => {
+  const { isSidebarExpanded } = useUIStore();
+
   return (
     <div className="hypr-bg">
       {/* Atmospheric background — purple fill for gaps */}
@@ -31,7 +34,7 @@ const AppLayout: React.FC = () => {
       <Sidebar />
 
       {/* Main content "window" */}
-      <div className="hypr-content-wrapper">
+      <div className={`hypr-content-wrapper ${isSidebarExpanded ? 'expanded' : ''}`}>
         <motion.main
           className="hypr-window"
           initial={{ opacity: 0, scale: 0.98 }}

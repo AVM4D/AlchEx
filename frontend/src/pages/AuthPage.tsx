@@ -3,7 +3,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Link, useNavigate } from 'react-router-dom';
-import { Mail, Lock, User, ArrowRight } from 'lucide-react';
+import { Mail, Lock, User, ArrowRight, Home } from 'lucide-react';
 import gsap from 'gsap';
 import { Input } from '../components/ui/Input';
 import { useAuthStore } from '../store/authStore';
@@ -164,6 +164,11 @@ export default function AuthPage({ initialMode = 'login' }: AuthPageProps) {
     <div className="min-h-screen bg-[var(--bg)] flex relative overflow-hidden w-full h-full">
       <div className="noise" />
 
+      {/* Back to landing */}
+      <Link to="/" className="absolute top-6 left-6 z-50 flex items-center justify-center w-12 h-12 rounded-xl bg-white/[0.04] border border-white/[0.08] hover:bg-white/[0.08] hover:border-white/[0.15] text-[var(--text-3)] hover:text-[var(--text)] transition-all duration-300 backdrop-blur-md group shadow-[0_0_20px_transparent] hover:shadow-[0_0_20px_var(--accent-glow)]">
+        <Home size={20} className="group-hover:scale-110 transition-transform" />
+      </Link>
+
       {/* LEFT — branding */}
       <div className="hidden lg:flex flex-1 relative items-center justify-center overflow-hidden">
         <div className="grid-lines absolute inset-0" />
@@ -182,7 +187,7 @@ export default function AuthPage({ initialMode = 'login' }: AuthPageProps) {
         </div>
         <div className="relative z-10 text-center px-12">
           <div className="auth-logo mb-6 flex justify-center">
-            <span className="font-logo text-3xl font-bold tracking-wider text-[var(--text)]">ALCHEX</span>
+            <span className="font-logo text-6xl font-bold tracking-wider text-[var(--text)]">ALCHEX</span>
           </div>
           <p className="auth-tagline text-[var(--text-3)] text-lg max-w-sm mx-auto">
             Your skills have value. Exchange them.
@@ -297,6 +302,11 @@ export default function AuthPage({ initialMode = 'login' }: AuthPageProps) {
   const registerLayout = (
     <div className="min-h-screen bg-[var(--bg)] flex relative overflow-hidden w-full h-full">
       <div className="noise" />
+
+      {/* Back to landing */}
+      <Link to="/" className="absolute top-6 left-6 z-50 flex items-center justify-center w-12 h-12 rounded-xl bg-white/[0.04] border border-white/[0.08] hover:bg-white/[0.08] hover:border-white/[0.15] text-[var(--text-3)] hover:text-[var(--text)] transition-all duration-300 backdrop-blur-md group shadow-[0_0_20px_transparent] hover:shadow-[0_0_20px_var(--accent-glow)]">
+        <Home size={20} className="group-hover:scale-110 transition-transform" />
+      </Link>
 
       {/* LEFT — register form */}
       <div className="flex-1 flex items-center justify-center px-6 py-12 relative z-10">
@@ -419,7 +429,7 @@ export default function AuthPage({ initialMode = 'login' }: AuthPageProps) {
         </div>
         <div className="relative z-10 text-center px-12">
           <div className="auth-logo mb-6 flex justify-center">
-            <span className="font-logo text-3xl font-bold tracking-wider text-[var(--text)]">ALCHEX</span>
+            <span className="font-logo text-6xl font-bold tracking-wider text-[var(--text)]">ALCHEX</span>
           </div>
           <p className="auth-tagline text-[var(--text-3)] text-lg max-w-sm mx-auto">
             Your next exchange starts here.

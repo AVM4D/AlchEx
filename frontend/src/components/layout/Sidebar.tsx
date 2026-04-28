@@ -4,7 +4,7 @@ import { motion, AnimatePresence, useMotionValue } from 'framer-motion';
 import {
   LayoutDashboard, ShoppingBag, Send, HandCoins, Receipt, MessageCircle,
   Trophy, User, Shield, LogOut, Bell, Search, Check, CheckCheck,
-  AlertCircle, Star, Package, X,
+  AlertCircle, Star, Package, X, ChevronRight, ChevronLeft
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { useAuthStore } from '../../store/authStore';
@@ -86,7 +86,7 @@ export const Sidebar: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, logout } = useAuthStore();
-  const { setSidebarOpen, sidebarOpen, toggleCommandPalette } = useUIStore();
+  const { setSidebarOpen, sidebarOpen, isSidebarExpanded, setSidebarExpanded, toggleCommandPalette } = useUIStore();
   const { notifications, unreadCount, fetchNotifications, markAsRead, markAllAsRead } = useNotificationStore();
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);
   const [showNotifPanel, setShowNotifPanel] = useState(false);
@@ -138,33 +138,49 @@ export const Sidebar: React.FC = () => {
   /* ─── Desktop Dock ─── */
   const desktopDock = (
     <motion.aside
-      initial={{ x: -20, opacity: 0 }}
-      animate={{ x: 0, opacity: 1 }}
-      transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-      className="hidden lg:flex hypr-dock flex-col items-center"
+      className={cn("hidden lg:flex hypr-dock z-50", isSidebarExpanded && "expanded")}
     >
-      {/* Logo */}
-      <Link to="/dashboard" className="mb-4 mt-1">
-        <div className="w-9 h-9 rounded-xl overflow-hidden shadow-[0_0_20px_rgba(139,92,246,0.25)] hover:shadow-[0_0_30px_rgba(139,92,246,0.4)] transition-shadow">
-          <span className="font-logo text-2xl font-bold tracking-wider text-[var(--accent)]">ALCHEX</span>
+      {/* Toggle Expand */}
+      <div className="w-full flex mb-3 justify-center">
+        <button
+          onClick={() => setSidebarExpanded(!isSidebarExpanded)}
+          title={isSidebarExpanded ? "Collapse" : "Expand"}
+          className="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-3)] hover:text-white hover:bg-white/[0.06] transition-colors"
+        >
+          {isSidebarExpanded ? <ChevronLeft size={16} /> : <ChevronRight size={16} />}
+        </button>
+      </div>
+
+      {/* Top section: Logo/Home */}
+      <Link to="/dashboard" className={cn("mb-4 group flex items-center gap-3 transition-all", isSidebarExpanded ? "px-2 w-full justify-center" : "w-10 justify-center")}>
+        <div className="w-10 h-10 shrink-0 rounded-xl overflow-hidden flex flex-col items-center justify-center relative shadow-[0_0_20px_rgba(139,92,246,0.25)] group-hover:shadow-[0_0_30px_rgba(139,92,246,0.4)] transition-shadow">
+          <img src="/star.jpg" alt="AlchEx" className="w-full h-full object-cover group-hover:scale-110 transition-transform" />
         </div>
+        {isSidebarExpanded && (
+          <span className="font-logo text-3xl font-bold tracking-wider text-[var(--text)] mt-1">ALCHEX</span>
+        )}
       </Link>
 
-      <div className="w-6 h-px bg-white/[0.06] mb-3" />
+      <div className={cn("h-px bg-white/[0.06] transition-all", isSidebarExpanded ? "w-full mb-3" : "w-6 mb-3")} />
 
       {/* Search trigger */}
-      <div className="relative mb-1">
+      <div className={cn("relative mb-1 transition-all", isSidebarExpanded ? "w-full" : "w-10")}>
         <button
           onClick={() => toggleCommandPalette()}
-          onMouseEnter={() => setHoveredItem('search')}
+          onMouseEnter={() => !isSidebarExpanded && setHoveredItem('search')}
           onMouseLeave={() => setHoveredItem(null)}
-          title="Search"
+          title={isSidebarExpanded ? undefined : "Search"}
           aria-label="Search"
-          className="w-10 h-10 rounded-xl flex items-center justify-center text-[var(--text-3)] hover:text-white hover:bg-white/[0.06] transition-all duration-200"
+          className={cn(
+            "h-10 rounded-xl flex items-center text-[var(--text-3)] hover:text-white hover:bg-white/[0.06] transition-all duration-200",
+            isSidebarExpanded ? "w-full px-3 justify-start gap-3" : "w-10 justify-center"
+          )}
         >
-          <Search size={17} />
+          <Search size={17} className="shrink-0" />
+          {isSidebarExpanded && <span className="text-sm font-medium whitespace-nowrap">Search</span>}
+          {isSidebarExpanded && <kbd className="ml-auto px-1.5 py-0.5 rounded text-[10px] bg-white/[0.06] border border-white/[0.08] font-mono">⌘K</kbd>}
         </button>
-        <DockTooltip label="Search  ⌘K" show={hoveredItem === 'search'} />
+        {!isSidebarExpanded && <DockTooltip label="Search  ⌘K" show={hoveredItem === 'search'} />}
       </div>
 
       {/* Nav items */}
@@ -177,86 +193,98 @@ export const Sidebar: React.FC = () => {
           const isActive = location.pathname === item.path || location.pathname.startsWith(item.path + '/');
           const Icon = item.icon;
 
+          const content = (iconScale?: any) => (
+            <>
+              <Link
+                to={item.path}
+                onMouseEnter={() => !isSidebarExpanded && setHoveredItem(item.path)}
+                onMouseLeave={() => setHoveredItem(null)}
+                title={isSidebarExpanded ? undefined : item.label}
+                aria-label={item.label}
+                className={cn(
+                  'h-11 rounded-xl flex items-center transition-all duration-200 relative overflow-hidden',
+                  isSidebarExpanded ? 'w-full px-3 justify-start gap-3' : 'w-11 justify-center',
+                  isActive
+                    ? 'text-white'
+                    : 'text-[var(--text-3)] hover:text-white hover:bg-white/[0.06]'
+                )}
+              >
+                {/* ── Active: coloured background + glow ── */}
+                {isActive && (
+                  <motion.div
+                    layoutId="dock-active"
+                    className="absolute inset-0 rounded-xl"
+                    style={{
+                      background: `linear-gradient(135deg, rgba(${item.tint},0.25) 0%, rgba(${item.tint},0.08) 100%)`,
+                      boxShadow: `0 0 18px rgba(${item.tint},0.3), inset 0 0 12px rgba(${item.tint},0.1)`,
+                    }}
+                    transition={{ type: 'spring', stiffness: 350, damping: 28 }}
+                  />
+                )}
+                {/* ── Active: animated border outline ── */}
+                {isActive && (
+                  <motion.span
+                    layoutId="dock-pip"
+                    className="absolute inset-0 rounded-xl pointer-events-none"
+                    style={{
+                      border: `2.5px solid rgb(${item.tint})`,
+                      boxShadow: `0 0 8px rgba(${item.tint},0.35)`,
+                    }}
+                    transition={{ type: 'spring', stiffness: 350, damping: 28 }}
+                  />
+                )}
+                {/* Only the icon scales on hover */}
+                <motion.div style={iconScale} className="relative z-10 flex items-center justify-center shrink-0">
+                  <Icon
+                    size={19}
+                    className="transition-colors duration-200"
+                    style={isActive ? { color: `rgb(${item.tint})` } : undefined}
+                  />
+                </motion.div>
+                {isSidebarExpanded && <span className="relative z-10 text-sm font-medium whitespace-nowrap">{item.label}</span>}
+              </Link>
+              {!isSidebarExpanded && <DockTooltip label={item.label} show={hoveredItem === item.path} />}
+            </>
+          );
+
+          if (isSidebarExpanded) {
+            return <div key={item.path} className="w-full">{content()}</div>;
+          }
+
           return (
             <DockMagnifyItem key={item.path} mousePos={mouseY} direction="vertical" baseSize={44} magnification={76} distance={180}>
-              {(iconScale) => (
-                <>
-                  <Link
-                    to={item.path}
-                    onMouseEnter={() => setHoveredItem(item.path)}
-                    onMouseLeave={() => setHoveredItem(null)}
-                    title={item.label}
-                    aria-label={item.label}
-                    className={cn(
-                      'w-11 h-11 rounded-xl flex items-center justify-center transition-all duration-200 relative overflow-hidden',
-                      isActive
-                        ? 'text-white'
-                        : 'text-[var(--text-3)] hover:text-white hover:bg-white/[0.06]'
-                    )}
-                  >
-                    {/* ── Active: coloured background + glow ── */}
-                    {isActive && (
-                      <motion.div
-                        layoutId="dock-active"
-                        className="absolute inset-0 rounded-xl"
-                        style={{
-                          background: `linear-gradient(135deg, rgba(${item.tint},0.25) 0%, rgba(${item.tint},0.08) 100%)`,
-                          boxShadow: `0 0 18px rgba(${item.tint},0.3), inset 0 0 12px rgba(${item.tint},0.1)`,
-                        }}
-                        transition={{ type: 'spring', stiffness: 350, damping: 28 }}
-                      />
-                    )}
-                    {/* ── Active: animated border outline ── */}
-                    {isActive && (
-                      <motion.span
-                        layoutId="dock-pip"
-                        className="absolute inset-0 rounded-xl pointer-events-none"
-                        style={{
-                          border: `2.5px solid rgb(${item.tint})`,
-                          boxShadow: `0 0 8px rgba(${item.tint},0.35)`,
-                        }}
-                        transition={{ type: 'spring', stiffness: 350, damping: 28 }}
-                      />
-                    )}
-                    {/* Only the icon scales on hover */}
-                    <motion.div style={iconScale} className="relative z-10 flex items-center justify-center">
-                      <Icon
-                        size={19}
-                        className="transition-colors duration-200"
-                        style={isActive ? { color: `rgb(${item.tint})` } : undefined}
-                      />
-                    </motion.div>
-                  </Link>
-                  <DockTooltip label={item.label} show={hoveredItem === item.path} />
-                </>
-              )}
+              {content}
             </DockMagnifyItem>
           );
         })}
       </nav>
 
-      <div className="w-6 h-px bg-white/[0.06] my-2" />
+      <div className={cn("h-px bg-white/[0.06] transition-all", isSidebarExpanded ? "w-full my-3" : "w-6 my-2")} />
 
       {/* Bottom section: notifications, theme, user */}
       <div className="flex flex-col items-center gap-1 mb-1">
         {/* Notifications */}
-        <div className="relative" ref={notifPanelRef}>
+        <div className="relative w-full" ref={notifPanelRef}>
           <button
             onClick={() => { setShowNotifPanel(!showNotifPanel); setShowUserPanel(false); }}
-            onMouseEnter={() => setHoveredItem('notif')}
+            onMouseEnter={() => !isSidebarExpanded && setHoveredItem('notif')}
             onMouseLeave={() => setHoveredItem(null)}
-            title="Notifications"
+            title={isSidebarExpanded ? undefined : "Notifications"}
             aria-label="Notifications"
-            className="w-10 h-10 rounded-xl flex items-center justify-center text-[var(--text-3)] hover:text-white hover:bg-white/[0.06] transition-all duration-200 relative"
+            className={cn(
+              "h-10 rounded-xl flex items-center text-[var(--text-3)] hover:text-white hover:bg-white/[0.06] transition-all duration-200 relative",
+              isSidebarExpanded ? "w-full px-3 justify-start gap-3" : "w-10 justify-center"
+            )}
           >
-            <Bell size={17} />
+            <Bell size={17} className="shrink-0" />
+            {isSidebarExpanded && <span className="text-sm font-medium whitespace-nowrap">Notifications</span>}
             {unreadCount > 0 && (
-              <span className="absolute top-1.5 right-1.5 min-w-[14px] h-3.5 px-1 rounded-full bg-[var(--accent)] text-white text-[8px] font-bold flex items-center justify-center">
+              <span className={cn("absolute bg-[var(--accent)] text-[var(--bg)] font-bold flex items-center justify-center rounded-full pointer-events-none", isSidebarExpanded ? "right-3 top-1/2 -translate-y-1/2 min-w-[20px] h-[20px] text-[10px] px-1" : "top-1 right-1 w-3.5 h-3.5 text-[9px]")}>
                 {unreadCount > 9 ? '9+' : unreadCount}
               </span>
             )}
           </button>
-          {!showNotifPanel && <DockTooltip label="Notifications" show={hoveredItem === 'notif'} />}
+          {!isSidebarExpanded && <DockTooltip label="Notifications" show={hoveredItem === 'notif'} />}
 
           {/* Notification panel */}
           <AnimatePresence>
@@ -312,22 +340,38 @@ export const Sidebar: React.FC = () => {
         </div>
 
         {/* Theme toggle */}
-        <ThemeToggle />
+        <div className="flex w-full justify-center transition-all">
+          <ThemeToggle />
+        </div>
 
         {/* User avatar */}
         {user && (
-          <div className="relative" ref={userPanelRef}>
+          <div className="relative mt-1 w-full" ref={userPanelRef}>
             <button
               onClick={() => { setShowUserPanel(!showUserPanel); setShowNotifPanel(false); }}
-              onMouseEnter={() => setHoveredItem('user')}
+              onMouseEnter={() => !isSidebarExpanded && setHoveredItem('user')}
               onMouseLeave={() => setHoveredItem(null)}
-              title={`${user.firstName} ${user.lastName}`}
+              title={isSidebarExpanded ? undefined : `${user.firstName} ${user.lastName}`}
               aria-label={`${user.firstName} ${user.lastName}`}
-              className="w-9 h-9 rounded-full bg-gradient-to-br from-[var(--accent)] to-purple-400 flex items-center justify-center text-[var(--avatar-initials)] text-[11px] font-bold hover:shadow-[0_0_20px_rgba(139,92,246,0.35)] transition-shadow mt-1"
+              className={cn(
+                "rounded-xl transition-shadow flex items-center",
+                isSidebarExpanded ? "w-full p-2 gap-3 hover:bg-white/[0.06] text-left" : "w-9 h-9 justify-center bg-gradient-to-br from-[var(--accent)] to-purple-400 hover:shadow-[0_0_20px_rgba(139,92,246,0.35)]"
+              )}
             >
-              {user.firstName?.charAt(0)}{user.lastName?.charAt(0)}
+              <div className={cn(
+                "rounded-full flex items-center justify-center font-bold text-[11px] shrink-0",
+                isSidebarExpanded ? "w-8 h-8 bg-gradient-to-br from-[var(--accent)] to-purple-400 text-[var(--avatar-initials)]" : "w-full h-full text-[var(--avatar-initials)]"
+              )}>
+                {user.firstName?.charAt(0)}{user.lastName?.charAt(0)}
+              </div>
+              {isSidebarExpanded && (
+                <div className="flex flex-col overflow-hidden">
+                  <span className="text-sm font-medium text-white truncate leading-tight">{user.firstName} {user.lastName}</span>
+                  <span className="text-[10px] text-[var(--text-3)] truncate leading-tight">{user.email}</span>
+                </div>
+              )}
             </button>
-            {!showUserPanel && <DockTooltip label={`${user.firstName} ${user.lastName}`} show={hoveredItem === 'user'} />}
+            {!isSidebarExpanded && !showUserPanel && <DockTooltip label={`${user.firstName} ${user.lastName}`} show={hoveredItem === 'user'} />}
 
             <AnimatePresence>
               {showUserPanel && (

@@ -9,7 +9,6 @@ import { postsApi, transactionsApi } from '../services/dataService';
 import { useAuthStore } from '../store/authStore';
 import type { Post, Transaction } from '../types';
 import { formatRelativeTime } from '../lib/utils';
-import TextPressure from '../components/ui/TextPressure';
 
 const ease: [number, number, number, number] = [0.16, 1, 0.3, 1];
 
@@ -70,28 +69,11 @@ export default function DashboardPage() {
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, ease }}
-        style={{ position: 'relative', height: '140px', padding: '10px 0' }}
+        className="pt-4 pb-2"
       >
-        <TextPressure
-          text={`Welcome back, ${user?.firstName || 'Alchemist'}`}
-          fontFamily="Syne"
-          fontUrl="https://fonts.gstatic.com/s/syne/v22/8vIS7w4qzmVxsWxjBZRjr0FKM_04uT6kR47NCV5Z.woff2"
-          flex={false}
-          alpha={false}
-          stroke={false}
-          width={false}
-          weight
-          italic={false}
-          textColor="var(--text)"
-          strokeColor="#5227FF"
-          minFontSize={36}
-          maxFontSize={72}
-          minWeight={400}
-          minWidth={80}
-          highlightText={user?.firstName || 'Alchemist'}
-          highlightColor="var(--accent-2)"
-          wordSpacing="0.25em"
-        />
+        <h1 className="text-display text-3xl md:text-4xl lg:text-5xl font-bold text-[var(--text)]">
+          Welcome back, <span className="text-gradient">{user?.firstName || 'Alchemist'}</span>
+        </h1>
       </motion.div>
 
       {/* Subheading + New Post */}

@@ -8,12 +8,15 @@
 // Teammates on Mac / Linux / Docker just need a DATABASE_URL with user=…;password=…
 // ────────────────────────────────────────────────────────────────────────────
 
-import type * as MsSql from 'mssql';
+// NOTE: Do NOT add `import ... from 'mssql'` here (even `import type`).
+// tsx resolves type-only imports as real require() calls at runtime, which
+// loads the tedious driver and overwrites the msnodesqlv8 shared driver —
+// causing "connection.on is not a function" crashes.
 
 // ─── Dynamic driver loading ────────────────────────────────────────────────
 // Try the native Windows driver first; fall back to the pure-JS tedious driver
 // so the same codebase works on every OS and in Docker.
-let sql: typeof MsSql;
+let sql: any;
 let usingNativeDriver = false;
 
 try {
@@ -24,7 +27,7 @@ try {
 }
 
 // ─── Parse DATABASE_URL from .env ──────────────────────────────────────────
-function parseConnectionUrl(url: string): MsSql.config {
+function parseConnectionUrl(url: string): any {
   // Format: sqlserver://host:port;database=name;integratedSecurity=true;...
   //    or:  sqlserver://host;instanceName=SQLEXPRESS;database=name;...
   const cleaned = url.replace(/^["']|["']$/g, '');
@@ -44,7 +47,7 @@ function parseConnectionUrl(url: string): MsSql.config {
     }
   }
 
-  const cfg: MsSql.config = {
+  const cfg: any = {
     server,
     port: parseInt(portStr, 10),
     database: params.get('database') || 'alchex',
@@ -77,9 +80,9 @@ function parseConnectionUrl(url: string): MsSql.config {
 }
 
 // ─── Connection pool (lazy-initialised) ────────────────────────────────────
-let pool: MsSql.ConnectionPool | null = null;
+let pool: any | null = null;
 
-async function getPool(): Promise<MsSql.ConnectionPool> {
+async function getPool(): Promise<any> {
   if (pool && pool.connected) return pool;
 
   const url = process.env.DATABASE_URL || '';
@@ -240,6 +243,6 @@ async function disconnect(): Promise<void> {
   }
 }
 
-const db = { query, execute, queryUnsafe, executeUnsafe, callProcedure, disconnect };
+const db = { query, execute, queryUnsafe, executeUnsafe, callProcedure, disconnect, types: sql };
 export default db;
 

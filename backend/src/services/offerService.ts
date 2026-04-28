@@ -59,7 +59,7 @@ export class OfferService {
         offerId,
         requesterId: userId,
       }, {
-        txId: { type: require('mssql').NVarChar(36) },
+        txId: { type: db.types.NVarChar(36) },
       });
       txId = result.output.txId;
     } catch (err: any) {

@@ -6,10 +6,12 @@ import { postsApi } from '../services/dataService';
 import { formatRelativeTime } from '../lib/utils';
 import type { Post } from '../types';
 import toast from 'react-hot-toast';
+import { Modal } from '../components/ui/Modal';
 
 export default function MyPostsPage() {
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
+  const [postToDelete, setPostToDelete] = useState<string | null>(null);
 
   const fetchPosts = async () => {
     setLoading(true);
@@ -23,11 +25,12 @@ export default function MyPostsPage() {
 
   useEffect(() => { fetchPosts(); }, []);
 
-  const deletePost = async (id: string) => {
-    if (!confirm('Delete this post?')) return;
+  const deletePost = async () => {
+    if (!postToDelete) return;
     try {
-      await postsApi.delete(id);
+      await postsApi.delete(postToDelete);
       toast.success('Post deleted');
+      setPostToDelete(null);
       fetchPosts();
     } catch { toast.error('Failed to delete'); }
   };
@@ -96,7 +99,7 @@ export default function MyPostsPage() {
                       <Link to={`/posts/${post.id}/edit`} className="p-2 rounded-lg text-[var(--text-3)] hover:text-[var(--accent)] hover:bg-[var(--surface-2)] transition-colors">
                         <Edit3 size={14} />
                       </Link>
-                      <button onClick={() => deletePost(post.id)} className="p-2 rounded-lg text-[var(--text-3)] hover:text-red-400 hover:bg-red-500/10 transition-colors">
+                      <button onClick={() => setPostToDelete(post.id)} className="p-2 rounded-lg text-[var(--text-3)] hover:text-red-400 hover:bg-red-500/10 transition-colors">
                         <Trash2 size={14} />
                       </button>
                     </>
@@ -107,6 +110,24 @@ export default function MyPostsPage() {
           ))}
         </div>
       )}
+
+      <Modal isOpen={!!postToDelete} onClose={() => setPostToDelete(null)} title="Delete Post" size="sm">
+        <p className="text-[var(--text-2)] mb-6 mt-2">Are you sure you want to delete this post? This action cannot be undone.</p>
+        <div className="flex justify-end gap-3 border-t border-white/5 pt-4">
+          <button 
+            onClick={() => setPostToDelete(null)} 
+            className="px-4 py-2 rounded-lg text-sm text-[var(--text-3)] hover:text-[var(--text)] hover:bg-[var(--surface-2)] transition-colors"
+          >
+            Cancel
+          </button>
+          <button 
+            onClick={deletePost} 
+            className="px-4 py-2 rounded-lg text-sm bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500/20 hover:border-red-500/30 transition-all font-medium"
+          >
+            Delete
+          </button>
+        </div>
+      </Modal>
     </div>
   );
 }

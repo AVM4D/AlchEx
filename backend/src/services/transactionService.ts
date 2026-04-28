@@ -31,7 +31,7 @@ export class TransactionService {
         transactionId,
         userId,
       }, {
-        bothDone: { type: require('mssql').Bit },
+        bothDone: { type: db.types.Bit },
       });
 
       const bothDone = result.output.bothDone;

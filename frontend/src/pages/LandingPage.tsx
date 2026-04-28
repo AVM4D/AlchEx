@@ -1,7 +1,7 @@
-import React, { useEffect, useRef, useState, lazy, Suspense } from 'react';
+import React, { useEffect, lazy, Suspense } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, useScroll, useTransform } from 'framer-motion';
-import { ArrowRight, ArrowUpRight, Sparkles, ArrowLeftRight, Shield, Star, Zap, MessageCircle, Trophy, Users } from 'lucide-react';
+import { ArrowRight, ArrowLeftRight, Shield, Star, Zap, MessageCircle, Trophy, Users } from 'lucide-react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { ParticleField } from '../components/ui/ParticleField';
@@ -35,33 +35,7 @@ function MarqueeStrip({ children, speed = 30, reverse = false }: { children: Rea
   );
 }
 
-function CountUp({ end, suffix = '', duration = 2, delay = 0 }: { end: number; suffix?: string; duration?: number; delay?: number }) {
-  const [count, setCount] = useState(0);
-  const ref = useRef<HTMLSpanElement>(null);
-  const [started, setStarted] = useState(false);
 
-  useEffect(() => {
-    if (!started) return;
-    let start = 0;
-    const step = end / (duration * 60);
-    const id = setInterval(() => {
-      start += step;
-      if (start >= end) { setCount(end); clearInterval(id); }
-      else setCount(Math.floor(start));
-    }, 1000 / 60);
-    return () => clearInterval(id);
-  }, [started, end, duration]);
-
-  useEffect(() => {
-    const observer = new IntersectionObserver(([entry]) => {
-      if (entry.isIntersecting) { setTimeout(() => setStarted(true), delay * 1000); observer.disconnect(); }
-    }, { threshold: 0.3 });
-    if (ref.current) observer.observe(ref.current);
-    return () => observer.disconnect();
-  }, [delay]);
-
-  return <span ref={ref}>{count.toLocaleString()}{suffix}</span>;
-}
 
 /* ─── Sticky Scrolling Words — faithful to Jhey Tompkins' original ─── */
 const SCROLL_WORDS = ['exchange.', 'tutor.', 'trade.', 'mentor.', 'learn.', 'build.', 'grow.'];
@@ -171,11 +145,11 @@ export default function LandingPage() {
 
         <div className="relative z-10 text-center max-w-6xl mx-auto">
           <div className="hero-logo mb-6 flex justify-center opacity-0">
-            <span className="font-logo text-[15vw] lg:text-[20vw] leading-none font-bold tracking-wider text-[var(--text)]">ALCHEX</span>
+            <span className="font-logo text-[20vw] lg:text-[25vw] leading-none font-bold tracking-wider text-[var(--text)]">ALCHEX</span>
           </div>
 
           <p className="hero-tagline text-lg md:text-xl text-[var(--text-2)] max-w-2xl mx-auto mb-10 leading-relaxed font-light opacity-0">
-            Trade skills, share knowledge, grow together — all without spending a dime.{' '}
+            A student-to-student exchange platform. No money involved.{' '}
             <span className="font-quote text-2xl text-[var(--accent-2)] tracking-wide">"Zero money. Pure exchange."</span>
           </p>
 
@@ -229,39 +203,7 @@ export default function LandingPage() {
         </MarqueeStrip>
       </section >
 
-      {/* ═══ STATS ═══ */}
-      < section className="relative py-16 sm:py-24 md:py-32 px-4 sm:px-6" >
-        <div className="max-w-6xl mx-auto">
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-px bg-[var(--border)] rounded-2xl overflow-hidden">
-            {[
-              { value: 10000, suffix: '+', label: 'Active Students', accent: true },
-              { value: 25000, suffix: '+', label: 'Exchanges Made', accent: false },
-              { value: 50, suffix: '+', label: 'Universities', accent: false },
-              { value: 4.9, suffix: '', label: 'Avg Rating', accent: true },
-            ].map((stat, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.1, duration: 0.6, ease }}
-                className="bg-[var(--surface)] p-5 sm:p-8 text-center relative group"
-              >
-                <div className="font-bold text-display mb-2" style={{ fontSize: 'clamp(1.5rem, 4vw, 3rem)' }}>
-                  <span className={stat.accent ? 'text-gradient' : 'text-[var(--text)]'}>
-                    {typeof stat.value === 'number' && stat.value >= 100
-                      ? <CountUp end={stat.value} suffix={stat.suffix} delay={i * 0.15} />
-                      : <>{stat.value}{stat.suffix}</>
-                    }
-                  </span>
-                </div>
-                <p className="text-label">{stat.label}</p>
-                <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-0 h-[2px] bg-[var(--accent)] group-hover:w-full transition-all duration-500" />
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section >
+
 
       {/* ═══ HOW IT WORKS (with Mouse Reveal) ═══ */}
       < section className="relative py-16 sm:py-24 md:py-32 px-4 sm:px-6" >
@@ -289,10 +231,10 @@ export default function LandingPage() {
 
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {[
-              { step: '01', icon: Zap, title: 'Create Request', desc: 'Post what you need and what you can offer in return.' },
-              { step: '02', icon: MessageCircle, title: 'Get Proposals', desc: 'Students browse and submit proposals. Chat to negotiate.' },
-              { step: '03', icon: ArrowLeftRight, title: 'Exchange', desc: 'Accept the best offer. Both sides deliver.' },
-              { step: '04', icon: Trophy, title: 'Build Reputation', desc: 'Rate each other. Climb the leaderboard.' },
+              { step: '01', icon: Zap, title: 'Post a Request', desc: 'Describe what you need and what you can give back.' },
+              { step: '02', icon: MessageCircle, title: 'Get Offers', desc: 'Other students send proposals. Chat to work out details.' },
+              { step: '03', icon: ArrowLeftRight, title: 'Exchange', desc: 'Accept an offer. Both sides follow through.' },
+              { step: '04', icon: Trophy, title: 'Rate & Review', desc: 'Leave honest feedback. Build your reputation over time.' },
             ].map((item, i) => (
               <motion.div
                 key={i}
@@ -334,19 +276,19 @@ export default function LandingPage() {
               <TextScramble text="/ Features" trigger="inView" />
             </span>
             <h2 className="text-display text-[var(--text)] mb-4" style={{ fontSize: 'clamp(1.75rem, 5vw, 3.75rem)' }}>
-              Built for <span className="text-gradient">excellence</span>
+              What you <span className="text-gradient">get</span>
             </h2>
-            <p className="text-[var(--text-2)] max-w-lg text-lg">Every feature crafted to make exchanging seamless, safe, and rewarding.</p>
+            <p className="text-[var(--text-2)] max-w-lg text-lg">Everything you need for a smooth, safe exchange — nothing you don't.</p>
           </motion.div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
             {[
-              { icon: Shield, title: 'Verified .edu Only', desc: 'Only university students with verified .edu emails can join. Safe by design.', span: 'sm:col-span-2 md:col-span-2' },
-              { icon: ArrowLeftRight, title: 'Fair Exchange', desc: 'Structured transaction lifecycle ensures both sides are satisfied.', span: '' },
-              { icon: MessageCircle, title: 'Real-Time Chat', desc: 'Built-in messaging with typing indicators. Negotiate instantly.', span: '' },
-              { icon: Star, title: 'Reputation System', desc: 'Weighted ratings build trust. Your reputation is your currency.', span: '' },
-              { icon: Trophy, title: 'Leaderboard', desc: 'Top exchangers get recognition. Compete to be the best.', span: '' },
-              { icon: Users, title: 'Multi-University', desc: 'Connect with students across campuses and programs.', span: 'sm:col-span-2 md:col-span-2' },
+              { icon: Shield, title: '.edu Verified', desc: 'Only students with a valid university email can sign up.', span: 'sm:col-span-2 md:col-span-2' },
+              { icon: ArrowLeftRight, title: 'Fair Exchange', desc: 'A clear transaction flow so both sides hold up their end.', span: '' },
+              { icon: MessageCircle, title: 'Built-in Chat', desc: 'Message other students directly. No need for external apps.', span: '' },
+              { icon: Star, title: 'Ratings', desc: 'Rate people after each exchange. Helps everyone make better decisions.', span: '' },
+              { icon: Trophy, title: 'Leaderboard', desc: 'See who\'s been most active and reliable.', span: '' },
+              { icon: Users, title: 'Cross-Campus', desc: 'Works across multiple universities and departments.', span: 'sm:col-span-2 md:col-span-2' },
             ].map((feature, i) => (
               <motion.div
                 key={i}
@@ -371,66 +313,7 @@ export default function LandingPage() {
         </div>
       </section >
 
-      {/* ═══ TOP ALCHEMISTS ═══ */}
-      < section className="relative py-16 sm:py-24 md:py-32 px-4 sm:px-6 overflow-hidden" >
-        <div className="orb orb-primary w-[500px] h-[500px] top-1/4 left-1/2 -translate-x-1/2 z-0" />
-        <div className="max-w-4xl mx-auto relative z-10">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6, ease }}
-            className="text-center mb-16"
-          >
-            <span className="text-label text-[var(--accent-2)] mb-4 block">
-              <TextScramble text="/ Leaderboard" trigger="inView" />
-            </span>
-            <h2 className="text-display text-[var(--text)]" style={{ fontSize: 'clamp(1.75rem, 5vw, 3.75rem)' }}>
-              Top <span className="text-gradient">alchemists</span>
-            </h2>
-          </motion.div>
 
-          <div className="flex flex-col sm:flex-row items-end justify-center gap-6">
-            {[
-              { rank: 2, name: 'Sarah C.', score: 4.8, exchanges: 42 },
-              { rank: 1, name: 'Alex M.', score: 4.9, exchanges: 67 },
-              { rank: 3, name: 'Jordan K.', score: 4.7, exchanges: 38 },
-            ].map((user, i) => {
-              const isFirst = user.rank === 1;
-              return (
-                <motion.div
-                  key={i}
-                  initial={{ opacity: 0, y: 40 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: i * 0.15, duration: 0.6, ease }}
-                  className={`flex-1 ${isFirst ? 'order-first sm:order-none' : ''}`}
-                >
-                  <div className={`glass-card p-6 text-center relative ${isFirst ? 'glow-strong border-[var(--accent-sub)]' : ''}`}>
-                    {isFirst && (
-                      <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                        <span className="pill text-[var(--accent)]">
-                          <Sparkles size={12} /> #1
-                        </span>
-                      </div>
-                    )}
-                    <div className={`mx-auto mb-3 rounded-full bg-gradient-to-br from-[var(--accent)] to-[var(--accent-2)] flex items-center justify-center font-bold text-[var(--avatar-initials)] ${isFirst ? 'w-20 h-20 text-2xl shadow-[0_0_40px_var(--accent-glow)]' : 'w-14 h-14 text-lg'}`}>
-                      {user.name.charAt(0)}
-                    </div>
-                    <h3 className="font-display font-bold text-[var(--text)] text-lg">{user.name}</h3>
-                    <div className="flex items-center justify-center gap-1 mt-1">
-                      <Star size={14} className="text-[var(--accent)] fill-[var(--accent)]" />
-                      <span className="text-[var(--accent-2)] font-semibold">{user.score}</span>
-                    </div>
-                    <p className="text-label mt-2">{user.exchanges} exchanges</p>
-                    <div className={`mt-4 rounded-t-lg bg-gradient-to-t from-[var(--accent-sub)] to-transparent ${isFirst ? 'h-16' : user.rank === 2 ? 'h-10' : 'h-6'}`} />
-                  </div>
-                </motion.div>
-              );
-            })}
-          </div>
-        </div>
-      </section >
 
       {/* ═══ MARQUEE CTA ═══ */}
       < section className="py-8 border-y border-[var(--border)]" >
@@ -472,8 +355,8 @@ export default function LandingPage() {
           <Link to="/register" className="group relative inline-flex -mt-3 mb-10">
             <div className="absolute -inset-2 bg-gradient-to-r from-[var(--accent)] via-[var(--accent)] to-[var(--accent-2)] rounded-2xl blur-xl opacity-30 group-hover:opacity-60 transition-opacity duration-700" />
             <div className="relative flex items-center gap-3 px-7 py-4 bg-[var(--accent)] text-[var(--bg)] rounded-xl font-bold text-base hover:bg-[var(--accent)] transition-all duration-300 shadow-[0_0_40px_var(--accent-glow)]">
-              Begin Your Journey
-              <Sparkles size={20} className="group-hover:rotate-12 transition-transform" />
+              Begin your journey
+              <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
             </div>
           </Link>
           <p className="text-3xl font-quote text-[var(--accent-2)] tracking-wide max-w-xl mx-auto leading-relaxed">
@@ -489,12 +372,12 @@ export default function LandingPage() {
             <div>
               <div className="flex items-center gap-3 mb-4">
                 <div className="w-10 h-10 rounded-xl overflow-hidden shadow-[0_0_20px_var(--accent-glow)]">
-                  <span className="font-logo text-2xl font-bold tracking-wider text-[var(--accent)]">ALCHEX</span>
+                  <img src="/star.jpg" alt="AlchEx" className="w-full h-full object-cover" />
                 </div>
                 <span className="font-logo text-3xl font-bold tracking-wider text-[var(--text)]">ALCHEX</span>
               </div>
               <p className="text-sm text-[var(--text-3)] max-w-xs">
-                Where every skill finds its match.
+                Student skill exchange, simplified.
               </p>
             </div>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-12 text-sm">
@@ -526,7 +409,7 @@ export default function LandingPage() {
           </div>
           <div className="section-line mt-12 mb-8" />
           <div className="flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-[var(--text-3)]">
-            <p>&copy; 2026 AlchEx. Where every skill finds its match.</p>
+            <p>&copy; 2026 AlchEx. All rights reserved.</p>
             <p className="text-mono">v1.0.0</p>
           </div>
         </div>

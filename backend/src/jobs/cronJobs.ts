@@ -6,7 +6,7 @@ export function initializeCronJobs() {
   cron.schedule('*/15 * * * *', async () => {
     try {
       const result = await db.callProcedure('sp_ExpirePosts', {}, {
-        expiredCount: { type: require('mssql').Int },
+        expiredCount: { type: db.types.Int },
       });
       if (result.output.expiredCount > 0) {
         console.log(`[Cron] Expired ${result.output.expiredCount} posts`);
@@ -20,7 +20,7 @@ export function initializeCronJobs() {
   cron.schedule('*/15 * * * *', async () => {
     try {
       const result = await db.callProcedure('sp_ExpireOffers', {}, {
-        expiredCount: { type: require('mssql').Int },
+        expiredCount: { type: db.types.Int },
       });
       if (result.output.expiredCount > 0) {
         console.log(`[Cron] Expired ${result.output.expiredCount} offers`);
@@ -34,7 +34,7 @@ export function initializeCronJobs() {
   cron.schedule('*/30 * * * *', async () => {
     try {
       const result = await db.callProcedure('sp_ExpireTransactions', {}, {
-        expiredCount: { type: require('mssql').Int },
+        expiredCount: { type: db.types.Int },
       });
       if (result.output.expiredCount > 0) {
         console.log(`[Cron] Expired ${result.output.expiredCount} transactions`);
