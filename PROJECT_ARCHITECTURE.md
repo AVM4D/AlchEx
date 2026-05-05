@@ -440,16 +440,16 @@ stateDiagram-v2
     ACTIVE --> ACTIVE: Students send offers
     ACTIVE --> EXPIRED: Timer runs out (cron job)
 
-    ACTIVE --> IN_PROGRESS: Owner accepts an offer
-    Note right of IN_PROGRESS: sp_AcceptOffer runs:<br/>1. Accept chosen offer<br/>2. Reject all other offers<br/>3. Create transaction<br/>4. Chat unlocked
+    ACTIVE --> IN_PROGRESS: Owner accepts an offer (sp_AcceptOffer)
 
-    IN_PROGRESS --> SUCCESSFUL: Both sides mark "Done"
-    Note right of SUCCESSFUL: sp_CompleteTransaction:<br/>1. Mark complete<br/>2. Recalculate reputation<br/>3. Rating enabled
-
+    IN_PROGRESS: Exchange in progress — chat enabled
+    IN_PROGRESS --> SUCCESSFUL: Both sides mark Done (sp_CompleteTransaction)
     IN_PROGRESS --> CANCELLED: Either party cancels
     IN_PROGRESS --> EXPIRED: 14-day timer runs out
 
+    SUCCESSFUL: Exchange complete — chat disabled, rating enabled
     SUCCESSFUL --> [*]: Users rate each other
+
     CANCELLED --> [*]
     EXPIRED --> [*]
 ```
