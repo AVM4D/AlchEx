@@ -333,15 +333,18 @@ Glass morphism cards, purple glow shadows, gradient borders, smooth Framer Motio
 ## Architecture
 
 ```
-Controller → Service → Repository → Prisma → SQL Server
-     ↑            ↑
-  Middleware    Validators (Zod)
+Controller → Service → Repository → DB Connection → SQL Server
+     ↑            ↑                        ↑
+  Middleware    Validators (Zod)    Stored Procedures
 ```
 
 - **Controllers**: Thin HTTP handlers, delegate to services
 - **Services**: Business logic, authorization checks, orchestration
-- **Repositories**: Pure data access, Prisma queries
+- **Repositories**: Pure data access, raw SQL queries via custom DB connection layer
 - **Middleware**: Auth (JWT verify), validation (Zod), error handling
+- **Stored Procedures**: 14 SPs encapsulate atomic multi-step operations (accept offer, complete transaction, recalculate reputation, etc.)
+
+> 📖 **For a complete beginner-friendly architecture guide** with diagrams, feature flows, database schema, stored procedure details, and everything you need to understand this project, see **[PROJECT_ARCHITECTURE.md](./PROJECT_ARCHITECTURE.md)**.
 
 ---
 
